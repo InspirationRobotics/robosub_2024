@@ -83,6 +83,7 @@ class SquareMovement:
 
 if __name__ == '__main__':
     """For running the script in terminal"""
+    rospy.init_node("test")
     try:
         square_movement = SquareMovement()
         square_movement.run()
