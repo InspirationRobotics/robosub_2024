@@ -13,7 +13,7 @@ class SquareMovement:
         self.rate = rospy.Rate(10) # 10 Hz
         self.command_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size = 10)
         self.arm_service = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
-        self.power = 2 # Adjust
+        self.power =  # Adjust
 
     def arm(self):
         """Arm autonomous function"""
@@ -60,12 +60,12 @@ class SquareMovement:
         """Move forward, then yaw. Repeat 4 times."""
         for i in range(4):
             self.move_forward(power)
-            rospy.sleep(2.0) # Adjust
+            rospy.sleep(7.0) # Adjust
             self.stop()
             rospy.sleep(1.0)
 
             self.yaw_right(power)
-            rospy.sleep(1.5) # Adjust
+            rospy.sleep(1.2) # Adjust
             self.stop()
             rospy.sleep(1.0)
     
