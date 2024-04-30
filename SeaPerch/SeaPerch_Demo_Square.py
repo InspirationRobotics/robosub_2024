@@ -13,7 +13,7 @@ class SquareMovement:
         self.rate = rospy.Rate(10) # 10 Hz
         self.command_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size = 10)
         self.arm_service = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
-        self.power =  # Adjust
+        self.power = 2 # Adjust
 
     def arm(self):
         """Arm autonomous function"""
