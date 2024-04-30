@@ -51,7 +51,7 @@ class PreQualificationMission:
 
         self.config = config
         self.data = {}
-        self.nextdata = {}
+        self.next_data = {}
         self.received = False
 
         self.RobotControl = robot_control.RobotControl()
@@ -72,5 +72,63 @@ class PreQualificationMission:
 
         file_name = msg.connection_header["topic"].split("/")[-1]
         data = json.loads(msg)
-        self.nextdata[file_name] = data
+        self.next_data[file_name] = data
         self.received = True
+
+    def run(self):
+        """
+        Code to run the PreQualification Mission.
+        """
+
+        while not rospy.is_shutdown():
+            if not self.received:
+                print("No output received from the CV Handler")
+
+            self.RobotControl.set_depth(4.0)
+
+            for key in self.next_data.keys:
+                if key in self.data.keys:
+                    self.data[key].update(self.next_data[key])
+                else:
+                    self.data[key] = self.next_data[key]
+
+            lateral = self.data["PreQualification_cv"].get("lateral")
+            forward = self.data["PreQualification_cv"].get("forward")
+            yaw = self.data["PreQualification_cv"].get("yaw")
+            end = self.data["PreQualification_cv"].get("end")
+
+            if end:
+                print("Ending...")
+                self.RobotControl.movement(lateral = 0, forward = 0, yaw = 0)
+                break
+            else:
+                self.RobotControl.movement(lateral = lateral, forward = forward, yaw = yaw)
+
+        print("PreQualification Mission running...")
+
+    def cleanup(self):
+        """
+        Exit the mission gracefully. Stops the CV script running through the CV handler, and idle the robot.
+        """
+        for file_name in cv_files:
+            self.CVHandler.stop_cv(file_name)
+        
+        self.RobotControl.movement(lateral = 0, forward = 0, yaw = 0)
+        print("[INFO] PreQualification Mission terminated.")
+
+    if __name__ == "main":
+        # The code inside this if statement will be run if you call the mission directly.
+        # It is here for testing purposes.
+        # You can call this file using "python -m mission.PreQualification_Mission.py" if you are outside the directory, or 
+        # "python -m PreQualification_Mission.py" if you are inside the directory.
+
+        import time
+        from auv.utils import deviceHelper
+
+        rospy.init_node("PreQualification Mission", anonymous = True)
+        config = deviceHelper.variables
+
+        mission = PreQualificationMission(**config)
+
+        mission.run()
+        mission.cleanup()
