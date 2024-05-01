@@ -1,5 +1,7 @@
 """
-CV script for the PreQualification Maneuver.
+CV script for the Pre-qualification Maneuver.
+
+Move forward through the gate, circle around a marker, and return through the gate.
 """
 
 import time
@@ -9,7 +11,13 @@ import cv2
 
 class CV:
     """
-    CV class for the PreQualification Maneuver.
+    CV class for the Pre-qualification Maneuver.
+
+    Attributes:
+        self.step (int): Counter for which part of the mission we are currently on.
+        self.shape (tuple): Shape of the frame (height, width).
+        self.circleSide (str): Which way to circle the marker, clockwise or counterclockwise.
+        self.marker (list): List containing the x-coordinate of the top left corner of the marker, y-coordinate of the top left corner of the marker, width of the marker, height of the marker.
     """
 
     camera = "/auv/camera/USBRaw0"
@@ -25,6 +33,8 @@ class CV:
         self.step = 0
         self.shape = (480, 640)
         self.circleSide = "clockwise"
+        self.markerDetected = False
+        self.marker = None
 
 # Find the two sides of the gate
 # Calculate the midpoint
@@ -49,7 +59,7 @@ class CV:
             frame (numpy.ndarray): Frame from the camera (this will be in the BGR color format).
 
         Returns:
-            numpy.ndarray: Blurred Image
+            numpy.ndarray: Blurred Image.
         """
         grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         blurredImage = cv2.GaussianBlur(grayImage, (5, 5), 0)
@@ -81,6 +91,9 @@ class CV:
                 sideRatio = w/(h + 0.000001)
                 if sideRatio <= 0.4:
                     vertical_sides.append(x, y, w, h)
+
+        for x, y, w, h in vertical_sides:
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
         return vertical_sides
     
@@ -153,6 +166,61 @@ class CV:
 
         return lateral, yaw
     
+    def detectMarker(self, frame):
+        """
+        Detect the marker. Sets the marker to the largest detected marker.
+
+        Args:
+            frame (numpy.ndarray): Raw frame from the camera.
+
+        Returns:
+            None. 
+        """
+
+        blurredFrame = cv2.GaussianBlur(frame, (9, 9), 0)
+        HSVFrame = cv2.cvtColor(blurredFrame, cv2.COLOR_BGR2HSV)
+
+        # Adjust these parameters.
+        lowerColor = np.array([0, 100, 100])
+        upperColor = np.array([20, 255, 255])
+
+        mask = cv2.inRange(HSVFrame, lowerColor, upperColor)
+        segmentedImage = cv2.bitwise_and(frame, frame, mask = mask)
+
+        edges = cv2.Canny(segmentedImage, 50, 150)
+
+        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        vertical_sides = []
+        for contour in contours:
+            perimeter = cv2.arcLength(contour)
+            approx = cv2.approxPolyDP(contour, perimeter * 0.02, True)
+            x, y, w, h = cv2.boundingRect(approx)
+
+            widthHeightRatio = w/(h + 0.0001)
+            if widthHeightRatio < 0.4:
+                vertical_sides.append(x, y, w, h)
+
+        for x, y, w, h in vertical_sides:
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+        largestDetection = [0, 0, 0, 0]
+        largestDetectionArea = 0
+
+        if len(vertical_sides) == 1:
+            self.marker = vertical_sides[0]
+        elif len(vertical_sides) == 0:
+            self.marker = None
+        else:
+            for detection in vertical_sides:
+                x, y, w, h = detection
+                detectionArea = int(w * h)
+                if detectionArea > largestDetectionArea:
+                    largestDetectionArea = detectionArea
+                    largestDetection = [x, y, w, h]
+
+            self.marker = largestDetection
+
     def run(self, frame):
         """
         Run the PreQualification CV.
@@ -164,33 +232,125 @@ class CV:
             dictionary, numpy.ndarray: {lateral movement command, forward movement command, yaw movment command, flag indicating whether the mission has ended}, visualized frame
         """
 
-        processed_frame = self.preProcessImage(frame)
-        detections = self.findVerticalSides(processed_frame)
-
         end = False
         lateral = 0
         forward = 0
         yaw = 0
+        tolerance = 20
+        circleTime = 5 # Adjust
+        startLookingForGate = False
+
+        frameArea = self.shape[0] * self.shape[1]
 
         # Positive lateral value = move right, negative, move left.
         # Positive yaw value clockwise, negative counterclockwise.
 
         # If step 0, find and align with the midpoint of the gate.
         if self.step == 0:
+            processed_frame = self.preProcessImage(frame)
+            detections = self.findVerticalSides(processed_frame)
+
             lateral, yaw = self.alignWithMidpointCallback(detections)
-            if lateral or yaw != 0:
+            if lateral != 0 or yaw != 0:
                 pass
             else:
                 self.step = 1
         
-        # If step 1, move forward through the gate until we see the marker.
+        # If step 1, move forward through the gate until we see the marker. Then align with the marker and move forward until the marker is big enough that we can circle.
         if self.step == 1:
-            pass
+            forward = 2
+            self.detectMarker(frame)
+            if self.marker != None:
+                x, y, w, h = self.marker
+                markerArea = w * h
+                if markerArea > 1/20 * frameArea:
+                    self.markerDetected = True
 
-        # If step 2, move clockwise or counterclockwise around the marker, by changing yaw and forward values.
+            if self.markerDetected == True:
+                forward = 1
+                markerMidpoint = (x + (x + h))/2
+                if abs(markerMidpoint - self.shape[1]/2) < tolerance:
+                    # Perfect alignment, move forward.
+                    forward = 2
+                elif markerMidpoint - self.shape[1]/2 < -(tolerance):
+                    # Marker is too far to the left
+                    yaw = -1
+                elif markerMidpoint - self.shape[1]/2 > tolerance:
+                    # Marker is too far to the right
+                    yaw = 1
 
-        # If step 3, move back through the gate.
-                 
+            # If step 2, move clockwise or counterclockwise around the marker, by changing yaw and forward values.
+            if markerArea > 1/5 * frameArea:
+                # Marker is big enough, start circling.
+                self.step = 2
+
+        if self.step == 2:
+            if self.circleSide == "clockwise":
+                yaw = -2
+                self.detectMarker(frame)
+                timeStart = time.time()
+                if self.marker == None:
+                    yaw = 0.5
+                    forward = 1
+                if self.marker != None:
+                    yaw = -1
+                    forward = 0.5
+                if time.time() - timeStart > circleTime:
+                    yaw = 0
+                    forward = 2
+                    self.step = 3
+
+        if self.step == 3:
+            timeToMoveForward = 5 # Adjust
+
+            forward = 2
+            
+            if not hasattr(self, "timeStart_Step3"):
+                self.timeStart_Step3 = time.time()
+
+            if time.time() - self.timeStart_Step3 > timeToMoveForward:
+                startLookingForGate = True
+
+            if startLookingForGate == True:
+                processed_frame = self.preProcessImage(frame)
+                detections = self.findVerticalSides(processed_frame)
+
+                forward = 0
+                lateral, yaw = self.alignWithMidpointCallback(detections)
+
+                if lateral == 0 and yaw == 0:
+                    forward = 2
+                
+                if len(detections) == 0:
+                    self.step = 4
+
+        if self.step == 4:
+            end = True
+            print("Ending mission.")
         
         return {"lateral" : lateral, "forward" : forward, "yaw" : yaw, "end" : end}, frame
-                
+        
+if __name__ == "main":
+    # This is the code that will be executed if you run the file directly.
+    # It is here for testing purposes.
+    # You can run this file independently using "python -m auv.cv.PreQualification_cv.py".
+    
+    # Create a CV object with arguments.
+    cv = CV()
+
+    cap = cv2.videoCapture("testing_data/PreQualificationMission.mp4")
+
+    while True:
+        # Grab a frame.
+        ret, frame = cap.read()
+
+        if not ret:
+            break
+        
+        result, visualizedImage = cv.run(frame)
+
+        if visualizedImage is not None:
+            cv2.imshow("Visualization", visualizedImage)
+        
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
