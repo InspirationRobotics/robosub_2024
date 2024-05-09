@@ -2,7 +2,7 @@
 CV template class. Copy this for each mission, and modify it accordingly.
 """
 
-# Import what you need from within the package
+# Import what you need from within the package.
 
 import time
 
@@ -31,14 +31,14 @@ class CV:
 
         print("[INFO] Template CV init")
 
-    def run(self, frame, target, oakd_data):
+    def run(self, frame, target, detections):
         """
         Run the CV script.
 
         Args:
             frame: The frame from the camera stream
             target: This can be any type of information, for example, the object to look for
-            oakd_data: This only applies to OAK-D cameras; this is the list of detections from the ML model output
+            detections: This only applies to OAK-D cameras; this is the list of detections from the ML model output
 
         Here should be all the code required to run the CV.
         This could be a loop, grabbing frames using ROS, etc.

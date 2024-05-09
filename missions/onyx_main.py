@@ -5,7 +5,7 @@ Script to run the planned missions for Onyx sequentially.
 import time
 import signal
 
-from . import PreQualification_Mission
+from . import prequalification_mission, gateMission
 from auv.utils import arm, disarm, deviceHelper
 from auv.motion import robot_control
 from auv.device.modems import modems_api
@@ -16,6 +16,8 @@ config = deviceHelper.variables
 RobotControl = robot_control.RobotControl()
 
 missionsNode = rospy.init_node("Missions", anonymous = True)
+
+target = "blue"
 
 def onExit(signum, frame):
     """
@@ -45,11 +47,16 @@ signal.SIGINT(signal.SIGINT, onExit)
 
 arm.arm()
 
-prequalification = PreQualification_Mission.PreQualificationMission()
+prequalification = prequalification_mission.PreQualificationMission()
+gate = gateMission.gateMission(target)
+
 time.sleep(1)
 
 prequalification.run()
 prequalification.cleanup()
+
+# gate_mission.run()
+# gate_mission.cleanup()
 
 disarm.disarm()
 

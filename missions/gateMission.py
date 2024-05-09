@@ -1,5 +1,5 @@
 """
-Class to run the prequalification maneuver. 
+Class to run the Gate mission. 
 """
 
 import json
@@ -10,9 +10,9 @@ from auv.motion import robot_control
 from auv.device import cv_handler
 from auv.utils import disarm
 
-class PreQualificationMission:
+class gateMission:
     """
-    Class to run the prequalification maneuver.
+    Class to run the mission.
 
     Attributes:
         config: Configuration of the devices on the sub.
@@ -23,11 +23,11 @@ class PreQualificationMission:
         CVHandler: Instance of the CVHandler class, which controls the running of individual, mission-specific, CV scripts.
     """
 
-    cv_files: ["prequalification_cv"]
+    cv_files: ["gate_cv"]
 
-    def __init__(self, **config):
+    def __init__(self, target = "blue", **config):
         """
-        Initialize the PreQualificationMission class.
+        Initialize the mission class.
 
         Args:
             config: Dictionary containing the configuration of the sub's devices.
@@ -44,7 +44,10 @@ class PreQualificationMission:
         for file_name in self.cv_files:
             self.CVHandler.start_cv(file_name, self.callback)
 
-        print("[INFO] PreQualification Maneuver Initialization.")
+        # Set the target for the CV file.
+        self.CVHandler.set_target("gate_cv", target)
+
+        print("[INFO] Gate Mission Initialization.")
 
     def callback(self, msg):
         """
@@ -61,14 +64,12 @@ class PreQualificationMission:
 
     def run(self):
         """
-        Code to run the PreQualification Mission.
+        Code to run the mission.
         """
 
         while not rospy.is_shutdown():
             if not self.received:
                 print("No output received from the CV Handler")
-
-            self.RobotControl.set_depth(4.0)
 
             for key in self.next_data.keys:
                 if key in self.data.keys:
@@ -76,10 +77,10 @@ class PreQualificationMission:
                 else:
                     self.data[key] = self.next_data[key]
 
-            lateral = self.data["PreQualification_cv"].get("lateral")
-            forward = self.data["PreQualification_cv"].get("forward")
-            yaw = self.data["PreQualification_cv"].get("yaw")
-            end = self.data["PreQualification_cv"].get("end")
+            lateral = self.data["gate_cv"].get("lateral")
+            forward = self.data["gate_cv"].get("forward")
+            yaw = self.data["gate_cv"].get("yaw")
+            end = self.data["gate_cv"].get("end")
 
             if end:
                 print("Ending...")
@@ -88,31 +89,31 @@ class PreQualificationMission:
             else:
                 self.RobotControl.movement(lateral = lateral, forward = forward, yaw = yaw)
 
-        print("PreQualification Mission running...")
+        print("Gate mission running...")
 
     def cleanup(self):
         """
-        Exit the mission gracefully. Stops the CV script running through the CV handler, and idle the robot.
+        Exit the mission gracefully. Stop the CV script running through the CV handler, and idle the robot.
         """
         for file_name in self.cv_files:
             self.CVHandler.stop_cv(file_name)
         
         self.RobotControl.movement(lateral = 0, forward = 0, yaw = 0)
-        print("[INFO] PreQualification Mission terminated.")
+        print("[INFO] Gate Mission terminated.")
 
     if __name__ == "main":
         # The code inside this if statement will be run if you call the mission directly.
         # It is here for testing purposes.
-        # You can call this file using "python -m mission.PreQualification_Mission.py" if you are outside the directory, or 
-        # "python -m PreQualification_Mission.py" if you are inside the directory.
+        # You can call this file using "python -m mission.gate.py" if you are outside the directory, or 
+        # "python -m gate.py" if you are inside the directory.
 
         import time
         from auv.utils import deviceHelper
 
-        rospy.init_node("PreQualification Mission", anonymous = True)
+        rospy.init_node("Gate Mission", anonymous = True)
         config = deviceHelper.variables
 
-        mission = PreQualificationMission(**config)
+        mission = gateMission(**config)
 
         mission.run()
         mission.cleanup()
