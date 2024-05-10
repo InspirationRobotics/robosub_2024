@@ -50,10 +50,40 @@ class CV:
         This could be a loop, grabbing frames using ROS, etc.
 
         Returns:
-            dictionary, visualized frame: {motion commands/flags for servos and other indication flags}, visualized frame
+            dictionary, visualized frame: {lateral motion command, forward motion command, yaw motion command, end flag}, visualized frame
         """
         print("[INFO] Gate CV run")
 
+        targetDetection = None
+        targetDetected = False
+        step = 0
+        end = False
+
+        if len(detections) < 2:
+            yaw = 1
+
+        if len(detections) == 2:
+            for detection in detections:
+                if target in detection.label:
+                    targetDetection = detection
+
+        if targetDetection is not None:
+            if targetDetection.confidence > 0.5:
+                targetDetected = True
+            else:
+                targetDetected = False
+        
+        if targetDetected == True:
+            step = 1
+
+        if step == 1:
+            # Align with the target.
+            lateral = 0
+            forward = 0
+        
+        if end == True:
+            print("Ending mission")
+                    
         # If the length of detections is not equal to two, then yaw to find the detections.
         # Find the detection with the target label.
         # If the confidence of the detection is high enough, then obtain the x and y coordinates of the detection on the frame.
@@ -61,7 +91,7 @@ class CV:
         # End.
 
         # Continuously return motion commands, the state of the mission, and the visualized frame.
-        return {"lateral": 0, "forward": 0, "end": False}, frame
+        return {"lateral": lateral, "forward": forward, "yaw": yaw, "end": end}, frame
 
 
 if __name__ == "__main__":
