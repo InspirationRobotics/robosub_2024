@@ -94,5 +94,5 @@ if __name__ == "__main__":
             break
     
     # These two lines are absolutely necessary; this cleans up the capture system, so the file does not become corrupted.
-    cv.vid.release()
+    cv2.vid.release()
     cv2.destroyAllWindows()
