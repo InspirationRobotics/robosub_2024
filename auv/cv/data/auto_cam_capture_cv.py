@@ -63,7 +63,7 @@ class CV:
 
 if __name__ == "__main__":
     """
-    Type "python -m auv.cv.data.auto_cam_capture_cv.py" in order to run this script.
+    Type "python3 -m auv.cv.data.auto_cam_capture_cv.py" in order to run this script.
     This should be all you need in order to obtain testing data. 
     """
     from auv.utils import deviceHelper
@@ -94,5 +94,6 @@ if __name__ == "__main__":
             break
     
     # These two lines are absolutely necessary; this cleans up the capture system, so the file does not become corrupted.
-    cv2.vid.release()
+    cap.release()
+    cv.vid.release()
     cv2.destroyAllWindows()

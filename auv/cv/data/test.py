@@ -14,9 +14,6 @@ while True:
     if not ret:
         break
 
-    # Run the CV processing.
-    result = cv.run(frame, None, None)
-
     # Show the frame for debugging purposes.
     cv2.imshow("frame", frame)
 
