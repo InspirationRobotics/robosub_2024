@@ -31,7 +31,7 @@ class CV:
         self.size = (self.frame_width, self.frame_height)
 
         self.pathToVideo = '../../../testing_data/test_video.mp4' # Adjust as necessary.
-        self.codec = 'mp4v' # Change from "MJPG" to "mp4v" if capturing from a Windows camera.
+        self.codec = 'MJPG' # Change from "MJPG" to "mp4v" if capturing from a Windows camera.
 
         self.vid =  cv2.VideoWriter(self.pathToVideo,
                           cv2.VideoWriter_fourcc(*self.codec), 
@@ -66,16 +66,16 @@ if __name__ == "__main__":
     Type "python -m auv.cv.data.auto_cam_capture_cv.py" in order to run this script.
     This should be all you need in order to obtain testing data. 
     """
-    # from auv.utils import deviceHelper
+    from auv.utils import deviceHelper
 
-    # camera = "forwardUSB" # Adjust
-    # port = deviceHelper.dataFromConfig(camera)
+    camera = "forwardOak" # Adjust
+    port = deviceHelper.dataFromConfig(camera)
 
     # Create a CV object with arguments.
     cv = CV()
 
     # Initializing camera capture object.
-    cap = cv2.VideoCapture(0) # Switch "port" to "0" to get input from a Windows camera.
+    cap = cv2.VideoCapture(port) # Switch "port" to "0" to get input from a Windows camera.
 
     while True:
         # Grab a frame from the video object.
