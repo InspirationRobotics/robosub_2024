@@ -22,6 +22,8 @@ def control():
         lateral = 2
     elif var == 'y':
         yaw = 2
+    elif var == 'fn':
+        forward = 0
     else:
         print("Invalid command.")
 
@@ -46,6 +48,7 @@ def disarm(self):
 
 arm()
 
+rospy.init_node("Control")
 try:
     while run:
         msg = OverrideRCIn()
