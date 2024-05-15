@@ -31,7 +31,7 @@ def control():
         yaw = 0
     elif var == 'i':
         forward = 0
-	lateral = 0
+        lateral = 0
         yaw  = 0
     elif var == 's':
         forward = 0
