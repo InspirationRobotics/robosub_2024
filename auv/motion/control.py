@@ -25,6 +25,14 @@ def control():
         yaw = 2
     elif var == 'fn':
         forward = 0
+    elif var == 'ln':
+        lateral = 0
+    elif var == 'yn':
+        yaw = 0
+    elif var == 'i':
+        forward = 0
+	lateral = 0
+        yaw  = 0
     elif var == 's':
         forward = 0
         lateral = 0
@@ -47,7 +55,7 @@ def arm():
 def disarm():
     """Disarm autonomous function"""
     try:
-        self.arm_service(False)
+        arm_service(False)
         rospy.loginfo("Vehicle disarmed.")
         return True
     except rospy.ServiceException as e:
