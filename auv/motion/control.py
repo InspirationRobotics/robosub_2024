@@ -15,7 +15,7 @@ lateral = 0
 yaw = 0
 
 def control():
-    global forward, lateral, yaw
+    global forward, lateral, yaw, run
     var = input("Type in a command: ")
     if var == 'f':
         forward = 2
@@ -29,6 +29,8 @@ def control():
         forward = 0
         lateral = 0
         yaw = 0
+        run = False
+        disarm()
     else:
         print("Invalid command.")
 
