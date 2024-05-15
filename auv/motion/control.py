@@ -2,6 +2,7 @@ import rospy
 from mavros_msgs.msg import OverrideRCIn
 from mavros_msgs.srv import CommandBool
 
+rospy.init_node("Control")
 
 rate = rospy.Rate(10)
 command_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size = 10)
@@ -48,7 +49,6 @@ def disarm(self):
 
 arm()
 
-rospy.init_node("Control")
 try:
     while run:
         msg = OverrideRCIn()
