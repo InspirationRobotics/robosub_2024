@@ -25,6 +25,10 @@ def control():
         yaw = 2
     elif var == 'fn':
         forward = 0
+    elif var == 's':
+        forward = 0
+        lateral = 0
+        yaw = 0
     else:
         print("Invalid command.")
 
@@ -51,6 +55,7 @@ arm()
 
 try:
     while run:
+        control()
         msg = OverrideRCIn()
         channels = [1500] * 18
         channels[3] = int((yaw * 80)) + 1500
@@ -58,6 +63,9 @@ try:
         channels[5] = int((lateral * 80) + 1500)
         msg.channels = channels
         command_pub.publish(msg)
+        print(f"Forward is {forward}")
+        print(f"Lateral is {lateral}")
+        print(f"Yaw is {yaw}")
 
 except KeyboardInterrupt:
     channels = [1500] * 18
