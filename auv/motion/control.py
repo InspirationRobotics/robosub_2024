@@ -44,7 +44,7 @@ def arm():
     except rospy.ServiceException as e:
         rospy.logwarn("Failed to arm vehicle: %s" % e)
 
-def disarm(self):
+def disarm():
     """Disarm autonomous function"""
     try:
         self.arm_service(False)
