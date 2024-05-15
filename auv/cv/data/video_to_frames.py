@@ -1,41 +1,28 @@
-# TODO: Pretty much everything.
-
 import cv2
 
-cap = cv2.VideoCapture(r"C:\Users\netwo\OneDrive\Team Inspiration\RoboSub 2024\robosub_2024\testing_data\AutoVideo.mp4")
+path = "/home/kc/Desktop/Testing Data/Buoy/Test Video 1.mp4"
+video = cv2.VideoCapture(path)
 
-_, frame = cap.read()
-cv2.imshow("frame", frame)
+if not video.isOpened():
+    print("Unable to open video.")
 
-# def split_video_into_frames(video_path, output_folder):
-#     """
-#     Split a given video at a given path into frames inside a folder.
+output_folder = "Test Video 1 Frames"
+import os
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
 
-#     Args:
-#         video_path (str): Path to the video.
-#         output_folder (str): The name of the folder that will contain the video frames.
-#     """
-#     # Open the video file.
-#     vidcap = cv2.VideoCapture(video_path)
+frame_count = 0
 
-#     # Create the output folder if it doesn't exist.
-#     import os
-#     if not os.path.exists(output_folder):
-#         os.makedirs(output_folder)
+while True:
+    ret, frame = video.read()
+    if not ret:
+        break
 
-#     # Read the video frame by frame.
-#     success, image = vidcap.read()
+    frame_count += 1
+    frame_path = os.path.join(output_folder, f'frame_{frame_count:04d}.jpg')
+    cv2.imwrite(frame_path, frame)
+    print(frame_count)
 
-#     count = 0
-#     while success:
-#         # Write the current frame to a JPEG file.
-#         cv2.imwrite(os.path.join(output_folder, "frame%d.jpg" % count), image)
-#         success, image = vidcap.read()
-#         print('Frame %d: Success' % count)
-#         count += 1
-
-#     print("Frames extraction completed.")
-
-# video_path = r"C:\Users\netwo\OneDrive\Team Inspiration\RoboSub 2024\robosub_2024\testing_data\AutoVideo.mp4"
-# output_folder = "AutoVideo_output_folder"
-# split_video_into_frames(video_path, output_folder)
+video.release()
+cv2.destroyAllWindows()
+print("Successful extraction of frames.")
