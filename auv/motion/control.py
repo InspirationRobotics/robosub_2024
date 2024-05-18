@@ -101,7 +101,7 @@ def disarm():
 arm()
 
 try:
-    rc.set_depth(1.0)
+    rc.set_depth(0.0)
     while run:
         control()
         msg = OverrideRCIn()
