@@ -14,7 +14,7 @@ run = True
 forward = 0
 lateral = 0
 yaw = 0
-depth = 0
+drop = 0
 
 rc = robot_control.RobotControl()
 
@@ -22,28 +22,37 @@ rc = robot_control.RobotControl()
 # TODO: Create a function that controls absolute depth, as well as simple upwards and downwards.
 
 def control():
-    global forward, lateral, yaw, run
+    global forward, lateral, yaw, drop, run
     var = input("Type in a command: ")
     if var == 'forward':
         forward = 2
     elif var == 'backward':
         forward = -2
     elif var == 'down':
-        pass
-    elif var == 'l':
-        lateral = 2
-    elif var == 'y':
-        yaw = 2
-    elif var == 'fn':
+        drop = 2
+    elif var == 'up':
+        drop = -2
+    elif var == 'lateral right':
+        lateral = 2 # Right
+    elif var == 'lateral left':
+        lateral = -2
+    elif var == 'yaw cw':
+        yaw = 2 # Clockwise
+    elif var == 'yaw ccw':
+        yaw = -2
+    elif var == 'stop forward':
         forward = 0
-    elif var == 'ln':
+    elif var == 'stop lateral':
         lateral = 0
-    elif var == 'yn':
+    elif var == 'stop yaw':
         yaw = 0
+    elif var == "stop drop":
+        drop = 0
     elif var == 'i':
         forward = 0
         lateral = 0
         yaw  = 0
+        depth = 0
     elif var == 's':
         forward = 0
         lateral = 0
@@ -79,6 +88,7 @@ try:
         control()
         msg = OverrideRCIn()
         channels = [1500] * 18
+        channels[2] = int((drop * 80) + 1500)
         channels[3] = int((yaw * 80)) + 1500
         channels[4] = int((forward * 80) + 1500)
         channels[5] = int((lateral * 80) + 1500)
