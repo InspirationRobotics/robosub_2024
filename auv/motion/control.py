@@ -1,4 +1,5 @@
 import rospy
+import time
 from mavros_msgs.msg import OverrideRCIn
 from mavros_msgs.srv import CommandBool
 from . import robot_control
@@ -50,13 +51,25 @@ def control():
         drop = 0
     elif var == 'set depth':
         drop = 0
-        depth = input("Absolute depth: ")
-        rc.set_depth(depth)
+        drop_control = input("Starting power: ")
+        start_time = time.time()
+        drop += drop_control
+        while True:
+            stop_input = input("Key in 'stop' to keep the depth of the sub: ")
+            if stop_input == "stop":
+                break
+            elif time.time() - start_time == 0.5:
+                start_time = time.time()
+                drop += 0.2
+                print(f'{drop}')
+                
+        # depth = input("Absolute depth: ")
+        # rc.set_depth(depth)
     elif var == 'i':
         forward = 0
         lateral = 0
         yaw  = 0
-        depth = 0
+        drop = 0
     elif var == 's':
         forward = 0
         lateral = 0
@@ -88,6 +101,7 @@ def disarm():
 arm()
 
 try:
+    rc.set_depth(1.0)
     while run:
         control()
         msg = OverrideRCIn()
@@ -101,6 +115,7 @@ try:
         print(f"Forward is {forward}")
         print(f"Lateral is {lateral}")
         print(f"Yaw is {yaw}")
+        print(f"Drop power is {drop}")
 
 except KeyboardInterrupt:
     channels = [1500] * 18
