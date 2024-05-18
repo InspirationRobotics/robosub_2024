@@ -53,7 +53,11 @@ def control():
         drop = 0
         drop_control = input("Starting power: ")
         start_time = time.time()
-        drop += drop_control
+        valid_input = is_convertible_to_float(drop_control)
+        if valid_input == True:
+            drop += float(drop_control)
+        else:
+            print("Invalid input.")
         while True:
             stop_input = input("Key in 'stop' to keep the depth of the sub: ")
             if stop_input == "stop":
@@ -97,6 +101,13 @@ def disarm():
         return True
     except rospy.ServiceException as e:
         rospy.logwarn("Failed to disarm vehicle: %s" % e)
+
+def is_convertible_to_float(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
 
 arm()
 
