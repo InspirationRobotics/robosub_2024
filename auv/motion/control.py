@@ -25,29 +25,29 @@ rc = robot_control.RobotControl()
 def control():
     global forward, lateral, yaw, drop, run
     var = input("Type in a command: ")
-    if var == 'forward':
-        forward = 2
-    elif var == 'backward':
-        forward = -2
-    elif var == 'down':
-        drop = 2
-    elif var == 'up':
-        drop = -2
-    elif var == 'lateral right':
-        lateral = 2 # Right
-    elif var == 'lateral left':
-        lateral = -2
-    elif var == 'yaw cw':
-        yaw = 2 # Clockwise
-    elif var == 'yaw ccw':
-        yaw = -2
-    elif var == 'stop forward':
+    if var == 'f':
+        forward = 1.5
+    elif var == 'b':
+        forward = -1.5
+    elif var == 'd':
+        drop = 1
+    elif var == 'u':
+        drop = -1
+    elif var == 'lr':
+        lateral = 1.5 # Right
+    elif var == 'll':
+        lateral = -1.5
+    elif var == 'y cw':
+        yaw = 0.5 # Clockwise
+    elif var == 'y ccw':
+        yaw = -0.5
+    elif var == 'sf':
         forward = 0
-    elif var == 'stop lateral':
+    elif var == 'sl':
         lateral = 0
-    elif var == 'stop yaw':
+    elif var == 'sy':
         yaw = 0
-    elif var == "stop drop":
+    elif var == "sd":
         drop = 0
     elif var == 'set depth':
         drop = 0
