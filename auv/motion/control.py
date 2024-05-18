@@ -1,6 +1,7 @@
 import rospy
 from mavros_msgs.msg import OverrideRCIn
 from mavros_msgs.srv import CommandBool
+from . import robot_control
 
 rospy.init_node("Control")
 
@@ -13,12 +14,22 @@ run = True
 forward = 0
 lateral = 0
 yaw = 0
+depth = 0
+
+rc = robot_control.RobotControl()
+
+# TODO: Check the lateral, yaw and make sure that we can input it both ways.
+# TODO: Create a function that controls absolute depth, as well as simple upwards and downwards.
 
 def control():
     global forward, lateral, yaw, run
     var = input("Type in a command: ")
-    if var == 'f':
+    if var == 'forward':
         forward = 2
+    elif var == 'backward':
+        forward = -2
+    elif var == 'down':
+        pass
     elif var == 'l':
         lateral = 2
     elif var == 'y':
