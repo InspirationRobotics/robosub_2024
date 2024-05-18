@@ -3,7 +3,6 @@ import time
 from mavros_msgs.msg import OverrideRCIn
 from mavros_msgs.srv import CommandBool
 from . import robot_control
-from ..device import pix_standalone
 
 rospy.init_node("Control")
 
@@ -19,7 +18,6 @@ yaw = 0
 drop = 0
 
 rc = robot_control.RobotControl()
-auv = pix_standalone.AUV()
 
 # TODO: Check the lateral, yaw and make sure that we can input it both ways.
 # TODO: Create a function that controls absolute depth, as well as simple upwards and downwards.
@@ -104,7 +102,6 @@ arm()
 
 try:
     while run:
-        auv.get_baro()
         control()
         msg = OverrideRCIn()
         channels = [1500] * 18
