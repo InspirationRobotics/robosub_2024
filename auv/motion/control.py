@@ -48,6 +48,10 @@ def control():
         yaw = 0
     elif var == "stop drop":
         drop = 0
+    elif var == 'set depth':
+        drop = 0
+        depth = input("Absolute depth: ")
+        rc.set_depth(depth)
     elif var == 'i':
         forward = 0
         lateral = 0
