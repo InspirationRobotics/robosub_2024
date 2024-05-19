@@ -26,17 +26,17 @@ def control():
     global forward, lateral, yaw, drop, run
     var = input("Type in a command: ")
     if var == 'f':
-        forward = 1
+        forward = 1.5
     elif var == 'b':
-        forward = -1
+        forward = -1.5
     elif var == 'd':
         drop = 1
     elif var == 'u':
         drop = -1
     elif var == 'lr':
-        lateral = 1 # Right
+        lateral = 1.5 # Right
     elif var == 'll':
-        lateral = -1
+        lateral = -1.5
     elif var == 'y cw':
         yaw = 0.5 # Clockwise
     elif var == 'y ccw':
@@ -45,9 +45,9 @@ def control():
         forward = 0
     elif var == 'sl':
         lateral = 0
-    elif var == 'y':
+    elif var == 'sy':
         yaw = 0
-    elif var == "stop drop":
+    elif var == "sd":
         drop = 0
     elif var == 'set depth':
         drop = 0
@@ -61,7 +61,12 @@ def control():
         while True:
             stop_input = input("Key in 'stop' to keep the depth of the sub: ")
             if stop_input == "stop":
-                break               
+                break
+            elif time.time() - start_time == 0.5:
+                start_time = time.time()
+                drop += 0.2
+                print(f'{drop}')
+                
         # depth = input("Absolute depth: ")
         # rc.set_depth(depth)
     elif var == 'i':
