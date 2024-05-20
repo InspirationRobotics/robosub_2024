@@ -5,7 +5,7 @@ To get the configuration of the devices connected to the sub(thrusters, cameras,
 import os # For interacting with the operating system
 import sys # For system-specific variables and functionalities
 import platform # For platform-specific functionalities
-from dotenv import dotenv_values # To load environment variables
+# from dotenv import dotenv_values # To load environment variables - this isn't used in the file
 import json
 
 def load_json(path):
