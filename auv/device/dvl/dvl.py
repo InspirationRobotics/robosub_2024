@@ -96,8 +96,8 @@ class DVL:
         try:
             data = self.dvla50.read()
         except:
+            print("I threw an exception!")
             data = None
-        print("I'm done!")
         return data
 
     def read_onyx(self):
