@@ -15,6 +15,16 @@ import crcmod
 import struct
 
 
+import sys
+import os
+
+list1 = os.path.realpath(__name__).split('/')
+list1.pop(-1)
+path_var = '/'.join(list1)
+sys.path.append(path_var)
+
+from auv.utils import deviceHelper
+
 # Logger
 log = logging.getLogger(__file__)
 
@@ -172,6 +182,8 @@ class WlDVLBase(object):
         self._rx_queue = list()
 
         self.oldString = ""
+        print(self._iodev)
+        print(self.debug)
 
     # --------------------
     # Public API functions
@@ -246,3 +258,12 @@ class WlDVL(WlDVLBase):
             raise WlDVLGenericError("Error opening serial port {}".format(err))
 
         super(WlDVL, self).__init__(self._serial, debug=debug)
+
+
+
+if __name__ == '__main__':
+    print(deviceHelper.dataFromConfig("dvl"))
+
+    # dvla50 = WlDVL(deviceHelper.dataFromConfig("dvl"), debug=True)
+    # dvla50._serial.open()
+    # print(dvla50.serial)
