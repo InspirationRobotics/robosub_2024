@@ -443,4 +443,5 @@ if __name__ == "__main__":
         print(f"[INFO] received: {msg.data}")
 
     cv = CVHandler()
-    cv.start_cv("template_cv")
+    script_handler = _ScriptHandler()
+    cv.start_cv("buoy_cv", dummy_callback(script_handler.sub_oakd_data))
