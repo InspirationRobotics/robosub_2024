@@ -442,6 +442,7 @@ if __name__ == "__main__":
     def dummy_callback(msg):
         print(f"[INFO] received: {msg.data}")
 
+    file_name = "buoy_cv"
+
     cv = CVHandler()
-    script_handler = _ScriptHandler()
-    cv.start_cv("buoy_cv", dummy_callback(script_handler.sub_oakd_data))
+    cv.start_cv(file_name, dummy_callback())
