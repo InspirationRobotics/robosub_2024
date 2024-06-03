@@ -15,9 +15,9 @@ xlinkOut = pipeline.create(dai.node.XLinkOut)
 xlinkOut.setStreamName("imu")
 
 # enable ACCELEROMETER_RAW at 500 hz rate
-imu.enableIMUSensor(dai.IMUSensor.ACCELEROMETER_RAW, 500)
+imu.enableIMUSensor(dai.IMUSensor.ACCELEROMETER_RAW, 1)
 # enable GYROSCOPE_RAW at 400 hz rate
-imu.enableIMUSensor(dai.IMUSensor.GYROSCOPE_RAW, 400)
+imu.enableIMUSensor(dai.IMUSensor.GYROSCOPE_RAW, 1)
 # it's recommended to set both setBatchReportThreshold and setMaxBatchReports to 20 when integrating in a pipeline with a lot of input/output connections
 # above this threshold packets will be sent in batch of X, if the host is not blocked and USB bandwidth is available
 imu.setBatchReportThreshold(1)
