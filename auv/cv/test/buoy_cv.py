@@ -15,7 +15,12 @@ class CV:
         self.shape = (640, 480)
         self.detected = True
         self.config = config # Blue counterclockwise, Red clockwise
-        self.step = None
+        self.step = 4
+
+        self.forward_times = 0 # The theory behind this is that we should only go forward past the buoy twice.
+        self.time_before_forward_run = 0
+        self.before_end_lateral_time = 0
+        self.end = False
 
         # Test variables.
         self.detection_area = None
@@ -59,6 +64,7 @@ class CV:
         forward = 0
         lateral = 0
         yaw = 0
+        end = self.end
         x_tolerance = 20 # Pixels
 
         data_from_detection, frame = self.detect_buoy(raw_frame)
@@ -71,6 +77,9 @@ class CV:
         x_midpoint = self.shape[0]/2
         y_midpoint = self.shape[1]/2
 
+        x_offset_ccw = x_midpoint/2
+        x_offset_cw = x_midpoint + x_midpoint/2
+
         # Check if there is a detection, if there is not one then yaw.
 
         if data_from_detection.get("status") == True:
@@ -80,8 +89,7 @@ class CV:
         else:
             self.detected = False
 
-        # Make this more robust
-        if self.detected == False:
+        if self.detected == False and self.step is None:
             yaw = 1
             forward = 0
             lateral = 0
@@ -113,35 +121,87 @@ class CV:
 
         # Step 2 is align with offset.
         elif self.step == 2 and self.detected == True:
-            x_offset_cw = x_midpoint/2
-            x_offset_ccw = x_midpoint + x_midpoint/2
+            self.aligned = False
 
-            if self.config == "Blue": # Counterclockwise -- we want the buoy on the right side of the frame
-                if detection_midpoint > x_offset_ccw - x_tolerance:
+            if self.config == "Blue": # Counterclockwise -- we want the buoy on the left side of the frame
+                if detection_midpoint < x_offset_ccw + x_tolerance:
                     self.aligned = True
+                    self.step = 3
                 else:
                     lateral = 1
-            elif self.config == "Red": # We want buoy on left side
-                if detection_midpoint < x_offset_cw + x_tolerance:
+            elif self.config == "Red": # We want buoy on right side
+                if detection_midpoint > x_offset_cw - x_tolerance:
                     self.aligned = True
+                    self.step = 3
                 else: 
                     lateral = -1
+
+        if self.aligned == False:
+            self.time_before_forward_run = time.time()
+
+        forward_allotment = 3 # Seconds
         
-        if self.aligned == True:
-            self.step == 3
-        
-        # TODO: Everything up to Step 3 works well, so next is just finish the steps.
-        elif self.step == 3 and self.detected == True:
+        if self.step == 3:
             lateral = 0
-            forward = 1
-                
+            if time.time() - self.time_before_forward_run < forward_allotment:
+                forward = 2
+            else:
+                forward = 0
+                self.forward_times += 1
+                self.aligned = False
+                self.step = 4
+
+        # Here we stop, and yaw, then go back to step 2.
+        # TODO: Step 4 does not seem to work.
+        elif self.step == 4:
+            # We'll want to yaw 180 degrees -- since we can't use a gyroscope/don't want to rely on it, 
+            # instead we will do the opposite of step 2, where basically we will yaw until we find the buoy 
+            # on the side of the frame that we don't want it on, so we can go back to step 2 and move laterally.
+
+            if self.config == "Blue": # Counterclockwise -- we want the buoy on the LEFT side of the frame
+                if self.detected == True:
+                    if detection_midpoint > x_offset_cw - x_tolerance:
+                        self.aligned = True
+                        self.step = 2
+                    else:
+                        yaw = -1
+                else:
+                    yaw = -1
+            elif self.config == "Red": # We want buoy on RIGHT side
+                if self.detected == True:
+                    if detection_midpoint < x_offset_ccw + x_tolerance:
+                        self.aligned = True
+                        self.step = 2
+                    else:
+                        yaw = 1
+                else:
+                    yaw = 1
+
+        if self.forward_times < 2:
+            lateral_end_allotment = 2 # Again in seconds
+            self.before_end_lateral_time = time.time()
         
-        return {"lateral" : lateral, "forward" : forward, "yaw" : yaw}, visualized_frame, self.detected, data_from_detection
+        # This is to make sure we get something equivalent to a full circle/square instead of unfinished.
+        elif self.forward_times == 2:
+            if self.config == "Blue":
+                # We'll (hopefully) be on the left of the buoy
+                if time.time() - self.before_end_lateral_time < lateral_end_allotment:
+                    lateral = -1
+                else:
+                    end = True
+            if self.config == "Red":
+                # Right side of buoy
+                if time.time() - self.before_end_lateral_time < lateral_end_allotment:
+                    lateral = 1
+                else:
+                    end = True
+
+        return {"lateral" : lateral, "forward" : forward, "yaw" : yaw, "end" : end}, visualized_frame, self.detected, data_from_detection
 
 if __name__ == "__main__":
     video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/"
     mission_name = "Buoy/"
-    video_name = "Buoy Video 5.mp4"
+    video_name = "Train Video 1.mp4"
     video_path = os.path.join(video_root_path, mission_name, video_name)
     print(f"Video path: {video_path}")
 
@@ -167,7 +227,7 @@ if __name__ == "__main__":
                     print("[ERROR] Unable to display frame.")
 
                 print(f"Motion: {motion_values}, Detection status: {detection_status}, Detection Coords: {detection_coords}")
-                print(f"Step: {cv.step}, Area of detection {cv.detection_area}")
+                print(f"Step: {cv.step}, Area of detection: {cv.detection_area}, Aligned status : {cv.aligned}")
                 time.sleep(0.05)
 
                 if cv2.waitKey(1) & 0xFF == ord("q"):

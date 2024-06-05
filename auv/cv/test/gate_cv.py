@@ -1,3 +1,8 @@
+"""
+Will need to use a YOLO model rather than color thresholding; the colors simply are too fractionated.
+"""
+
+
 import cv2
 import time
 import numpy as np
@@ -22,11 +27,11 @@ class CV:
         detected = False
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        lower_red_mask_1 = np.array([0, 120, 70])
+        lower_red_mask_1 = np.array([0, 120, 150])
         upper_red_mask_1 = np.array([10, 255, 255])
         lower_red_range_mask = cv2.inRange(hsv, lower_red_mask_1, upper_red_mask_1)
 
-        lower_red_mask_2 = np.array([170, 120, 70])
+        lower_red_mask_2 = np.array([170, 120, 150])
         upper_red_mask_2 = np.array([180, 255, 255])
         upper_red_range_mask = cv2.inRange(hsv, lower_red_mask_2, upper_red_mask_2)
 
@@ -40,11 +45,10 @@ class CV:
 
             if cv2.contourArea(largest_contour) > 0:
                 x, y, w, h = cv2.boundingRect(largest_contour)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 detected = True
-                return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}, frame
+                return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}
         
-        return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}, frame        
+        return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}        
     
     def detect_blue(self, frame):
         """
@@ -53,7 +57,7 @@ class CV:
         detected = False
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        lower_blue_mask = np.array([100, 150, 0])
+        lower_blue_mask = np.array([130, 190, 200])
         upper_blue_mask = np.array([140, 255, 255])
         mask = cv2.inRange(hsv, lower_blue_mask, upper_blue_mask)
 
@@ -65,21 +69,37 @@ class CV:
 
             if cv2.contourArea(largest_contour) > 0:
                 x, y, w, h = cv2.boundingRect(largest_contour)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 detected = True
-                return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}, frame
+                return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}
         
-        return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}, frame        
+        return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}     
         
 
     def run(self, raw_frame):
-        visualized_frame = None
         forward = 0
         lateral = 0
         yaw = 0
         x_tolerance = 20 # Pixels
 
-        # TODO: Create run logic
+        blue_info = self.detect_blue(raw_frame)
+        red_info = self.detect_red(raw_frame)
+
+        # There's probably a better way to do this, but this is the simplest in my estimation...
+        if blue_info.get('status') == True:
+            blue_xmin = blue_info.get('xmin')
+            blue_xmax = blue_info.get('xmax')
+            blue_ymin = blue_info.get('ymin')
+            blue_ymax = blue_info.get('ymax')
+            cv2.rectangle(raw_frame, (blue_xmin, blue_ymin), (blue_xmax, blue_ymax), (255, 0, 0), 2)
+
+        if red_info.get('status') == True:
+            red_xmin = red_info.get('xmin')
+            red_xmax = red_info.get('xmax')
+            red_ymin = red_info.get('ymin')
+            red_ymax = red_info.get('ymax')
+            cv2.rectangle(raw_frame, (red_xmin, red_ymin), (red_xmax, red_ymax), (0, 0, 255), 2)
+
+        return raw_frame
 
 if __name__ == "__main__":
     video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/"
@@ -107,14 +127,16 @@ if __name__ == "__main__":
                 # if viz_frame is not None:
                 #     cv2.imshow("frame", viz_frame)
 
-                if frame is not None:
-                    cv2.imshow("frame", frame)
+                viz_frame = cv.run(frame)
+
+                if viz_frame is not None:
+                    cv2.imshow("frame", viz_frame)
                 else:
                     print("[ERROR] Unable to display frame.")
 
                 # print(f"Motion: {motion_values}, Detection status: {detection_status}, Detection Coords: {detection_coords}")
                 # print(f"Step: {cv.step}, Area of detection {cv.detection_area}")
-                time.sleep(0.05)
+                time.sleep(1)
 
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
