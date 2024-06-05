@@ -1,5 +1,9 @@
 """
-Will need to use a YOLO model rather than color thresholding; the colors simply are too fractionated.
+CV logic for the Gate mission, tested on training data.
+
+NOTE: Will need to use a YOLO model rather than color thresholding; the colors simply are too fractionated.
+
+Author: Keith Chen
 """
 
 
@@ -113,7 +117,7 @@ if __name__ == "__main__":
     if not os.path.exists(video_path):
         print(f"[ERROR] Video file not found {video_path}")
     else:
-        cap = cap = cv2.VideoCapture(video_path)
+        cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             print(f"[ERROR] Unable to open video file: {video_path}")
         else:

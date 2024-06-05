@@ -1,3 +1,8 @@
+"""
+Buoy CV logic, tested on training videos.
+
+Author: Keith Chen
+"""
 import cv2
 import time
 import numpy as np
@@ -13,9 +18,9 @@ class CV:
     def __init__(self, config):
         self.aligned = False
         self.shape = (640, 480)
-        self.detected = True
+        self.detected = False
         self.config = config # Blue counterclockwise, Red clockwise
-        self.step = 4
+        self.step = 0
 
         self.forward_times = 0 # The theory behind this is that we should only go forward past the buoy twice.
         self.time_before_forward_run = 0
@@ -27,7 +32,7 @@ class CV:
 
     def detect_buoy(self, frame):
         """
-        Uses HSV color space and masking to detect a red object.
+        Uses HSV color space and masking to detect a red object. Returns bounding box coordinates and the visualized frame.
         """
         detected = False
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -55,11 +60,9 @@ class CV:
                 return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}, frame
         
         return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}, frame        
-            
-            # else:
-            #     return {"frame" : frame, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}
 
     def run(self, raw_frame):
+        """Run the CV logic."""
         visualized_frame = None
         forward = 0
         lateral = 0
@@ -111,7 +114,7 @@ class CV:
                 self.step = 1
         
         # Step 1 is to move forward enough so that the buoy is at a certain area size
-        elif self.step == 1 and self.detected == True:
+        if self.step == 1 and self.detected == True:
             self.detection_area = detection_area
             if detection_area < 1/60 * self.shape[0] * self.shape[1]:
                 forward = 1
@@ -120,7 +123,7 @@ class CV:
                 self.step = 2
 
         # Step 2 is align with offset.
-        elif self.step == 2 and self.detected == True:
+        if self.step == 2 and self.detected == True:
             self.aligned = False
 
             if self.config == "Blue": # Counterclockwise -- we want the buoy on the left side of the frame
@@ -152,8 +155,7 @@ class CV:
                 self.step = 4
 
         # Here we stop, and yaw, then go back to step 2.
-        # TODO: Step 4 does not seem to work.
-        elif self.step == 4:
+        if self.step == 4:
             # We'll want to yaw 180 degrees -- since we can't use a gyroscope/don't want to rely on it, 
             # instead we will do the opposite of step 2, where basically we will yaw until we find the buoy 
             # on the side of the frame that we don't want it on, so we can go back to step 2 and move laterally.
@@ -178,11 +180,11 @@ class CV:
                     yaw = 1
 
         if self.forward_times < 2:
-            lateral_end_allotment = 2 # Again in seconds
             self.before_end_lateral_time = time.time()
         
         # This is to make sure we get something equivalent to a full circle/square instead of unfinished.
-        elif self.forward_times == 2:
+        if self.forward_times == 2:
+            lateral_end_allotment = 2 # Again in seconds
             if self.config == "Blue":
                 # We'll (hopefully) be on the left of the buoy
                 if time.time() - self.before_end_lateral_time < lateral_end_allotment:
@@ -196,6 +198,7 @@ class CV:
                 else:
                     end = True
 
+        # We only need dictionary and visualized_frame, self.detected and data_from_detection are test variables.
         return {"lateral" : lateral, "forward" : forward, "yaw" : yaw, "end" : end}, visualized_frame, self.detected, data_from_detection
 
 if __name__ == "__main__":
@@ -210,7 +213,7 @@ if __name__ == "__main__":
     if not os.path.exists(video_path):
         print(f"[ERROR] Video file not found {video_path}")
     else:
-        cap = cap = cv2.VideoCapture(video_path)
+        cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             print(f"[ERROR] Unable to open video file: {video_path}")
         else:
@@ -226,8 +229,10 @@ if __name__ == "__main__":
                 else:
                     print("[ERROR] Unable to display frame.")
 
+                # For testing purposes.
                 print(f"Motion: {motion_values}, Detection status: {detection_status}, Detection Coords: {detection_coords}")
-                print(f"Step: {cv.step}, Area of detection: {cv.detection_area}, Aligned status : {cv.aligned}")
+                print(f"Step: {cv.step}, Area of detection: {cv.detection_area}, Aligned status : {cv.aligned}, Forward times : {cv.forward_times}")
+                
                 time.sleep(0.05)
 
                 if cv2.waitKey(1) & 0xFF == ord("q"):
