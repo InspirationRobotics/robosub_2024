@@ -31,14 +31,15 @@ class CV:
     # You can put detection functions to detect a specific object as needed. 
 
     def run(self, raw_frame):
-        """Run the CV logic. Returns the motion commands and visualized frame."""
+        """ Run the CV logic. Returns the motion commands and visualized frame. """
         # Here is where all of the actual CV logic should be.
         # It should return motion values and the visualized frame.
         # This function will run basically every time a new frame is to be processed, which means multiple times a second.
         # This is why we use the self.<variable_name> variables to detail the state/alignment and other variables that depend 
         # on the current action, as those are global and will not be reinitialized to default every time this function runs.
 
-        # Initializing motion variables
+        # Initializing motion variables -- it is in most forseeable cases advisable to do this, as not doing so may result in trying to return something that has not 
+        # been initalized, resulting in the program crashing. 
         lateral = 0
         forward = 0
         yaw = 0

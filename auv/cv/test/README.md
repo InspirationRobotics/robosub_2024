@@ -15,4 +15,13 @@ Since the goal as stated is to create a testing platform for mission-specific CV
 Please see the code inside this folder labeled "template_test_cv.py" for the template code. Attached to the code are all of the relevant comments and explanations.
 
 ## Protocol
-TODO: Commenting, good practices, steps, etc. Do this after completed template_test_cv.py.
+To name a file that you wish to create, please use <mission_name>_test_cv.py, in all lowercase, underscores between words.
+
+Inside each file, please put a header at the top in the following format:
+"""
+Description of script
+
+Author: <Author_name>
+"""
+
+Additionally, please add comments as necessary throughout the code, but not too many as to clutter it. Use your own discretion, but the end goal is to have any programmer on our team quickly and easily understand the logic of your code, and to utilize aspects of it, assuming the programmer is at all familiar with subject matter.
