@@ -445,4 +445,4 @@ if __name__ == "__main__":
     file_name = "buoy_cv"
 
     cv = CVHandler()
-    cv.start_cv(file_name, dummy_callback())
+    cv.start_cv(file_name, dummy_callback)
