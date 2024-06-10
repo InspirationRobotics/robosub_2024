@@ -75,12 +75,18 @@ class CV:
 
     def run(self, frame, target, oakd_data):
         """
-        frame: the frame from the camera
-        target: any type of information, for example the thing to look for
-        oakd_data: only applies for oakd cameras; the list of detections
+        Run the CV script.
+
+        Args:
+            frame: The frame from the camera stream
+            target: This can be any type of information, for example, the object to look for
+            detections: This only applies to OAK-D cameras; this is the list of detections from the ML model output
 
         Here should be all the code required to run the CV.
-        This could be a loop, grabing frames using ROS, etc.
+        This could be a loop, grabbing frames using ROS, etc.
+
+        Returns:
+            dictionary, visualized frame: {motion commands/flags for servos and other indication flags}, visualized frame
         """
 
         forward = 0
