@@ -6,7 +6,9 @@ import numpy as np
 import shapely
 
 class CV: 
-    """CV class for Bin mission. Do not change name of class."""
+    """
+    CV class for Bin mission. DO NOT change the name of the class, as this will mess up all of the backend files to run the CV scripts.
+    """
   
     camera = "/auv/camera/videoOAKdRawBottom"
     model = "bins3"
