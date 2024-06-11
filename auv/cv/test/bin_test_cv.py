@@ -131,37 +131,50 @@ class CV:
         # TODO (low priority): Remove colors for each bin
         return {"lateral": lateral, "forward": forward, "aligned": aligned}, frame
 
+# This if statement is just saying what to do if this script is run directly. 
 if __name__ == "__main__":
-    # This is the code that will be executed if you run this file directly
-    # It is here for testing purposes
-    # you can run this file independently using: "python -m auv.cv.template_cv"
+    # Example of how to obtain a training video. Make sure to follow this template when capturing your own video, in case 
+    # another team member needs to run this code on his/her device. 
+    
+    # NOTE: When downloading the training data, the training data folder itself, which contains all of the data.
     video_root_path = "" # Computer path through the training data folder.
-    mission_name = "Ocean Temperatures/" # Mission folder
+    mission_name = "/" # Mission folder
     video_name = "" # Specified video
-    video_path = os.bin.join(video_root_path, mission_name, video_name)
+    video_path = os.path.join(video_root_path, mission_name, video_name)
 
     # For testing
     print(f"Video path: {video_path}")
-    
-    # Create a CV object with arguments
-    cv = CV()
-    
-    # here you can for example initialize your camera, etc
-    cap = cv2.VideoCapture("../../testing_data/")
 
-    while True:
-        # grab a frame
-        ret, frame = cap.read()
-        if not ret:
-            break
+    # Initialize an instance of the class.
+    cv = CV("Blue")
 
-        # run the cv
-        result = cv.run(frame, "some_info", None)
-    
-        # do something with the result
-        print(f"[INFO] {result}")
-    
-        # debug the frame
-        cv2.imshow("frame", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+    # Verify the path exists.
+    if not os.path.exists(video_path):
+        print(f"[ERROR] Video file not found {video_path}")
+    else:
+        # Capture the video object (basically access the specified video) at the specified path.
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            print(f"[ERROR] Unable to open video file: {video_path}")
+        else:
+            while True:
+                # Access each frame of the video.
+                ret, frame = cap.read()
+                if not ret:
+                    print("[INFO] End of file.")
+                    break
+
+                # Run the run function on the frame, and get back the relevant results.
+                motion_values, viz_frame = cv.run(frame)
+                if viz_frame is not None:
+                    cv2.imshow("frame", viz_frame)
+                else:
+                    print("[ERROR] Unable to display frame.")
+
+                # For testing purposes.
+                print(f"Motion: {motion_values}")
+                
+                time.sleep(0.05)
+
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break
