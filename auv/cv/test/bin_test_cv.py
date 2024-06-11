@@ -47,7 +47,7 @@ class CV:
 
         forward = 0
         lateral = 0
-        aligned = False
+        yaw = 0
 
         height, width, _ = frame.shape
 
