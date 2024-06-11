@@ -14,8 +14,22 @@ class CV:
     model = "bin"
     
     def __init__(self, **config):
-        """Initialize CV class"""
-      
+        # Config is a way of passing in an argument to indicate to the logic what actions to take. Take a look at 
+        # buoy_test_cv.py for an example.
+        self.shape = (640, 480)
+
+        # Switcher variables which can be used as needed to switch states.
+        self.aligned = False
+        self.detected = False
+
+        self.config = config 
+        self.step = 0 # Step counter variable.
+
+        self.end = False # End variable to denote when the mission has finished.
+
+        print("[INFO] Bin CV Init")
+        
+        # Add variables as needed below.
         self.viz_frame = None
         self.error_buffer = []
       
