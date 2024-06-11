@@ -98,10 +98,10 @@ class CV:
         tolerance = 0.1
         maxConfidence = 0
         target_bin = None
-        earth = None
-        abydos = None
-        earth_confidence = 0
-        abydos_confidence = 0
+        red = None
+        blue = None
+        red_confidence = 0
+        blue_confidence = 0
         bins = []
         lids = []
 
@@ -117,13 +117,13 @@ class CV:
             y1 = int(detection.ymin)
             y2 = int(detection.ymax)
 
-            if "abydos" in detection.label and detection.confidence > abydos_confidence:
-                abydos = detection
-                abydos_confidence = detection.confidence
+            if "blue" in detection.label and detection.confidence > blue_confidence:
+                blue = detection
+                blue_confidence = detection.confidence
 
-            elif "earth" in detection.label and detection.confidence > earth_confidence:
-                earth = detection
-                earth_confidence = detection.confidence
+            elif "red" in detection.label and detection.confidence > red_confidence:
+                red = detection
+                red_confidence = detection.confidence
 
             elif "bin" in detection.label:
                 bins.append(detection)
@@ -131,15 +131,15 @@ class CV:
             elif "lid" in detection.label:
                 lids.append(detection)
 
-        if "earth" in target:
-            target_bin = earth
+        if "red" in target:
+            target_bin = red
 
-        elif "abydos" in target:
-            target_bin = abydos
+        elif "blue" in target:
+            target_bin = blue
 
         approach = False
         if target_bin is None:
-            if earth is None and abydos is None:
+            if red is None and blue is None:
                 if len(bins) == 0:
                     return {"forward": 0.8}, frame
                 else:
@@ -147,10 +147,10 @@ class CV:
                     avg_center = np.mean([self.get_bbox_center(b) for b in bins], axis=0)
                     target_bin_center = (int(avg_center[0]), int(avg_center[1]))
                     approach = True
-            elif earth is None:
-                target_bin = abydos
-            elif abydos is None:
-                target_bin = earth
+            elif red is None:
+                target_bin = blue
+            elif blue is None:
+                target_bin = red
 
         if not approach:
             # remove the lids from the target bin
