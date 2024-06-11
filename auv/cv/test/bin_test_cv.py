@@ -135,6 +135,13 @@ if __name__ == "__main__":
     # This is the code that will be executed if you run this file directly
     # It is here for testing purposes
     # you can run this file independently using: "python -m auv.cv.template_cv"
+    video_root_path = "" # Computer path through the training data folder.
+    mission_name = "Ocean Temperatures/" # Mission folder
+    video_name = "" # Specified video
+    video_path = os.bin.join(video_root_path, mission_name, video_name)
+
+    # For testing
+    print(f"Video path: {video_path}")
     
     # Create a CV object with arguments
     cv = CV()
