@@ -29,7 +29,7 @@ class CV:
     # You can put detection functions to detect a specific object as needed. 
 
     def detect_hole(self, frame, detection, target):
-      pass
+        pass
 
     def run(self, raw_frame):
         """ Run the CV logic. Returns the motion commands and visualized frame. """
