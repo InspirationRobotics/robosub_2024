@@ -267,7 +267,8 @@ class oakCamera:
         Returns:
             modelPath (str): the path to the model
         """
-        root = os.path.normpath("/home/inspiration/auv/auv/device/cams/models/")
+        # root = os.path.normpath("/home/inspiration/auv/auv/device/cams/models/") -- For 2023 directory
+        root = os.path.normpath("/home/inspiration/RoboSub 2024/robosub_2024/auv/device/cams/models/")
 
         if modelName == "raw":
             modelPath = "raw"
