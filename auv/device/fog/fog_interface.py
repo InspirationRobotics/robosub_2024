@@ -6,8 +6,14 @@
 import sys
 import os
 
-list1 = os.path.realpath(__name__).split('/')
-list1.pop(-1)
+list1 = os.path.realpath(__file__).split('/')
+
+# integer in range should be number of directories
+# the file is "underneath" directory robosub_2024
+
+for i in range(4):
+    list1.pop(-1)
+
 path_var = '/'.join(list1)
 sys.path.append(path_var)
 
