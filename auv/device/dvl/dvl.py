@@ -337,3 +337,6 @@ print('yay it\'s working!!!')
 if __name__ == '__main__':
     # Make a new dvl instance
     dvl1 = DVL()
+    while True:
+        time.sleep(1)
+        print(dvl1.position)
