@@ -50,13 +50,9 @@ class CV:
         detected = False
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        lower_red_mask_1 = np.array([0, 120, 150])
-        upper_red_mask_1 = np.array([10, 255, 255])
-        lower_red_range_mask = cv2.inRange(hsv, lower_red_mask_1, upper_red_mask_1)
-
-        lower_red_mask_2 = np.array([170, 120, 150])
-        upper_red_mask_2 = np.array([180, 255, 255])
-        upper_red_range_mask = cv2.inRange(hsv, lower_red_mask_2, upper_red_mask_2)
+        lower_red_mask = np.array([0, 120, 150])
+        upper_red_mask = np.array([10, 255, 255])
+        red_range_mask = cv2.inRange(hsv, lower_red_mask, upper_red_mask_)
 
         mask = lower_red_range_mask + upper_red_range_mask
 
@@ -80,13 +76,9 @@ class CV:
         detected = false
         hsv = cv2.cvtColor(frame, cv2.COLOR_ )
 
-        lower_blue_mask_1 = np.array(p
-        upper_blue_mask_1 = np.array
-        lower_blue_range_mask = cv2.inRange(hsv, lower_blue_mask_1, lower_blue_mask_1)
-
-        lower_blue_mask_2 = np.array(p
-        upper_blue_mask_2 = np.array
-        upper_blue_range_mask = cv2.inRange(hsv, lower_blue_mask_2, lower_blue_mask_2)
+        lower_blue_mask = np.array(p
+        upper_blue_mask = np.array
+        blue_range_mask = cv2.inRange(hsv, lower_blue_mask, lower_blue_mask)
 
         # Find contours
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
