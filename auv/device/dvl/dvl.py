@@ -30,7 +30,9 @@ class DVL:
     def __init__(self, autostart=True, compass=False, test=False):
         self.test = test
         if not self.test:
-            self.dvlPort = deviceHelper.dataFromConfig("dvl")
+            # self.dvlPort = deviceHelper.dataFromConfig("dvl")
+            self.dvlPort = '/dev/ttyUSB0'
+            print(self.dvlPort)
             sub = deviceHelper.variables.get("sub")
             if sub == "onyx":
                 self.ser = serial.Serial(
@@ -98,6 +100,7 @@ class DVL:
         except:
             print("I threw an exception!")
             data = None
+        print(data)
         return data
 
     def read_onyx(self):
@@ -289,7 +292,7 @@ class DVL:
             return
 
         self.__running = True
-        self.__thread_vel = threading.Thread(target=self.update, daemon=False)
+        self.__thread_vel = threading.Thread(target=self.update, daemon=True)
         self.__thread_vel.start()
 
     def stop(self):
