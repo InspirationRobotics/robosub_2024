@@ -43,11 +43,63 @@ class CV:
 
         return ((x1 + x2) // 2, (y1 + y2) // 2)
 
-    def detect_blue:
-        pass
+    def detect_red(self, frame):
+        """
+        Uses HSV color space and masking to detect a red object.
+        """
+        detected = False
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    def detect_red:
-        pass
+        lower_red_mask_1 = np.array([0, 120, 150])
+        upper_red_mask_1 = np.array([10, 255, 255])
+        lower_red_range_mask = cv2.inRange(hsv, lower_red_mask_1, upper_red_mask_1)
+
+        lower_red_mask_2 = np.array([170, 120, 150])
+        upper_red_mask_2 = np.array([180, 255, 255])
+        upper_red_range_mask = cv2.inRange(hsv, lower_red_mask_2, upper_red_mask_2)
+
+        mask = lower_red_range_mask + upper_red_range_mask
+
+        # Find contours
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        if contours:
+            largest_contour = max(contours, key = cv2.contourArea)
+
+            if cv2.contourArea(largest_contour) > 0:
+                x, y, w, h = cv2.boundingRect(largest_contour)
+                detected = True
+                return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}
+        
+        return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}
+
+    def detect_blue(self, frame):
+        """
+        Uses HSV color space and masking to detect a blue object.
+        """
+        detected = false
+        hsv = cv2.cvtColor(frame, cv2.COLOR_ )
+
+        lower_blue_mask_1 = np.array(p
+        upper_blue_mask_1 = np.array
+        lower_blue_range_mask = cv2.inRange(hsv, lower_blue_mask_1, lower_blue_mask_1)
+
+        lower_blue_mask_2 = np.array(p
+        upper_blue_mask_2 = np.array
+        upper_blue_range_mask = cv2.inRange(hsv, lower_blue_mask_2, lower_blue_mask_2)
+
+        # Find contours
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        if contours:
+            largest_contour = max(contours, key = cv2.contourArea)
+
+            if cv2.contourArea(largest_contour) > 0:
+                x, y, w, h = cv2.boundingRect(largest_contour)
+                detected = True
+                return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}
+        
+        return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}
 
     def run(self, frame, target, oakd_data):
         """
