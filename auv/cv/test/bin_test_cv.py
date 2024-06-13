@@ -43,6 +43,12 @@ class CV:
 
         return ((x1 + x2) // 2, (y1 + y2) // 2)
 
+    def detect_blue:
+        pass
+
+    def detect_red:
+        pass
+
     def run(self, frame, target, oakd_data):
         """
         Run the CV script.
