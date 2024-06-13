@@ -28,6 +28,7 @@ else:
 
 def findFromId(ids):
     """Finding devices based on their IDs"""
+    print("Starting findFromId")
     bash = os.popen("bash /home/inspiration/auv/auv/utils/usbLink.sh").read() # Read usbLink.sh
     bashSplit = bash.split("\n") # Split output into lines at "\n"
     result = []
@@ -88,6 +89,7 @@ def findCam(ids):
 def dataFromConfig(name):
     """Obtain the configurations of a device based on the name of the device"""
     # Look at configs of Graey and Onyx for a full picture
+    print("starting datafromconfig")
     data = None
     usbID = None
     if name == "forwardOak":
@@ -117,7 +119,10 @@ def dataFromConfig(name):
     if data != None:
         return data
     if usbID == None:
+        print("id not found")
         return None  # id is not on sub so leave it
+    print(usbID)
+    print('hrar')
     return findFromId([usbID])
 
 
@@ -126,7 +131,8 @@ if __name__ == "__main__":
     When running the script directly, get the configuration of the device 
     using a command line argument that is the name of the device
     """
-    if len(sys.argv) > 1:
-        print(dataFromConfig(sys.argv[1]))
-    else:
-        print(dataFromConfig("pixhawk"))
+#    if len(sys.argv) > 1:
+#        print(dataFromConfig(sys.argv[1]))
+#    else:
+#        print(dataFromConfig("pixhawk"))
+    print(dataFromConfig("dvl"))
