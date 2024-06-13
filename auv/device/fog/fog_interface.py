@@ -1,22 +1,3 @@
-# sys and os stuff here is to add the root directory
-# to sys.path - this allows for imports to work properly
-# in VSCode. This may not work if dvl.py is imported
-# TODO: test the fix if dvl.py is imported
-
-import sys
-import os
-
-list1 = os.path.realpath(__file__).split('/')
-
-# integer in range should be number of directories
-# the file is "underneath" directory robosub_2024
-
-for i in range(4):
-    list1.pop(-1)
-
-path_var = '/'.join(list1)
-sys.path.append(path_var)
-
 import time
 import threading
 
