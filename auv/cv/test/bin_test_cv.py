@@ -52,9 +52,7 @@ class CV:
 
         lower_red_mask = np.array([0, 120, 150])
         upper_red_mask = np.array([10, 255, 255])
-        red_range_mask = cv2.inRange(hsv, lower_red_mask, upper_red_mask_)
-
-        mask = lower_red_range_mask + upper_red_range_mask
+        mask = cv2.inRange(hsv, lower_red_mask, upper_red_mask)
 
         # Find contours
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -76,9 +74,9 @@ class CV:
         detected = false
         hsv = cv2.cvtColor(frame, cv2.COLOR_ )
 
-        lower_blue_mask = np.array(p
-        upper_blue_mask = np.array
-        blue_range_mask = cv2.inRange(hsv, lower_blue_mask, lower_blue_mask)
+        lower_blue_mask = np.array([130, 190, 200])
+        upper_blue_mask = np.array([140, 255, 255])
+        mask = cv2.inRange(hsv, lower_blue_mask, upper_blue_mask)
 
         # Find contours
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
