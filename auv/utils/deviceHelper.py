@@ -112,6 +112,8 @@ def dataFromConfig(name):
         usbID = variables.get("polulu_port")
     elif name == "teensy":
         usbID = variables.get("teensy_port")
+    elif name == "fog":
+        usbID = variables.get("fog_port")
     else:
         data = variables.get(name)
         if data == None:

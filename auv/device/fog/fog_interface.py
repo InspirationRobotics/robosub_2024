@@ -4,8 +4,13 @@ import threading
 # use module pyserial (not serial)
 
 import serial
+from ...utils import deviceHelper
 
 
+# Requires FOG USB to be connected to 
+# lower-right USB port on Jetson to work
+
+fog_port = deviceHelper.dataFromConfig("fog")
 
 class FOG:
 
