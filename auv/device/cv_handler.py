@@ -446,7 +446,8 @@ if __name__ == "__main__":
 
     cv = CVHandler()
     rospy.init_node("test")
-    cv.start_cv(file_name, dummy_callback)
+    try:
+        cv.start_cv(file_name, dummy_callback)
     #try:
          # Generic module file path: auv.cv.file_name
          #module = importlib.import_module(f"auv.cv.{file_name}")
@@ -457,4 +458,8 @@ if __name__ == "__main__":
     #cv_class = getattr(module, "CV", None)
     #if cv_class is None:
         # print("[ERROR] [cv_handler] No CV class found in file, check the file name and file content")
+
+    except KeyboardInterrupt:
+        cv.stop_cv(file_name)
+        pass
         
