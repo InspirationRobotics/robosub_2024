@@ -219,7 +219,7 @@ class FOG:
         print("FOG serial port closed.")
 
 if __name__ == "__main__":
-    fog = FOG()
+    fog = FOG(fog_port)
     fog.calibrate()
 
     # --------- Calibration metrics for 60 seconds ------------
