@@ -58,6 +58,8 @@ class CV:
         lateral = 0
         yaw = 0
         end = 0
+
+        print(f"{forward} {lateral} {yaw} {end}")
         # targetDetection = None
         # targetDetected = False
         # step = 0
@@ -99,31 +101,35 @@ class CV:
 
 
 if __name__ == "__main__":
-    # This is the code that will be executed if you run this file directly.
-    # It is here for testing purposes.
-    # You can run this file independently using: "python -m auv.cv.template_cv".
-
-    # Create a CV object with arguments
     cv = CV()
+    data, frame = cv.run(None, None, None)
+    print(data)
 
-    # Here you can initialize your camera, etc.
+    # # This is the code that will be executed if you run this file directly.
+    # # It is here for testing purposes.
+    # # You can run this file independently using: "python -m auv.cv.template_cv".
 
-    # Capture the video object for processing
-    cap = cv2.VideoCapture(0)
+    # # Create a CV object with arguments
+    # cv = CV()
 
-    while True:
-        # Grab and read a frame from the video object.
-        ret, frame = cap.read()
-        if not ret:
-            break
+    # # Here you can initialize your camera, etc.
 
-        # Run the CV script.
-        result = cv.run(frame, "some_info", None)
+    # # Capture the video object for processing
+    # cap = cv2.VideoCapture(0)
 
-        # Do something with the result. 
-        print(f"[INFO] {result}")
+    # while True:
+    #     # Grab and read a frame from the video object.
+    #     ret, frame = cap.read()
+    #     if not ret:
+    #         break
 
-        # Debug the visualized frame.
-        cv2.imshow("frame", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+    #     # Run the CV script.
+    #     result = cv.run(frame, "some_info", None)
+
+    #     # Do something with the result. 
+    #     print(f"[INFO] {result}")
+
+    #     # Debug the visualized frame.
+    #     cv2.imshow("frame", frame)
+    #     if cv2.waitKey(1) & 0xFF == ord("q"):
+    #         break
