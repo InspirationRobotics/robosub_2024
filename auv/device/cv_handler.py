@@ -445,6 +445,7 @@ if __name__ == "__main__":
     file_name = "gate_cv"
 
     cv = CVHandler()
+    rospy.init_node("test")
     cv.start_cv(file_name, dummy_callback)
     # try:
     #     # Generic module file path: auv.cv.file_name
