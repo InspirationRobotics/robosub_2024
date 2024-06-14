@@ -445,4 +445,15 @@ if __name__ == "__main__":
     file_name = "gate_cv"
 
     cv = CVHandler()
-    cv.start_cv(file_name, dummy_callback)
+    # cv.start_cv(file_name, dummy_callback)
+    try:
+        # Generic module file path: auv.cv.file_name
+        module = importlib.import_module(f"auv.cv.{file_name}")
+    except Exception as e:
+        print("[ERROR] [cv_handler] Error while importing CV module from file name")
+        print(f"[ERROR] {e}")
+
+    cv_class = getattr(module, "CV", None)
+    if cv_class is None:
+        print("[ERROR] [cv_handler] No CV class found in file, check the file name and file content")
+        
