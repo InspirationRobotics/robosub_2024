@@ -123,8 +123,6 @@ def dataFromConfig(name):
     if usbID == None:
         print("id not found")
         return None  # id is not on sub so leave it
-    print(usbID)
-    print('hrar')
     return findFromId([usbID])
 
 
