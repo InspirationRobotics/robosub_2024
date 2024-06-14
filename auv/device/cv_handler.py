@@ -442,7 +442,7 @@ if __name__ == "__main__":
     def dummy_callback(msg):
         print(f"[INFO] received: {msg.data}")
 
-    file_name = "buoy_cv"
+    file_name = "gate_cv"
 
     cv = CVHandler()
     cv.start_cv(file_name, dummy_callback)
