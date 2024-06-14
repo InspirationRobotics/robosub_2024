@@ -459,7 +459,7 @@ if __name__ == "__main__":
     #if cv_class is None:
         # print("[ERROR] [cv_handler] No CV class found in file, check the file name and file content")
 
-    except KeyboardInterrupt:
+    except rospy.KeyboardInterrupt:
         cv.stop_cv(file_name)
         pass
         
