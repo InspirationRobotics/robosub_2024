@@ -11,59 +11,29 @@ class CV:
     """
   
     camera = "/auv/camera/videoOAKdRawBottom"
-    model = "bins3"
+    model = "bin"
     
     def __init__(self, **config):
-        """Initialize CV class"""
-      
+        # Config is a way of passing in an argument to indicate to the logic what actions to take. Take a look at 
+        # buoy_test_cv.py for an example.
+        self.shape = (640, 480)
+
+        # Switcher variables which can be used as needed to switch states.
+        self.aligned = False
+        self.detected = False
+
+        self.config = config 
+        self.step = 0 # Step counter variable.
+
+        self.end = False # End variable to denote when the mission has finished.
+
+        print("[INFO] Bin CV Init")
+        
+        # Add variables as needed below.
         self.viz_frame = None
         self.error_buffer = []
       
         print("[INFO] Bin CV Init")
-
-    def mask_out_lids(self, target, lids):
-        """
-        target: the target bin
-        lids: the list of lids
-        returns a new target bin with the lids masked out
-        """
-
-        if len(lids) == 0:
-            return target, self.get_bbox_center(target)
-
-        x1, x2, y1, y2 = target.xmin, target.xmax, target.ymin, target.ymax
-        geom_target = shapely.geometry.box(x1, y1, x2, y2)
-
-        for lid in lids:
-            x1, x2, y1, y2 = lid.xmin - 100, lid.xmax + 100, lid.ymin, lid.ymax
-            geom_lid = shapely.geometry.box(x1, y1, x2, y2)
-            geom_target = geom_target.difference(geom_lid)
-
-        # if there are multiple polygons, pick the largest one
-        if geom_target.geom_type == "MultiPolygon":
-            geom_target = max(geom_target, key=lambda x: x.area)
-
-        # if there is a hole in the Polygon, split it into two
-        if geom_target.geom_type == "Polygon" and geom_target.interiors:
-            x1, x2, y1, y2 = geom_target.interiors[0].bounds
-            split_line = shapely.geometry.LineString([(0, (y1 + y2) / 2), (640, (y1 + y2) / 2)])
-
-            # split the polygon with the line
-            splitted = shapely.ops.split(geom_target, split_line)
-
-            # pick the largest polygon
-            geom_target = max(splitted, key=lambda x: x.area)
-
-        x1, y1, x2, y2 = geom_target.bounds
-        target.xmin = x1
-        target.ymin = y1
-        target.xmax = x2
-        target.ymax = y2
-
-        # get the centroid
-        centroid = geom_target.centroid
-        target_center = (int(centroid.x), int(centroid.y))
-        return target, target_center
 
     def get_bbox_center(self, detection):
         x1 = int(detection.xmin)
@@ -72,6 +42,54 @@ class CV:
         y2 = int(detection.ymax)
 
         return ((x1 + x2) // 2, (y1 + y2) // 2)
+
+    def detect_red(self, frame):
+        """
+        Uses HSV color space and masking to detect a red object.
+        """
+        detected = False
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+        lower_red_mask = np.array([0, 120, 150])
+        upper_red_mask = np.array([10, 255, 255])
+        mask = cv2.inRange(hsv, lower_red_mask, upper_red_mask)
+
+        # Find contours
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        if contours:
+            largest_contour = max(contours, key = cv2.contourArea)
+
+            if cv2.contourArea(largest_contour) > 0:
+                x, y, w, h = cv2.boundingRect(largest_contour)
+                detected = True
+                return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}
+        
+        return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}
+
+    def detect_blue(self, frame):
+        """
+        Uses HSV color space and masking to detect a blue object.
+        """
+        detected = false
+        hsv = cv2.cvtColor(frame, cv2.COLOR_ )
+
+        lower_blue_mask = np.array([130, 190, 200])
+        upper_blue_mask = np.array([140, 255, 255])
+        mask = cv2.inRange(hsv, lower_blue_mask, upper_blue_mask)
+
+        # Find contours
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        if contours:
+            largest_contour = max(contours, key = cv2.contourArea)
+
+            if cv2.contourArea(largest_contour) > 0:
+                x, y, w, h = cv2.boundingRect(largest_contour)
+                detected = True
+                return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}
+        
+        return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}
 
     def run(self, frame, target, oakd_data):
         """
@@ -91,19 +109,19 @@ class CV:
 
         forward = 0
         lateral = 0
-        aligned = False
+        yaw = 0
 
         height, width, _ = frame.shape
 
         tolerance = 0.1
         maxConfidence = 0
-        target_bin = None
-        earth = None
-        abydos = None
-        earth_confidence = 0
-        abydos_confidence = 0
-        bins = []
-        lids = []
+        target_color = None
+        red = None
+        blue = None
+        red_confidence = 0
+        blue_confidence = 0
+        bin = []
+        colors = []
 
         # measured offset from the footage
         target_pixel = (190, 300)
@@ -117,58 +135,48 @@ class CV:
             y1 = int(detection.ymin)
             y2 = int(detection.ymax)
 
-            if "abydos" in detection.label and detection.confidence > abydos_confidence:
-                abydos = detection
-                abydos_confidence = detection.confidence
+            if "blue" in detection.label and detection.confidence > blue_confidence:
+                blue = detection
+                blue_confidence = detection.confidence
 
-            elif "earth" in detection.label and detection.confidence > earth_confidence:
-                earth = detection
-                earth_confidence = detection.confidence
+            elif "red" in detection.label and detection.confidence > red_confidence:
+                red = detection
+                red_confidence = detection.confidence
 
-            elif "bin" in detection.label:
-                bins.append(detection)
+        if "red" in target:
+            target_color = red
 
-            elif "lid" in detection.label:
-                lids.append(detection)
-
-        if "earth" in target:
-            target_bin = earth
-
-        elif "abydos" in target:
-            target_bin = abydos
+        elif "blue" in target:
+            target_color = blue
 
         approach = False
-        if target_bin is None:
-            if earth is None and abydos is None:
-                if len(bins) == 0:
+        if target_color is None:
+            if red is None and blue is None:
+                if len(bin) == 0:
                     return {"forward": 0.8}, frame
                 else:
-                    # average the positions of the bins
-                    avg_center = np.mean([self.get_bbox_center(b) for b in bins], axis=0)
-                    target_bin_center = (int(avg_center[0]), int(avg_center[1]))
+                    # average the positions of the bin
+                    avg_center = np.mean([self.get_bbox_center(b) for b in bin], axis=0)
+                    target_color_center = (int(avg_center[0]), int(avg_center[1]))
                     approach = True
-            elif earth is None:
-                target_bin = abydos
-            elif abydos is None:
-                target_bin = earth
+            elif red is None:
+                target_color = blue
+            elif blue is None:
+                target_color = red
 
         if not approach:
-            # remove the lids from the target bin
-            target_bin, target_bin_center = self.mask_out_lids(target_bin, lids)
+            pass
 
         cv2.rectangle(
             frame,
-            (int(target_bin.xmin), int(target_bin.ymin)),
-            (int(target_bin.xmax), int(target_bin.ymax)),
+            (int(target_color.xmin), int(target_color.ymin)),
+            (int(target_color.xmax), int(target_color.ymax)),
             (255, 0, 0),
             2,
         )
 
-        cv2.circle(frame, target_pixel, 10, (0, 255, 0), -1)
-        cv2.circle(frame, target_bin_center, 10, (0, 0, 255), -1)
-
-        x_error = (target_bin_center[0] - target_pixel[0]) / width
-        y_error = (target_pixel[1] - target_bin_center[1]) / height
+        x_error = (target_color_center[0] - target_pixel[0]) / width
+        y_error = (target_pixel[1] - target_color_center[1]) / height
 
         # apply a gain and clip the values
         lateral = np.clip(x_error * 3.5, -1, 1)
@@ -182,33 +190,53 @@ class CV:
         if avg_error < tolerance and len(self.error_buffer) == 30:
             aligned = True
 
-        # TODO (low priority): Remove Lids for each bin
+        # TODO (low priority): Remove colors for each bin
         return {"lateral": lateral, "forward": forward, "aligned": aligned}, frame
 
+# This if statement is just saying what to do if this script is run directly. 
 if __name__ == "__main__":
-    # This is the code that will be executed if you run this file directly
-    # It is here for testing purposes
-    # you can run this file independently using: "python -m auv.cv.template_cv"
+    # Example of how to obtain a training video. Make sure to follow this template when capturing your own video, in case 
+    # another team member needs to run this code on his/her device. 
     
-    # Create a CV object with arguments
-    cv = CV()
-    
-    # here you can for example initialize your camera, etc
-    cap = cv2.VideoCapture("../../testing_data/")
+    # NOTE: When downloading the training data, the training data folder itself, which contains all of the data.
+    video_root_path = ""/RoboSub 2024/Training Data"" # Computer path through the training data folder.
+    mission_name = "/" # Mission folder
+    video_name = "" # Specified video
+    video_path = os.path.join(video_root_path, mission_name, video_name)
 
-    while True:
-        # grab a frame
-        ret, frame = cap.read()
-        if not ret:
-            break
+    # For testing
+    print(f"Video path: {video_path}")
 
-        # run the cv
-        result = cv.run(frame, "some_info", None)
-    
-        # do something with the result
-        print(f"[INFO] {result}")
-    
-        # debug the frame
-        cv2.imshow("frame", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+    # Initialize an instance of the class.
+    cv = CV("Blue")
+
+    # Verify the path exists.
+    if not os.path.exists(video_path):
+        print(f"[ERROR] Video file not found {video_path}")
+    else:
+        # Capture the video object (basically access the specified video) at the specified path.
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            print(f"[ERROR] Unable to open video file: {video_path}")
+        else:
+            while True:
+                # Access each frame of the video.
+                ret, frame = cap.read()
+                if not ret:
+                    print("[INFO] End of file.")
+                    break
+
+                # Run the run function on the frame, and get back the relevant results.
+                motion_values, viz_frame = cv.run(frame)
+                if viz_frame is not None:
+                    cv2.imshow("frame", viz_frame)
+                else:
+                    print("[ERROR] Unable to display frame.")
+
+                # For testing purposes.
+                print(f"Motion: {motion_values}")
+                
+                time.sleep(0.05)
+
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break

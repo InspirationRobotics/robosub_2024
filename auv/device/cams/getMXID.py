@@ -24,3 +24,5 @@ with dai.Device(dai.Pipeline(), infos[0], usb2Mode=False) as device:
     calib = device.readCalibration()
     eeprom = calib.getEepromData()
     print(f"Product name: {eeprom.productName}, board name {eeprom.boardName}")
+
+# New OAK-D Wide for Onyx Bottom: 19443010C1111F1300
