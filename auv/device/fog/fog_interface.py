@@ -88,7 +88,7 @@ class FOG:
         self.reset_params()
         self.start_read(self._cal_fog_angle_data)
         time.sleep(self.cal_time)
-        self.bias = self.cal_sum/self.cal_count
+        self.bias = self.cal_sum/(self.cal_count + 0.00001)
         self.stop_read()
         print(f"Calibration complete. Bias: {self.bias}")
 
@@ -219,7 +219,7 @@ class FOG:
         print("FOG serial port closed.")
 
 if __name__ == "__main__":
-    fog = FOG()
+    fog = FOG(fog_port)
     fog.calibrate()
 
     # --------- Calibration metrics for 60 seconds ------------

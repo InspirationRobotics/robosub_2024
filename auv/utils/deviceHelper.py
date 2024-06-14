@@ -19,7 +19,7 @@ file_dir = os.path.dirname(os.path.abspath(__file__)) # Obtain the file director
 
 # If "nx" is in the platform node name, Onyx is the sub, else Graey (Onyx runs on an Nvidia NX)
 # Load the configuration of Onyx/Graey
-if "nx" in platform.node():
+if "jetson-desktop" in platform.node():
     onyx = True 
     variables = load_json(f"{file_dir}/../../config/onyx.json")
 else:
@@ -123,8 +123,6 @@ def dataFromConfig(name):
     if usbID == None:
         print("id not found")
         return None  # id is not on sub so leave it
-    print(usbID)
-    print('hrar')
     return findFromId([usbID])
 
 
