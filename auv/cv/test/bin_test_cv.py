@@ -3,7 +3,8 @@
 import time
 import cv2
 import numpy as np
-import shapely
+
+import os
 
 class CV: 
     """
@@ -13,7 +14,7 @@ class CV:
     camera = "/auv/camera/videoOAKdRawBottom"
     model = "bin"
     
-    def __init__(self, **config):
+    def __init__(self, config):
         # Config is a way of passing in an argument to indicate to the logic what actions to take. Take a look at 
         # buoy_test_cv.py for an example.
         self.shape = (640, 480)
@@ -71,7 +72,7 @@ class CV:
         """
         Uses HSV color space and masking to detect a blue object.
         """
-        detected = false
+        detected = False
         hsv = cv2.cvtColor(frame, cv2.COLOR_ )
 
         lower_blue_mask = np.array([130, 190, 200])
@@ -90,11 +91,12 @@ class CV:
                 return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}
         
         return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}
-
+    
     def run(self, frame, target, oakd_data):
         """
         Run the CV script.
 
+        
         Args:
             frame: The frame from the camera stream
             target: This can be any type of information, for example, the object to look for
@@ -193,15 +195,16 @@ class CV:
         # TODO (low priority): Remove colors for each bin
         return {"lateral": lateral, "forward": forward, "aligned": aligned}, frame
 
+    
 # This if statement is just saying what to do if this script is run directly. 
 if __name__ == "__main__":
     # Example of how to obtain a training video. Make sure to follow this template when capturing your own video, in case 
     # another team member needs to run this code on his/her device. 
     
     # NOTE: When downloading the training data, the training data folder itself, which contains all of the data.
-    video_root_path = ""/RoboSub 2024/Training Data"" # Computer path through the training data folder.
-    mission_name = "/" # Mission folder
-    video_name = "" # Specified video
+    video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/" # Computer path through the training data folder.
+    mission_name = "Bins/" # Mission folder
+    video_name = "Bins Video 3.mp4" # Specified video
     video_path = os.path.join(video_root_path, mission_name, video_name)
 
     # For testing
