@@ -202,7 +202,7 @@ if __name__ == "__main__":
     # another team member needs to run this code on his/her device. 
     
     # NOTE: When downloading the training data, the training data folder itself, which contains all of the data.
-    video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/" # Computer path through the training data folder.
+    video_root_path = "/home/Brandon - Personal/Desktop/Training Data/" # Computer path through the training data folder.
     mission_name = "Bins/" # Mission folder
     video_name = "Bins Video 3.mp4" # Specified video
     video_path = os.path.join(video_root_path, mission_name, video_name)
