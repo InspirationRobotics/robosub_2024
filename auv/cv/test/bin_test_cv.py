@@ -44,6 +44,7 @@ class CV:
 
         return ((x1 + x2) // 2, (y1 + y2) // 2)
 
+
     def detect_red(self, frame):
         """
         Uses HSV color space and masking to detect a red object.
@@ -51,32 +52,42 @@ class CV:
         detected = False
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        lower_red_mask = np.array([0, 120, 150])
-        upper_red_mask = np.array([10, 255, 255])
-        mask = cv2.inRange(hsv, lower_red_mask, upper_red_mask)
+        # Define range for red color in HSV
+        lower_red_mask1 = np.array([0, 120, 70])
+        upper_red_mask1 = np.array([10, 255, 255])
+        lower_red_mask2 = np.array([170, 120, 70])
+        upper_red_mask2 = np.array([180, 255, 255])
+
+        # Create masks for the red ranges
+        mask1 = cv2.inRange(hsv, lower_red_mask1, upper_red_mask1)
+        mask2 = cv2.inRange(hsv, lower_red_mask2, upper_red_mask2)
+
+        # Combine masks
+        mask = mask1 + mask2
 
         # Find contours
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         if contours:
-            largest_contour = max(contours, key = cv2.contourArea)
+            largest_contour = max(contours, key=cv2.contourArea)
 
             if cv2.contourArea(largest_contour) > 0:
                 x, y, w, h = cv2.boundingRect(largest_contour)
                 detected = True
-                return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}
-        
-        return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}
+                return {"status": detected, "xmin": x, "xmax": x + w, "ymin": y, "ymax": y + h}
+
+        return {"status": detected, "xmin": None, "xmax": None, "ymin": None, "ymax": None}
+
 
     def detect_blue(self, frame):
         """
         Uses HSV color space and masking to detect a blue object.
         """
         detected = False
-        hsv = cv2.cvtColor(frame, cv2.COLOR_ )
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        lower_blue_mask = np.array([130, 190, 200])
-        upper_blue_mask = np.array([140, 255, 255])
+        lower_blue_mask = np.array([100, 50, 50])
+        upper_blue_mask = np.array([130, 255, 255])        
         mask = cv2.inRange(hsv, lower_blue_mask, upper_blue_mask)
 
         # Find contours
@@ -92,23 +103,7 @@ class CV:
         
         return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}
     
-    def run(self, frame, target, oakd_data):
-        """
-        Run the CV script.
-
-        
-        Args:
-            frame: The frame from the camera stream
-            target: This can be any type of information, for example, the object to look for
-            detections: This only applies to OAK-D cameras; this is the list of detections from the ML model output
-
-        Here should be all the code required to run the CV.
-        This could be a loop, grabbing frames using ROS, etc.
-
-        Returns:
-            dictionary, visualized frame: {motion commands/flags for servos and other indication flags}, visualized frame
-        """
-
+    def run(self, raw_frame):
         forward = 0
         lateral = 0
         yaw = 0
@@ -122,79 +117,25 @@ class CV:
         blue = None
         red_confidence = 0
         blue_confidence = 0
-        bin = []
-        colors = []
 
-        # measured offset from the footage
-        target_pixel = (190, 300)
+        blue_info = self.detect_blue(raw_frame)
+        red_info = self.detect_red(raw_frame)
 
-        if len(oakd_data) == 0:
-            return {"forward": 0.8}, frame
+        if blue_info.get('status') == True:
+            blue_xmin = blue_info.get('xmin')
+            blue_xmax = blue_info.get('xmax')
+            blue_ymin = blue_info.get('ymin')
+            blue_ymax = blue_info.get('ymax')
+            cv2.rectangle(raw_frame, (blue_xmin, blue_ymin), (blue_xmax, blue_ymax), (255, 0, 0), 2)
 
-        for detection in oakd_data:
-            x1 = int(detection.xmin)
-            x2 = int(detection.xmax)
-            y1 = int(detection.ymin)
-            y2 = int(detection.ymax)
+        if red_info.get('status') == True:
+            red_xmin = red_info.get('xmin')
+            red_xmax = red_info.get('xmax')
+            red_ymin = red_info.get('ymin')
+            red_ymax = red_info.get('ymax')
+            cv2.rectangle(raw_frame, (red_xmin, red_ymin), (red_xmax, red_ymax), (0, 0, 255), 2)
 
-            if "blue" in detection.label and detection.confidence > blue_confidence:
-                blue = detection
-                blue_confidence = detection.confidence
-
-            elif "red" in detection.label and detection.confidence > red_confidence:
-                red = detection
-                red_confidence = detection.confidence
-
-        if "red" in target:
-            target_color = red
-
-        elif "blue" in target:
-            target_color = blue
-
-        approach = False
-        if target_color is None:
-            if red is None and blue is None:
-                if len(bin) == 0:
-                    return {"forward": 0.8}, frame
-                else:
-                    # average the positions of the bin
-                    avg_center = np.mean([self.get_bbox_center(b) for b in bin], axis=0)
-                    target_color_center = (int(avg_center[0]), int(avg_center[1]))
-                    approach = True
-            elif red is None:
-                target_color = blue
-            elif blue is None:
-                target_color = red
-
-        if not approach:
-            pass
-
-        cv2.rectangle(
-            frame,
-            (int(target_color.xmin), int(target_color.ymin)),
-            (int(target_color.xmax), int(target_color.ymax)),
-            (255, 0, 0),
-            2,
-        )
-
-        x_error = (target_color_center[0] - target_pixel[0]) / width
-        y_error = (target_pixel[1] - target_color_center[1]) / height
-
-        # apply a gain and clip the values
-        lateral = np.clip(x_error * 3.5, -1, 1)
-        forward = np.clip(y_error * 3.5, -1, 1)
-
-        if len(self.error_buffer) > 30:
-            self.error_buffer.pop(0)
-        self.error_buffer.append((x_error + y_error) / 2)
-        avg_error = np.mean(np.linalg.norm(self.error_buffer, axis=1))
-
-        if avg_error < tolerance and len(self.error_buffer) == 30:
-            aligned = True
-
-        # TODO (low priority): Remove colors for each bin
-        return {"lateral": lateral, "forward": forward, "aligned": aligned}, frame
-
+        return raw_frame
     
 # This if statement is just saying what to do if this script is run directly. 
 if __name__ == "__main__":
@@ -202,8 +143,8 @@ if __name__ == "__main__":
     # another team member needs to run this code on his/her device. 
     
     # NOTE: When downloading the training data, the training data folder itself, which contains all of the data.
-    video_root_path = "/home/Brandon - Personal/Desktop/Training Data/" # Computer path through the training data folder.
-    mission_name = "Bins/" # Mission folder
+    video_root_path = "C:/Users/brand/OneDrive/Desktop/Training Data/" # Computer path through the training data folder.
+    mission_name = "Bins/"
     video_name = "Bins Video 3.mp4" # Specified video
     video_path = os.path.join(video_root_path, mission_name, video_name)
 
@@ -230,14 +171,14 @@ if __name__ == "__main__":
                     break
 
                 # Run the run function on the frame, and get back the relevant results.
-                motion_values, viz_frame = cv.run(frame)
+                viz_frame = cv.run(frame)
                 if viz_frame is not None:
                     cv2.imshow("frame", viz_frame)
                 else:
                     print("[ERROR] Unable to display frame.")
 
                 # For testing purposes.
-                print(f"Motion: {motion_values}")
+                # print(f"Motion: {motion_values}")
                 
                 time.sleep(0.05)
 
