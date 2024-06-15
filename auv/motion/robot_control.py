@@ -52,7 +52,7 @@ class RobotControl:
 
         fog_enable = True
 
-        if fog_enable = True:
+        if fog_enable == True:
             self.fog = fog.FOG()
             self.fog.calibrate()
             self.fog.start_read()
