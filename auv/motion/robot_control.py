@@ -19,6 +19,7 @@ from simple_pid import PID
 from .utils import get_distance, get_heading_from_coords, heading_error, rotate_vector, inv_rotate_vector
 from ..utils import deviceHelper # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
 from ..device.dvl import dvl # DVL class that enables position estimation
+from ..device.fog import fog_interface
 import math
 import numpy as np
 
@@ -48,6 +49,13 @@ class RobotControl:
         #     self.dvl.start()
         # else:
         self.dvl = None
+
+        fog_enable = True
+
+        if fog_enable = True:
+            self.fog = fog.FOG()
+            self.fog.calibrate()
+            self.fog.start_read()
 
         # Establish thruster and depth publishers
         self.sub_compass = rospy.Subscriber("/auv/devices/compass", Float64, self.get_callback_compass())
@@ -617,3 +625,6 @@ class RobotControl:
             time = (inches - 3.4) / 7.8
         # Move forward for the specified time and at the specified power
         self.forwardUni(power, time)
+
+    def rotate_degrees(self, rotation):
+        pass
