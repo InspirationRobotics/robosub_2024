@@ -627,4 +627,32 @@ class RobotControl:
         self.forwardUni(power, time)
 
     def rotate_degrees(self, rotation):
-        pass
+        """Yaw to relative position with assistance from FOG,
+        absolute value of rotation at most 180 degrees"""
+        
+        curr_deg = False
+        while not curr_deg:
+            if "angle_deg" in self.fog.parsed_data: 
+                curr_deg = self.fog.parsed_data["angle_deg"]
+                target = curr_deg + rotation
+            else:
+                print("[WARN] FOG is not ready")
+
+        while not rospy.is_shutdown(): # could be while True, but here we go:
+            curr_deg = self.fog.parsed_data["angle_deg"]
+            error = heading_error(curr_deg, target)
+        
+            # normalized error ideally b/w -1 and 1
+            output = self.PIDs["yaw"](-error / 180) # verify negative error
+
+            print(f"[DEBUG] Heading error: {error}, output: {output} {self.compass} {target}")
+
+            if abs(error) <= 1:
+                print("[INFO] Heading reached")
+                break
+        
+            self.movement(yaw=output)
+            time.sleep(0.1)
+
+        print(f"[INFO] Finished setting heading to {target}")
+        
