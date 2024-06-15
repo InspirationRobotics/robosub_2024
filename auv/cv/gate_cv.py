@@ -21,7 +21,7 @@ class CV:
     """
 
     # Camera to get the camera stream from.
-    camera = "/auv/camera/videoUSBRaw1" 
+    camera = "/auv/camera/videoOAKdRawForward" 
     model = "gate"
 
     def __init__(self, **config):
