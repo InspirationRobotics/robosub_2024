@@ -19,7 +19,7 @@ from simple_pid import PID
 from .utils import get_distance, get_heading_from_coords, heading_error, rotate_vector, inv_rotate_vector
 from ..utils import deviceHelper # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
 from ..device.dvl import dvl # DVL class that enables position estimation
-from ..device.fog import fog_interface
+from ..device.fog import fog_interface as fog
 import math
 import numpy as np
 
