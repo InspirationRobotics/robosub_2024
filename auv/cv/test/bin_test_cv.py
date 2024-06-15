@@ -44,7 +44,6 @@ class CV:
 
         return ((x1 + x2) // 2, (y1 + y2) // 2)
 
-
     def detect_red(self, frame):
         """
         Uses HSV color space and masking to detect a red object.
@@ -120,6 +119,12 @@ class CV:
 
         blue_info = self.detect_blue(raw_frame)
         red_info = self.detect_red(raw_frame)
+        
+        blue_rectangle = cv2.rectangle(raw_frame, (blue_xmin, blue_ymin), (blue_xmax, blue_ymax), (255, 0, 0), 2)
+        red_rectangle = cv2.rectangle(raw_frame, (red_xmin, red_ymin), (red_xmax, red_ymax), (0, 0, 255), 2)
+        
+        blue_midpoint = self.get_bbox_center(blue_rectangle)
+        red_midpoint = self.get_bbox_center(red_rectangle)
 
         if blue_info.get('status') == True:
             blue_xmin = blue_info.get('xmin')
@@ -127,6 +132,8 @@ class CV:
             blue_ymin = blue_info.get('ymin')
             blue_ymax = blue_info.get('ymax')
             cv2.rectangle(raw_frame, (blue_xmin, blue_ymin), (blue_xmax, blue_ymax), (255, 0, 0), 2)
+            return blue_midpoint
+            
 
         if red_info.get('status') == True:
             red_xmin = red_info.get('xmin')
@@ -134,6 +141,7 @@ class CV:
             red_ymin = red_info.get('ymin')
             red_ymax = red_info.get('ymax')
             cv2.rectangle(raw_frame, (red_xmin, red_ymin), (red_xmax, red_ymax), (0, 0, 255), 2)
+            return red_midpoint
 
         return raw_frame
     
