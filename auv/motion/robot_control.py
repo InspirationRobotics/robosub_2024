@@ -628,7 +628,10 @@ class RobotControl:
 
     def rotate_degrees(self, rotation):
         """Yaw to relative position with assistance from FOG,
-        absolute value of rotation at most 180 degrees"""
+        absolute value of rotation at most 180 degrees
+        
+        Args:
+            rotation (int): Relative desired heading (deg)"""
         
         curr_deg = False
         while not curr_deg:
@@ -637,6 +640,7 @@ class RobotControl:
                 target = curr_deg + rotation
             else:
                 print("[WARN] FOG is not ready")
+                time.sleep(0.1)
 
         while not rospy.is_shutdown(): # could be while True, but here we go:
             curr_deg = self.fog.parsed_data["angle_deg"]
