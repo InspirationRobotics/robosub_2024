@@ -18,8 +18,7 @@ class oakIMU:
 
         self.heading = 0 # Relative heading from start in degrees
 
-    def get_raw_data(self, get_accelerometer):
-        # Create pipeline
+         # Create pipeline
         pipeline = dai.Pipeline()
 
         # Define sources and outputs
@@ -57,50 +56,53 @@ class oakIMU:
 
                 imuPackets = imuData.packets
                 for imuPacket in imuPackets:
-                    acceleroValues = imuPacket.acceleroMeter
-                    gyroValues = imuPacket.gyroscope
+                    self.acceleroValues = imuPacket.acceleroMeter
+                    self.gyroValues = imuPacket.gyroscope
 
                     acceleroTs = acceleroValues.getTimestampDevice()
                     gyroTs = gyroValues.getTimestampDevice()
                     if baseTs is None:
                         baseTs = acceleroTs if acceleroTs < gyroTs else gyroTs
-                    acceleroTs = timeDeltaToMilliS(acceleroTs - baseTs)
-                    gyroTs = timeDeltaToMilliS(gyroTs - baseTs)
+                    self.acceleroTs = timeDeltaToMilliS(acceleroTs - baseTs)
+                    self.gyroTs = timeDeltaToMilliS(gyroTs - baseTs)
 
                     imuF = "{:.06f}"
                     tsF  = "{:.03f}"
 
-                    accelerometer_dict = {}
-                    gyroscope_dict = []
 
-                    if get_accelerometer == True:
-                        accelerometer_dict = {
-                            "Accelerometer timestamp in ms" : tsF.format(acceleroTs), 
-                            "Accelerometer [m/s^2] x-axis" : imuF.format(acceleroValues.x),
-                            "Accelerometer [m/s^2] y-axis" : imuF.format(acceleroValues.y),
-                            "Accelerometer [m/s^2] z-axis" : imuF.format(acceleroValues.z)
-                        }
-                        
-                        gyroscope_dict = {
-                            "Gyroscope timestamp in ms" : tsF.format(gyroTs),
-                            "Gyroscope [rad/s] x-axis" : imuF.format(gyroValues.x), # Most of interest to us
-                            "Gyroscope [rad/s] y-axis" : imuF.format(gyroValues.y),
-                            "Gyroscope [rad/s] z-axis" : imuF.format(gyroValues.z)
-                        }
+    def get_raw_data(self, get_accelerometer):
+            accelerometer_dict = {}
+            gyroscope_dict = {}
 
-                        return accelerometer_dict, gyroscope_dict
+            if get_accelerometer == True:
+                accelerometer_dict = {
+                    "Accelerometer timestamp in ms" : tsF.format(self.acceleroTs), 
+                    "Accelerometer [m/s^2] x-axis" : imuF.format(self.acceleroValues.x),
+                    "Accelerometer [m/s^2] y-axis" : imuF.format(self.acceleroValues.y),
+                    "Accelerometer [m/s^2] z-axis" : imuF.format(self.acceleroValues.z)
+                }
+                
+                gyroscope_dict = {
+                    "Gyroscope timestamp in ms" : tsF.format(self.gyroTs),
+                    "Gyroscope [rad/s] x-axis" : imuF.format(self.gyroValues.x), # Most of interest to us
+                    "Gyroscope [rad/s] y-axis" : imuF.format(self.gyroValues.y),
+                    "Gyroscope [rad/s] z-axis" : imuF.format(self.gyroValues.z)
+                }
+
+                return accelerometer_dict, gyroscope_dict
                     
                     elif get_accelerometer == False:
                         gyroscope_dict = {
-                            "Gyroscope timestamp in ms" : tsF.format(gyroTs),
-                            "Gyroscope [rad/s] x-axis" : imuF.format(gyroValues.x), # Most of interest to us
-                            "Gyroscope [rad/s] y-axis" : imuF.format(gyroValues.y),
-                            "Gyroscope [rad/s] z-axis" : imuF.format(gyroValues.z)
+                            "Gyroscope timestamp in ms" : tsF.format(self.gyroTs),
+                            "Gyroscope [rad/s] x-axis" : imuF.format(self.gyroValues.x), # Most of interest to us
+                            "Gyroscope [rad/s] y-axis" : imuF.format(self.gyroValues.y),
+                            "Gyroscope [rad/s] z-axis" : imuF.format(self.gyroValues.z)
                         }
                         return gyroscope_dict
                     
     def radians_to_degrees(self, rad_measure):
         return math.degrees(rad_measure)
+        
     def absolute_rotation(self):
         accelerometer_data = None
         gyroscope_data = None
