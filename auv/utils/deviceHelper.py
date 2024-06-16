@@ -19,7 +19,7 @@ file_dir = os.path.dirname(os.path.abspath(__file__)) # Obtain the file director
 
 # If "nx" is in the platform node name, Onyx is the sub, else Graey (Onyx runs on an Nvidia NX)
 # Load the configuration of Onyx/Graey
-if "nx" in platform.node():
+if "jetson-desktop" in platform.node():
     onyx = True 
     variables = load_json(f"{file_dir}/../../config/onyx.json")
 else:
@@ -28,6 +28,7 @@ else:
 
 def findFromId(ids):
     """Finding devices based on their IDs"""
+    print("Starting findFromId")
     bash = os.popen("bash /home/inspiration/auv/auv/utils/usbLink.sh").read() # Read usbLink.sh
     bashSplit = bash.split("\n") # Split output into lines at "\n"
     result = []
@@ -88,6 +89,7 @@ def findCam(ids):
 def dataFromConfig(name):
     """Obtain the configurations of a device based on the name of the device"""
     # Look at configs of Graey and Onyx for a full picture
+    print("starting datafromconfig")
     data = None
     usbID = None
     if name == "forwardOak":
@@ -110,6 +112,8 @@ def dataFromConfig(name):
         usbID = variables.get("polulu_port")
     elif name == "teensy":
         usbID = variables.get("teensy_port")
+    elif name == "fog":
+        usbID = variables.get("fog_port")
     else:
         data = variables.get(name)
         if data == None:
@@ -117,6 +121,7 @@ def dataFromConfig(name):
     if data != None:
         return data
     if usbID == None:
+        print("id not found")
         return None  # id is not on sub so leave it
     return findFromId([usbID])
 
@@ -126,7 +131,8 @@ if __name__ == "__main__":
     When running the script directly, get the configuration of the device 
     using a command line argument that is the name of the device
     """
-    if len(sys.argv) > 1:
-        print(dataFromConfig(sys.argv[1]))
-    else:
-        print(dataFromConfig("pixhawk"))
+#    if len(sys.argv) > 1:
+#        print(dataFromConfig(sys.argv[1]))
+#    else:
+#        print(dataFromConfig("pixhawk"))
+    print(dataFromConfig("dvl"))

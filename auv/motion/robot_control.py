@@ -19,6 +19,7 @@ from simple_pid import PID
 from .utils import get_distance, get_heading_from_coords, heading_error, rotate_vector, inv_rotate_vector
 from ..utils import deviceHelper # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
 from ..device.dvl import dvl # DVL class that enables position estimation
+from ..device.fog import fog_interface as fog
 import math
 import numpy as np
 
@@ -48,6 +49,13 @@ class RobotControl:
         #     self.dvl.start()
         # else:
         self.dvl = None
+
+        fog_enable = True
+
+        if fog_enable == True:
+            self.fog = fog.FOG()
+            self.fog.calibrate()
+            self.fog.start_read()
 
         # Establish thruster and depth publishers
         self.sub_compass = rospy.Subscriber("/auv/devices/compass", Float64, self.get_callback_compass())
@@ -617,3 +625,38 @@ class RobotControl:
             time = (inches - 3.4) / 7.8
         # Move forward for the specified time and at the specified power
         self.forwardUni(power, time)
+
+    def rotate_degrees(self, rotation):
+        """Yaw to relative position with assistance from FOG,
+        absolute value of rotation at most 180 degrees
+        
+        Args:
+            rotation (int): Relative desired heading (deg)"""
+        
+        curr_deg = False
+        while not curr_deg:
+            if "angle_deg" in self.fog.parsed_data: 
+                curr_deg = self.fog.parsed_data["angle_deg"]
+                target = curr_deg + rotation
+            else:
+                print("[WARN] FOG is not ready")
+                time.sleep(0.1)
+
+        while not rospy.is_shutdown(): # could be while True, but here we go:
+            curr_deg = self.fog.parsed_data["angle_deg"]
+            error = heading_error(curr_deg, target)
+        
+            # normalized error ideally b/w -1 and 1
+            output = self.PIDs["yaw"](-error / 180) # verify negative error
+
+            print(f"[DEBUG] Heading error: {error}, output: {output} {self.compass} {target}")
+
+            if abs(error) <= 1:
+                print("[INFO] Heading reached")
+                break
+        
+            self.movement(yaw=output)
+            time.sleep(0.1)
+
+        print(f"[INFO] Finished setting heading to {target}")
+        

@@ -1,15 +1,22 @@
 import cv2
+import os
 
-path = "/home/kc/Desktop/Testing Data/Buoy/Test Video 1.mp4"
-video = cv2.VideoCapture(path)
+video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/"
+mission_name = "Gate/"
+video_name = "Gate Video 1.mp4"
+video_path = os.path.join(video_root_path, mission_name, video_name)
+
+video = cv2.VideoCapture(video_path)
 
 if not video.isOpened():
     print("Unable to open video.")
 
-output_folder = "Test Video 1 Frames"
-import os
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
+output_folder = f"{video_name} Frames"
+
+folder_path = os.path.join(video_root_path, mission_name, output_folder)
+
+if not os.path.exists(folder_path):
+    os.makedirs(folder_path)
 
 frame_count = 0
 
@@ -19,7 +26,9 @@ while True:
         break
 
     frame_count += 1
-    frame_path = os.path.join(output_folder, f'frame_{frame_count:04d}.jpg')
+    if frame_count > 2:
+        break
+    frame_path = os.path.join(folder_path, f'frame_{frame_count:04d}.jpg')
     cv2.imwrite(frame_path, frame)
     print(frame_count)
 
