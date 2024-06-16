@@ -61,6 +61,7 @@ class CV:
 
         detections_info = repr(detections)
         detection_str = str(detections)
+        detection_label = detections.label
 
         print(f"{forward} {lateral} {yaw} {end} {detections_info}{detection_str}")
         # targetDetection = None
