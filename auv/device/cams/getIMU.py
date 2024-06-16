@@ -15,6 +15,8 @@ import math
 def timeDeltaToMilliS(delta) -> float:
     return delta.total_seconds()*1000
 
+
+
 class oakIMU:
     def __init__(self, accelerometer):
         self.accelerometer = accelerometer # True means get accelerometer data, false means don't.
@@ -45,14 +47,26 @@ class oakIMU:
         # Link plugins IMU -> XLINK
         imu.out.link(xlinkOut.input)
 
+        # Make angular position in degrees
+
+        self.angles = {
+        "x": 0,
+        "y": 0,
+        "z": 0
+        }
+
+        self.curr_time = None
+        self.prev_time = None
+
     def get_raw_data(self, get_accelerometer):
 
-    
+        print("I ran a new connection")
         # Pipeline is defined, now we can connect to the device
         with dai.Device(self.pipeline) as device:
 
             # Output queue for imu bulk packets
             imuQueue = device.getOutputQueue(name="imu", maxSize=50, blocking=False)
+            print("I made a queue")
             baseTs = None
 
             while True:
@@ -73,53 +87,77 @@ class oakIMU:
                     self.imuF = "{:.06f}"
                     self.tsF  = "{:.03f}"
 
-    
+                # Units for data:
+                # Timestamps in ms
+                # Acceleration in m/s^2
+                # Angular velocity (gyro) in rad/s
     
                 accelerometer_dict = {}
-                gyroscope_dict = {}
+                gyro_dict = {}
+
+                gyro_dict = {
+                        "Time" : self.tsF.format(self.gyroTs),
+                        "Gyro_x" : self.imuF.format(self.gyroValues.x), # Most of interest to us
+                        "Gyro_y" : self.imuF.format(self.gyroValues.y),
+                        "Gyro_z" : self.imuF.format(self.gyroValues.z)
+                }
+
+                # Modify anglular position through integrating
+                # angular velocity - time in milliseconds!
+
+                self.curr_time = float(gyro_dict["Time"])
+
+                if self.prev_time is None:
+                    self.prev_time = self.curr_time
+                    print("[WARN] Need one more packet",
+                          "position is currently 0")
+
+                dt = (self.curr_time - self.prev_time) / 1000
+
+                self.prev_time = self.curr_time
+
+                self.angles = {
+                    "x": (self.angles["x"] + math.degrees(float(gyro_dict["Gyro_x"])) * dt) % 360,
+                    "y": (self.angles["y"] + math.degrees(float(gyro_dict["Gyro_y"])) * dt) % 360,
+                    "z": (self.angles["z"] + math.degrees(float(gyro_dict["Gyro_z"])) * dt) % 360
+                }
+                # Return data
 
                 if get_accelerometer == True:
                     accelerometer_dict = {
-                        "Accelerometer timestamp in ms" : self.tsF.format(self.acceleroTs), 
-                        "Accelerometer [m/s^2] x-axis" : self.imuF.format(self.acceleroValues.x),
-                        "Accelerometer [m/s^2] y-axis" : self.imuF.format(self.acceleroValues.y),
-                        "Accelerometer [m/s^2] z-axis" : self.imuF.format(self.acceleroValues.z)
+                        "Accel_time" : self.tsF.format(self.acceleroTs), 
+                        "Accel_x" : self.imuF.format(self.acceleroValues.x),
+                        "Accel_y" : self.imuF.format(self.acceleroValues.y),
+                        "Accel_z" : self.imuF.format(self.acceleroValues.z)
                     }
-                
-                    gyroscope_dict = {
-                        "Gyroscope timestamp in ms" : self.tsF.format(self.gyroTs),
-                        "Gyroscope [rad/s] x-axis" : self.imuF.format(self.gyroValues.x), # Most of interest to us
-                        "Gyroscope [rad/s] y-axis" : self.imuF.format(self.gyroValues.y),
-                        "Gyroscope [rad/s] z-axis" : self.imuF.format(self.gyroValues.z)
-                    }
-
-                    return accelerometer_dict, gyroscope_dict
+                    yield accelerometer_dict, gyro_dict
                     
                 elif get_accelerometer == False:
-                    gyroscope_dict = {
-                    "Gyroscope timestamp in ms" : self.tsF.format(self.gyroTs),
-                    "Gyroscope [rad/s] x-axis" : self.imuF.format(self.gyroValues.x), # Most of interest to us
-                    "Gyroscope [rad/s] y-axis" : self.imuF.format(self.gyroValues.y),
-                    "Gyroscope [rad/s] z-axis" : self.imuF.format(self.gyroValues.z)
-                }
-                    return gyroscope_dict
+                    yield self.angles
                     
     def radians_to_degrees(self, rad_measure):
         return math.degrees(rad_measure)
         
     def absolute_rotation(self):
         accelerometer_data = None
-        gyroscope_data = None
+        gyro_data = None
+
+        # Yield statements in get_raw_data 
+        # allow for only one variable to take the data
 
         if self.accelerometer == True:
-            accelerometer_data, gyroscope_data = self.get_raw_data(self.accelerometer)
+            accelerometer_data = self.get_raw_data(self.accelerometer)
         elif self.accelerometer == False:
-            gyroscope_data = self.get_raw_data(self.accelerometer)
+            gyro_data = self.get_raw_data(self.accelerometer)
 
         if accelerometer_data is not None:
-            return accelerometer_data, gyroscope_data
+            # This part is not functional right now - NOT TESTED
+            for line in accelerometer_data:
+                yield line
         else:
-            return gyroscope_data
+            # Gyroscope_data is now a generator, must be accessed w/ for loop
+            for line in gyro_data:
+                yield line
 
 if __name__ == "__main__":
     oakIMU = oakIMU(False)   
@@ -128,7 +166,13 @@ if __name__ == "__main__":
             accelerometer_data, gyroscope_data = oakIMU.absolute_rotation()
             print(f"Accelerometer data : {accelerometer_data} \n Gyroscope data : {gyroscope_data}")
         else:
-            gyroscope_data = oakIMU.absolute_rotation()
-            print(f"Gyroscope data : {gyroscope_data}")
+            angle_data = oakIMU.absolute_rotation()
+            print(f"Angle data : ", end='')
+
+            # Be warned that the gyro angles have 3-4 second latency
+
+            for line in angle_data:
+                print(line)
+                time.sleep(0.1)
         if cv2.waitKey(1) == ord('q'):
             break
