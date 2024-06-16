@@ -59,9 +59,10 @@ class CV:
         yaw = 0
         end = 0
 
-        detections_info = detections
+        detections_info = repr(detections)
+        detection_str = str(detections)
 
-        print(f"{forward} {lateral} {yaw} {end} {detections_info}")
+        print(f"{forward} {lateral} {yaw} {end} {detections_info}{detection_str}")
         # targetDetection = None
         # targetDetected = False
         # step = 0
