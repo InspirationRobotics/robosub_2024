@@ -52,7 +52,7 @@ class CV:
         Returns:
             dictionary, visualized frame: {lateral motion command, forward motion command, yaw motion command, end flag}, visualized frame
         """
-        print("[INFO] Gate CV run")
+        print("[INFO] Buoy CV run")
 
         forward = 0
         lateral = 0
