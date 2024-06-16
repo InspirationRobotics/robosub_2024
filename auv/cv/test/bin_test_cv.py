@@ -1,4 +1,6 @@
-"""Bin Mission CV Test"""
+"""
+Bin Mission CV Test
+"""
 
 import time
 import cv2
