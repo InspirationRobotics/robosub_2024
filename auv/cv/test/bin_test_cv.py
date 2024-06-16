@@ -94,7 +94,9 @@ class CV:
             blue_ymin = blue_info["ymin"]
             blue_ymax = blue_info["ymax"]
             cv2.rectangle(frame, (blue_xmin, blue_ymin), (blue_xmax, blue_ymax), (255, 0, 0), 2)
-            midpoints["blue"] = self.get_bbox_center(blue_info)
+            blue_midpoint = self.get_bbox_center(blue_info)
+            midpoints["blue"] = blue_midpoint
+            cv2.putText(frame, f"Blue ({blue_midpoint[0]}, {blue_midpoint[1]})", blue_midpoint, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
         if red_info["status"]:
             red_xmin = red_info["xmin"]
@@ -102,7 +104,9 @@ class CV:
             red_ymin = red_info["ymin"]
             red_ymax = red_info["ymax"]
             cv2.rectangle(frame, (red_xmin, red_ymin), (red_xmax, red_ymax), (0, 0, 255), 2)
-            midpoints["red"] = self.get_bbox_center(red_info)
+            red_midpoint = self.get_bbox_center(red_info)
+            midpoints["red"] = red_midpoint
+            cv2.putText(frame, f"Red ({red_midpoint[0]}, {red_midpoint[1]})", red_midpoint, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
         return midpoints
     
@@ -146,3 +150,4 @@ if __name__ == "__main__":
 
             cap.release()
             cv2.destroyAllWindows()
+
