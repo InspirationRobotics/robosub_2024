@@ -44,7 +44,6 @@ class CV:
 
         return ((x1 + x2) // 2, (y1 + y2) // 2)
 
-
     def detect_red(self, frame):
         """
         Uses HSV color space and masking to detect a red object.
@@ -120,6 +119,7 @@ class CV:
 
         blue_info = self.detect_blue(raw_frame)
         red_info = self.detect_red(raw_frame)
+        
 
         if blue_info.get('status') == True:
             blue_xmin = blue_info.get('xmin')
@@ -127,6 +127,9 @@ class CV:
             blue_ymin = blue_info.get('ymin')
             blue_ymax = blue_info.get('ymax')
             cv2.rectangle(raw_frame, (blue_xmin, blue_ymin), (blue_xmax, blue_ymax), (255, 0, 0), 2)
+            
+            return ((blue_xmin + blue_xmax) // 2, (blue_ymin + blue_ymax) // 2)
+            
 
         if red_info.get('status') == True:
             red_xmin = red_info.get('xmin')
@@ -134,6 +137,8 @@ class CV:
             red_ymin = red_info.get('ymin')
             red_ymax = red_info.get('ymax')
             cv2.rectangle(raw_frame, (red_xmin, red_ymin), (red_xmax, red_ymax), (0, 0, 255), 2)
+            
+            return ((red_xmin + red_xmax) // 2, (red_ymin + red_ymax) // 2)
 
         return raw_frame
     
@@ -143,7 +148,7 @@ if __name__ == "__main__":
     # another team member needs to run this code on his/her device. 
     
     # NOTE: When downloading the training data, the training data folder itself, which contains all of the data.
-    video_root_path = "C:/Users/brand/OneDrive/Desktop/Training Data/" # Computer path through the training data folder.
+    video_root_path = "/Users/brandontran3/downloads/Training Data/" # Computer path through the training data folder.
     mission_name = "Bins/"
     video_name = "Bins Video 3.mp4" # Specified video
     video_path = os.path.join(video_root_path, mission_name, video_name)
