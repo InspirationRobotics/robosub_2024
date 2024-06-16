@@ -54,72 +54,82 @@ class CV:
         """
         print("[INFO] Gate CV run")
 
-        targetDetection = None
-        targetDetected = False
-        step = 0
-        end = False
+        forward = 0
+        lateral = 0
+        yaw = 0
+        end = 0
 
-        if len(detections) < 2:
-            yaw = 1
+        print(f"{forward} {lateral} {yaw} {end}")
+        # targetDetection = None
+        # targetDetected = False
+        # step = 0
+        # end = False
 
-        if len(detections) == 2:
-            for detection in detections:
-                if target in detection.label:
-                    targetDetection = detection
+        # if len(detections) < 2:
+        #     yaw = 1
 
-        if targetDetection is not None:
-            if targetDetection.confidence > 0.5:
-                targetDetected = True
-            else:
-                targetDetected = False
+        # if len(detections) == 2:
+        #     for detection in detections:
+        #         if target in detection.label:
+        #             targetDetection = detection
+
+        # if targetDetection is not None:
+        #     if targetDetection.confidence > 0.5:
+        #         targetDetected = True
+        #     else:
+        #         targetDetected = False
         
-        if targetDetected == True:
-            step = 1
+        # if targetDetected == True:
+        #     step = 1
 
-        if step == 1:
-            # Align with the target.
-            lateral = 0
-            forward = 0
+        # if step == 1:
+        #     # Align with the target.
+        #     lateral = 0
+        #     forward = 0
         
-        if end == True:
-            print("Ending mission")
+        # if end == True:
+        #     print("Ending mission")
                     
-        # If the length of detections is not equal to two, then yaw to find the detections.
-        # Find the detection with the target label.
-        # If the confidence of the detection is high enough, then obtain the x and y coordinates of the detection on the frame.
-        # Align so that the x midpoint is aligned with the midpoint of the frame, and the y coordinate should be significantly higher than the y midpoint.
-        # End.
+        # # If the length of detections is not equal to two, then yaw to find the detections.
+        # # Find the detection with the target label.
+        # # If the confidence of the detection is high enough, then obtain the x and y coordinates of the detection on the frame.
+        # # Align so that the x midpoint is aligned with the midpoint of the frame, and the y coordinate should be significantly higher than the y midpoint.
+        # # End.
 
         # Continuously return motion commands, the state of the mission, and the visualized frame.
         return {"lateral": lateral, "forward": forward, "yaw": yaw, "end": end}, frame
 
 
 if __name__ == "__main__":
-    # This is the code that will be executed if you run this file directly.
-    # It is here for testing purposes.
-    # You can run this file independently using: "python -m auv.cv.template_cv".
-
-    # Create a CV object with arguments
     cv = CV()
+    data, frame = cv.run(None, None, None)
+    print(data)
 
-    # Here you can initialize your camera, etc.
+    # # This is the code that will be executed if you run this file directly.
+    # # It is here for testing purposes.
+    # # You can run this file independently using: "python -m auv.cv.template_cv".
 
-    # Capture the video object for processing
-    cap = cv2.VideoCapture(0)
+    # # Create a CV object with arguments
+    # cv = CV()
 
-    while True:
-        # Grab and read a frame from the video object.
-        ret, frame = cap.read()
-        if not ret:
-            break
+    # # Here you can initialize your camera, etc.
 
-        # Run the CV script.
-        result = cv.run(frame, "some_info", None)
+    # # Capture the video object for processing
+    # cap = cv2.VideoCapture(0)
 
-        # Do something with the result. 
-        print(f"[INFO] {result}")
+    # while True:
+    #     # Grab and read a frame from the video object.
+    #     ret, frame = cap.read()
+    #     if not ret:
+    #         break
 
-        # Debug the visualized frame.
-        cv2.imshow("frame", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+    #     # Run the CV script.
+    #     result = cv.run(frame, "some_info", None)
+
+    #     # Do something with the result. 
+    #     print(f"[INFO] {result}")
+
+    #     # Debug the visualized frame.
+    #     cv2.imshow("frame", frame)
+    #     if cv2.waitKey(1) & 0xFF == ord("q"):
+    #         break
