@@ -60,10 +60,10 @@ class CV:
         end = 0
 
         detections_info = repr(detections)
-        detection_str = str(detections)
-        detection_label = detections.label
+        # detection_str = str(detections)
+        # detection_label = detections.label
 
-        print(f"{forward} {lateral} {yaw} {end} {detections_info}{detection_str}")
+        print(f"{forward} {lateral} {yaw} {end} {detections_info}")
         # targetDetection = None
         # targetDetected = False
         # step = 0
