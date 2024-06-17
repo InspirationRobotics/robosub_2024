@@ -326,3 +326,5 @@ if __name__ == '__main__':
     while True:
         time.sleep(1)
         print(dvl1.position)
+        print(dvl1.data)
+        print(dvl1.error)
