@@ -1,5 +1,5 @@
 """
-Bin Mission CV Test
+Bin Misssion CV Testing
 """
 
 import time
@@ -110,9 +110,57 @@ class CV:
 
         return midpoints
     
-    def run(self, raw_frame):
-        return self.get_midpoints(raw_frame)
+    def calculate_movement(self, midpoints, frame_shape):
+        """
+        Calculates the forward, lateral, depth, and yaw movements based on midpoints.
+        """
+        height, width = frame_shape
+        center_x = width // 2
+        center_y = height // 2
+
+        forward = lateral = depth = yaw = 0
+
+        if "red" in midpoints:
+            target_midpoint = midpoints["red"]
+        elif "blue" in midpoints:
+            target_midpoint = midpoints["blue"]
+        else:
+            return forward, lateral, depth, yaw
+
+        # Calculate forward and depth based on vertical position
+        forward = (center_y - target_midpoint[1]) / center_y
+        depth = (target_midpoint[1] - center_y) / center_y
+        
+        # Calculate lateral based on horizontal position
+        lateral = (target_midpoint[0] - center_x) / center_x
+        
+        # Calculate yaw based on horizontal position
+        yaw = (target_midpoint[0] - center_x) / center_x
+
+        return forward, lateral, depth, yaw
     
+    def run(self, raw_frame):
+        midpoints = self.get_midpoints(raw_frame)
+        frame_shape = raw_frame.shape[:2]
+        forward, lateral, depth, yaw = self.calculate_movement(midpoints, frame_shape)
+
+        cv2.putText(raw_frame, f"Forward: {forward:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        cv2.putText(raw_frame, f"Lateral: {lateral:.2f}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        cv2.putText(raw_frame, f"Depth: {depth:.2f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        cv2.putText(raw_frame, f"Yaw: {yaw:.2f}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+
+        return raw_frame, forward, lateral, depth, yaw
+    
+    def drop(self, forward, lateral, depth, yaw):
+        """
+        Drops the object when the robot is aligned with the target midpoint.
+        """
+        if abs(forward) < 0.1 and abs(lateral) < 0.1 and abs(depth) < 0.1 and abs(yaw) < 0.1:
+            print("[INFO] Dropping object at target location")
+            # Code to trigger the drop mechanism of the robot
+        else:
+            print("[INFO] Aligning with target, cannot drop object yet")
+
 if __name__ == "__main__":
     video_root_path = "/Users/brandontran3/downloads/Training Data/"
     mission_name = "Bins/"
@@ -136,10 +184,10 @@ if __name__ == "__main__":
                     print("[INFO] End of file.")
                     break
 
-                midpoints = cv.run(frame)
-                if midpoints:
-                    print(f"Midpoints: {midpoints}")
-                    cv2.imshow("frame", frame)
+                viz_frame, forward, lateral, depth, yaw = cv.run(frame)
+                if viz_frame is not None:
+                    cv.drop(forward, lateral, depth, yaw)
+                    cv2.imshow("frame", viz_frame)
                 else:
                     print("[ERROR] Unable to display frame.")
 
@@ -150,4 +198,3 @@ if __name__ == "__main__":
 
             cap.release()
             cv2.destroyAllWindows()
-
