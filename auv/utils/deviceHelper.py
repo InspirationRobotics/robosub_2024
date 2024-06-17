@@ -89,7 +89,6 @@ def findCam(ids):
 def dataFromConfig(name):
     """Obtain the configurations of a device based on the name of the device"""
     # Look at configs of Graey and Onyx for a full picture
-    print("starting datafromconfig")
     data = None
     usbID = None
     if name == "forwardOak":
