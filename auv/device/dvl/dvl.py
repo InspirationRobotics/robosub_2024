@@ -75,6 +75,7 @@ class DVL:
         self.error_memory = []
 
         if autostart:
+            print("Initialized Successfully!")
             self.start()
 
     def __parseLine(self, line):
@@ -122,10 +123,17 @@ class DVL:
             return None
 
         TS = self.__parseLine(self.ser.readline())
+        WI = self.__parseLine(self.ser.readline()) # unused
         BI = self.__parseLine(self.ser.readline())
+        WS = self.__parseLine(self.ser.readline()) # unused
         BS = self.__parseLine(self.ser.readline())
+        WE = self.__parseLine(self.ser.readline()) # unused
         BE = self.__parseLine(self.ser.readline())  # unused
+        WD = self.__parseLine(self.ser.readline()) # unused
         BD = self.__parseLine(self.ser.readline())
+        print(TS)
+        print(BS)
+        print(WD)
 
         try:
             # data["Attitude"] = [float(SA[1]), float(SA[2]), float(SA[3])]
