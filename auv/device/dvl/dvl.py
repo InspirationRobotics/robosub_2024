@@ -1,3 +1,6 @@
+# Documentation available at https://drive.google.com/file/d/1xniDtjYIJhaFOhWaSj4tj6RxBdN5inx2/view
+# See page 93 for specs
+
 import math
 import signal
 import threading
@@ -56,7 +59,7 @@ class DVL:
 
         # sensor error
         self.compass_error = math.radians(1.0)  # rad/s
-        self.dvl_error = 0.001  # m/s
+        self.dvl_error = 0.002  # m/s - see documentation comment
         self.error = [0, 0, 0]  # accumulated error
 
         # NORTH = 0, EAST = pi/2, SOUTH = pi, WEST = 3pi/2
@@ -138,7 +141,7 @@ class DVL:
             # data["Distance_from_bottom"] = float(BD[4])
             # data["Time_since_valid"] = float(BD[5])
 
-            milli = int(TS[1][12:14]) * 0.01
+            milli = int(TS[1][12:14]) * 0.1
             seconds = int(TS[1][10:12])
             minutes = int(TS[1][8:10]) * 60
             hours = int(TS[1][6:8]) * 60 * 60
@@ -326,5 +329,4 @@ if __name__ == '__main__':
     while True:
         time.sleep(1)
         print(dvl1.position)
-        print(dvl1.data)
         print(dvl1.error)
