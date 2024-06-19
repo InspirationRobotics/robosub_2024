@@ -74,7 +74,6 @@ class DVL:
         self.error_memory = []
 
         if autostart:
-            print("Initialized Successfully!")
             self.start()
 
     def __parseLine(self, line):
@@ -130,9 +129,7 @@ class DVL:
         BE = self.__parseLine(self.ser.readline())  # unused
         WD = self.__parseLine(self.ser.readline()) # unused
         BD = self.__parseLine(self.ser.readline())
-        print(TS)
-        print(BS)
-        print(WD)
+
 
         try:
             # data["Attitude"] = [float(SA[1]), float(SA[2]), float(SA[3])]
@@ -231,6 +228,9 @@ class DVL:
             return False
 
         dt = current_time - self.prev_time
+        print(current_time)
+        print(self.prev_time)
+        print(dt)
         if dt < 0:
             print("[WARN] DVL time error, skipping")
             return False
