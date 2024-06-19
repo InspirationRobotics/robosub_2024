@@ -21,7 +21,7 @@ class CV:
     """
 
     # Camera to get the camera stream from.
-    camera = "/auv/camera/videoUSBRaw0" 
+    camera = "/auv/camera/videoOAKdRawForward" 
     model = "buoy"
 
     def __init__(self, **config):
@@ -57,9 +57,12 @@ class CV:
         forward = 0
         lateral = 0
         yaw = 0
-        end = 0
+        end = False
 
         detections_info = repr(detections)
+        for detection in detections:
+            detection_type = type(detection)
+            print(f"Detection type: {detection_type}")
         # detection_str = str(detections)
         # detection_label = detections.label
 
