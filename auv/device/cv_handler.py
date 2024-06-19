@@ -304,6 +304,7 @@ class _ScriptHandler:
             self.pub_out.publish(json.dumps(result))
 
             if viz_img is not None:
+                self.pub_out.publish(self.br.cv2_to_imgmsg(viz_img))
                 self.pub_viz.publish(self.br.cv2_to_imgmsg(viz_img)) # Publish the visualization of the frame as a ROS Image
 
     def stop(self):
@@ -406,7 +407,6 @@ class _DummyScriptHandler:
 
             # Publish the visualized frame as a ROS image, if the visualized frame is avaliable.
             if viz_img is not None:
-                self.pub_out.publish(self.br.cv2_to_imgmsg(viz_img))
                 self.pub_viz.publish(self.br.cv2_to_imgmsg(viz_img))
 
     def stop(self):
@@ -462,5 +462,5 @@ if __name__ == "__main__":
 
     except rospy.KeyboardInterrupt:
         cv.stop_cv(file_name)
-        pass
+        
         
