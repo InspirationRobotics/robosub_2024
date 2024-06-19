@@ -406,6 +406,7 @@ class _DummyScriptHandler:
 
             # Publish the visualized frame as a ROS image, if the visualized frame is avaliable.
             if viz_img is not None:
+                self.pub_out.publish(self.br.cv2_to_imgmsg(viz_img))
                 self.pub_viz.publish(self.br.cv2_to_imgmsg(viz_img))
 
     def stop(self):
@@ -445,7 +446,7 @@ if __name__ == "__main__":
     file_name = "buoy_cv"
 
     cv = CVHandler()
-    rospy.init_node("test")
+    rospy.init_node("CV_Handler", anonymous = True)
     try:
         cv.start_cv(file_name, dummy_callback)
     #try:
