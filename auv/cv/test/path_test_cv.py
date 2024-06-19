@@ -31,9 +31,13 @@ class CV:
         self.oriented = False
         self.aligned = False
 
-        self.start_time_search = None
-        self.start_search = False
-        self.last_lateral_search_movement = 0
+        self.following_path = False
+        self.lateral_search = False
+
+        self.start_time = None
+        self.time_at_search = 0
+        self.lateral_time_search = 3 # Seconds
+        self.last_lateral = 0
 
     def run(self, orig_frame):
         lateral = 0
@@ -54,8 +58,8 @@ class CV:
         frame = cv2.GaussianBlur(orig_frame, (5, 5), 0)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        mask0 = cv2.inRange(hsv, (0, 80, 40), (25, 255, 255))
-        mask1 = cv2.inRange(hsv, (160, 80, 40), (179, 255, 255))
+        mask0 = cv2.inRange(hsv, (0, 100, 50), (20, 255, 255))
+        mask1 = cv2.inRange(hsv, (20, 100, 50), (25, 255, 255))
         # join masks
         mask = mask0 + mask1
 
@@ -132,52 +136,70 @@ class CV:
                 print("Vertical line: infinite slope")
             
         #motion code
-        if self.detected = False:
-            self.start_search = True
-            self.start_time_search = time.time()
+        if self.detected == False and self.following_path == False:
+            self.lateral_search = True
 
-        if self.start_search = True:
-            if self.last_lateral_search_movement = 0:
+        if self.detected == True:
+            self.lateral_search == False
+
+        if self.detected == False and self.following_path == True:
+            self.end = True
+
+        # Back and forth lateral pattern
+        if self.lateral_search == True:
+            if self.start_time is None:
+                self.start_time = time.time()
+            if time.time() - self.start_time < self.lateral_time_search and self.last_lateral == 0:
                 lateral = 1
+            elif time.time() - self.start_time > self.lateral_time_search:
+                if self.last_lateral == 1:
+                    lateral = -1
+                elif self.last_lateral == -1:
+                    lateral = 1
+                self.lateral_time_search += 1
+
+            self.last_lateral = lateral
         
-        threshold_slope = 10
-        if abs(slope) > threshold_slope:
-            self.oriented = True
-        else:
-            self.oriented = False
-            if slope > 0:
-                yaw = -1
-            elif slope < 0:
-                yaw = 1
+        if self.detected:
+            threshold_slope = 10
+            if abs(slope) > threshold_slope:
+                self.oriented = True
             else:
-                pass
-        
-        # TODO: Figure out motion values to detect object if object is not on screen
-        # TODO: Figure out how to move based on previous orientation
+                self.oriented = False
+                if slope > 0:
+                    yaw = -1
+                elif slope < 0:
+                    yaw = 1
+                else:
+                    pass
+            
+            # TODO: Figure out motion values to detect object if object is not on screen
+            # TODO: Figure out how to move based on previous orientation
 
-        if self.oriented:
-            x_threshold = 20 # Pixels
-            center_x = self.shape[0]
-            center_line_x = (start_left[0] + end_right[0])/2
-            if abs(center_line_x - center_x) < x_threshold:
-                self.aligned = True
-            elif center_line_x - center_x > x_threshold:
-                lateral = 1 # Move right
-            elif center_line_x - center_x < - x_threshold:
-                lateral = -1 # Move left
+            if self.oriented:
+                x_threshold = 20 # Pixels
+                center_x = self.shape[0]
+                center_line_x = (start_left[0] + end_right[0])/2
+                if abs(center_line_x - center_x) < x_threshold:
+                    self.aligned = True
+                elif center_line_x - center_x > x_threshold:
+                    lateral = 1 # Move right
+                elif center_line_x - center_x < - x_threshold:
+                    lateral = -1 # Move left
 
-        if self.aligned and self.oriented:
-            lateral = 0
-            yaw = 0
-            forward = 1
-
-        # Continuously return motion commands, the state of the mission, and the visualized frame.
-        return {"lateral": 0, "forward": 0, "yaw" : yaw, "end": end}, orig_frame
+            if self.aligned and self.oriented:
+                lateral = 0
+                yaw = 0
+                forward = 1
+                self.following_path = True
+            
+            # Continuously return motion commands, the state of the mission, and the visualized frame.
+        return {"lateral": lateral, "forward": forward, "yaw" : yaw, "end": end}, orig_frame
 
 if __name__ == "__main__":
-    video_root_path = "/Users/avikaprasad/Desktop/RoboSub 2024/Training Data/"
-    mission_name = "Follow the Path/"
-    video_name = "Follow the Path Video 3.mp4"
+    video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/"
+    mission_name = "Gate/"
+    video_name = "Gate Video 3.mp4"
     video_path = os.path.join(video_root_path, mission_name, video_name)
     print(f"Video path: {video_path}")
 
@@ -197,6 +219,8 @@ if __name__ == "__main__":
                     break
 
                 motion_values, viz_frame = cv.run(frame)
+                print(f"{cv.last_lateral} {cv.detected} Lateral search: {cv.lateral_search}")
+                print(f"Start lateral: {cv.start_time}")
                 if viz_frame is not None:
                     cv2.imshow("frame", viz_frame)
                 else:
