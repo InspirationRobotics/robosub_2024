@@ -3,6 +3,7 @@ import time
 from mavros_msgs.msg import OverrideRCIn
 from mavros_msgs.srv import CommandBool
 from . import robot_control
+from ..utils import arm, disarm
 
 rospy.init_node("Control")
 
@@ -83,24 +84,24 @@ def control():
     else:
         print("Invalid command.")
 
-def arm():
-    """Arm autonomous function"""
-    try: 
-        arm_service(True)
-        rospy.loginfo("Vehicle armed.")
-        return True
+# def arm():
+#     """Arm autonomous function"""
+#     try: 
+#         arm_service(True)
+#         rospy.loginfo("Vehicle armed.")
+#         return True
     
-    except rospy.ServiceException as e:
-        rospy.logwarn("Failed to arm vehicle: %s" % e)
+#     except rospy.ServiceException as e:
+#         rospy.logwarn("Failed to arm vehicle: %s" % e)
 
-def disarm():
-    """Disarm autonomous function"""
-    try:
-        arm_service(False)
-        rospy.loginfo("Vehicle disarmed.")
-        return True
-    except rospy.ServiceException as e:
-        rospy.logwarn("Failed to disarm vehicle: %s" % e)
+# def disarm():
+#     """Disarm autonomous function"""
+#     try:
+#         arm_service(False)
+#         rospy.loginfo("Vehicle disarmed.")
+#         return True
+#     except rospy.ServiceException as e:
+#         rospy.logwarn("Failed to disarm vehicle: %s" % e)
 
 def is_convertible_to_float(value):
     try:
@@ -109,7 +110,7 @@ def is_convertible_to_float(value):
     except ValueError:
         return False
 
-arm()
+arm.arm()
 
 try:
     while run:
@@ -134,4 +135,4 @@ except KeyboardInterrupt:
     print("Exiting...")
     run = False
 
-disarm()
+disarm.disarm()

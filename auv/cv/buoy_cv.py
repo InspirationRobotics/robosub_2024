@@ -57,9 +57,14 @@ class CV:
         forward = 0
         lateral = 0
         yaw = 0
-        end = 0
+        end = False
 
         detections_info = repr(detections)
+        for detection in detections:
+            detection_type = type(detection)
+            detection_label = detection.label
+            print(f"Detection type: {detection_type}, Detection label: {detection_label}")
+            print(f"Detection coords: ({detection.xmin, detection.ymin}) , ({detection.xmax, detection.ymax})")
         # detection_str = str(detections)
         # detection_label = detections.label
 

@@ -445,7 +445,7 @@ if __name__ == "__main__":
     file_name = "buoy_cv"
 
     cv = CVHandler()
-    rospy.init_node("test")
+    rospy.init_node("CV_Handler", anonymous = True)
     try:
         cv.start_cv(file_name, dummy_callback)
     #try:
@@ -461,5 +461,5 @@ if __name__ == "__main__":
 
     except rospy.KeyboardInterrupt:
         cv.stop_cv(file_name)
-        pass
+        
         
