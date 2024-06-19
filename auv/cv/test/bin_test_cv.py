@@ -1,5 +1,5 @@
 """
-Bin Misssion CV Testing
+Bin CV Testing
 """
 
 import time
@@ -19,11 +19,11 @@ class CV:
         self.shape = (640, 480)
         self.aligned = False
         self.detected = False
-        self.config = config 
+        self.config = config.lower()  # Ensure config is in lowercase
         self.step = 0
         self.end = False
 
-        print("[INFO] Bin CV Init")
+        print(f"[INFO] Bin CV Init with target color: {self.config.capitalize()}")
         self.viz_frame = None
         self.error_buffer = []
 
@@ -120,10 +120,9 @@ class CV:
 
         forward = lateral = depth = yaw = 0
 
-        if "red" in midpoints:
-            target_midpoint = midpoints["red"]
-        elif "blue" in midpoints:
-            target_midpoint = midpoints["blue"]
+        target_color = self.config  # Use the config to determine which color to track
+        if target_color in midpoints:
+            target_midpoint = midpoints[target_color]
         else:
             return forward, lateral, depth, yaw
 
@@ -164,12 +163,14 @@ class CV:
 if __name__ == "__main__":
     video_root_path = "/Users/brandontran3/downloads/Training Data/"
     mission_name = "Bins/"
-    video_name = "Bins Video 3.mp4"
+    video_name = "Bins Video 5.mp4"
     video_path = os.path.join(video_root_path, mission_name, video_name)
 
     print(f"Video path: {video_path}")
 
-    cv = CV("Blue")
+    # Change "red" or "blue" to test different target colors
+    target_color = "red"  # Specify "red" or "blue" as the target color
+    cv = CV(target_color)
 
     if not os.path.exists(video_path):
         print(f"[ERROR] Video file not found {video_path}")
