@@ -21,7 +21,7 @@ class CV:
     """
 
     # Camera to get the camera stream from.
-    camera = "/auv/camera/videoOAKdRawForward" 
+    camera = "/auv/camera/videoUSBRaw0" 
     model = "buoy"
 
     def __init__(self, **config):
