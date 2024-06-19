@@ -1,5 +1,5 @@
 """
-Bin CV and logic tests
+Bin CV and logic test
 """
 
 import time
