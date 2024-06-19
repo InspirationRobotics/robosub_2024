@@ -1,188 +1,197 @@
 """
-Template script for creating CV logic for a specific mission, and testing it on training data.
+Path CV Test Class.
 
 Author: Avika Prasad
 """
 
-import cv2
-import time
-import numpy as np
+# Import what you need from within the package.
 
+import time
+import math
+import cv2
+import numpy as np
 import os
 
 class CV:
-    """CV class, DO NOT change the name of the class."""
+    """
+    Path CV class. DO NOT change the name of the class, as this will mess up all of the backend files to run the CV scripts.
+    """
 
     def __init__(self, config):
-        # Config is a way of passing in an argument to indicate to the logic what actions to take. Take a look at 
-        # buoy_test_cv.py for an example.
-        self.shape = (640, 480)
-
-        # Switcher variables which can be used as needed to switch states.
         self.aligned = False
+        self.shape = (640, 480)
         self.detected = False
+        self.config = config # Blue counterclockwise, Red clockwise
+        self.step = 0
 
-        self.config = config 
-        self.step = 1 # Step counter variable.
+        self.forward_times = 0 # The theory behind this is that we should only go forward past the buoy twice.
+        self.end = False
 
-        self.end = False # End variable to denote when the mission has finished.
+        # Test variables.
+        self.oriented = False
+        self.aligned = False
 
-        # Add variables as needed below.
-
-    # You can put detection functions to detect a specific object as needed. 
-
-    def detect_path(self, frame):
-        detected = False
-        
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-        lower_orange_mask = np.array([10, 100, 100])
-        upper_orange_mask = np.array([25, 255, 255])
-
-        mask = cv2.inRange(frame, lower_orange_mask, upper_orange_mask)
-
-        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.drawContours(hsv, contours, -1, (0, 255, 0), 3)
-
-        # cv2.imshow('hsv', image)
-        # cv2.waitKey(0)
-        # cv2.destoryAllWindows()
-
-       # if contours:
-           # largest_contour = max(contours, key = cv2.contourArea)
-
-            #if cv2.contourArea(largest_contour) > 0:
-                #x, y, w, h = cv2.boundingRect(largest_contour)
-               # cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-                #detected = True
-                #return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}, hsv
-        
-        return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}, frame 
-    
-    def align_properly(self, detection):
-        # Detection a list/dictionary containing the detection coordinates
-        # Align properly based on when the path is straight up and down the screen.
-        # Yaw so that path is |, then lateral to midpoint, then yaw again.
-        pass
-
-    def run(self, frame):
-        """ Run the CV logic. Returns the motion commands and visualized frame. """
-        # converts the frame from color to grayscale
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-         # converts the color values for BGR to HSV
-        into_hsv =(cv2.cvtColor(frame,cv2.COLOR_BGR2HSV))
-
-         # lowest limit to say it is orange
-        lower_limit=np.array([25, 41, 98])
-         # 3, 20, 20 
-
-         # highest limit to say it is orange
-        upper_limit=np.array([23, 100, 82])
-         # 80, 255, 255
-
-        kernel = np.ones((5, 5), np.uint8)
-
-        # takes the frame and turns the pixels in the limit to white (255), outside of limit = black (0)
-        orange=cv2.inRange(into_hsv,lower_limit,upper_limit)
-
-        # determines the edges by determining which are stong and weak
-        edges = cv2.Canny(gray, threshold1=100, threshold2=200)
-
-        ret, thresh3 = cv2.threshold(edges, 230, 255, cv2.THRESH_BINARY)
-        ret2, thresh3 = cv2.threshold(thresh3, 1, 255, cv2.THRESH_OTSU)
-        cv2.imshow("edges", thresh3)
-         # Removing Noise
-        orange = cv2.morphologyEx(orange, cv2.MORPH_OPEN, kernel)
-        time.sleep(0.2)
-         # Blur and Threshold 
-        orange = cv2.GaussianBlur(orange, (11, 11), 0)
-        ret, thresh = cv2.threshold(orange, 230, 255, cv2.THRESH_BINARY)
-
-        blur = cv2.blur(thresh, (10, 10))
-        ret2, thresh2 = cv2.threshold(blur, 1, 255, cv2.THRESH_OTSU)
-
-         # Find Contours
-        contours, heirarchy = cv2.findContours(thresh3, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.drawContours(frame, contours, -1, 255, 3)
-
-        yaw = lateral = forward = 0
-        hline = cv2.line(frame, (640, 0), (0, 0), (0, 255, 255), 8)
-
+    def run(self, orig_frame):
+        # set the testing vid
+        # video = cv2.VideoCapture("/Users/avikaprasad/Desktop/RoboSub 2024/Training Data/Follow the Path/Follow the Path Video 4.mp4")
         lateral = 0
         forward = 0
         yaw = 0
+        end = self.end
+        # Downscale the image to a reasonable size to reduce compute
+        scale = 1
 
-        center_line = (hline)/2
+        # Minimize false detects by eliminating contours less than a percentage of the image
+        area_threshold = 0.01
+        croppedPixels = 150
+        width = orig_frame.shape[0]
+        height = orig_frame.shape[1] - croppedPixels
+        dim = (int(scale * height), int(scale * width))
 
-        if center_line < 5:
-            lateral = 3
+        orig_frame = cv2.resize(orig_frame, dim, interpolation=cv2.INTER_AREA)
+        frame = cv2.GaussianBlur(orig_frame, (5, 5), 0)
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # path_data, frame = self.detect_path(raw_frame)
+        mask0 = cv2.inRange(hsv, (0, 80, 40), (25, 255, 255))
+        mask1 = cv2.inRange(hsv, (160, 80, 40), (179, 255, 255))
+        # join masks
+        mask = mask0 + mask1
 
-        # if path_data.get('status') == True:
-        #     self.detected = True
-        #     detection_xmin = path_data.get('xmin')
-        #     detection_xmax = path_data.get('xmax')
-        #     detection_ymin = path_data.get('ymin')
-        #     detection_ymax = path_data.get('ymax')
+        ret, thresh = cv2.threshold(mask, 127, 255, 0)
+        # Erosions and dilations
+        # erosions are applied to reduce the size of foreground objects
+        kernel = np.ones((3, 3), np.uint8)
+        eroded = cv2.erode(thresh, kernel, iterations=0)	
+        dilated = cv2.dilate(eroded, kernel, iterations=3) 
 
-        if self.step == 0 and self.detected == True:
-            pass
+        dst = cv2.equalizeHist(dilated)
+        cv2.imshow("equalized", dst)
 
-        if self.step == 1 and self.detected == True:
+        cnts, hierarchy = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:60]
+
+        boundingBoxes = np.empty((0, 4), float)
+        if len(cnts) > 0:
+            contour = cnts[0]
+
+            rect = cv2.minAreaRect(contour)
+            box = cv2.boxPoints(rect)
+            box = np.int0(box)
+
+            cv2.drawContours(orig_frame, [box], 0, (0, 0, 255), 2)
+            
+            # initializing the points of the rectangle
+            box0 = (box[0])
+
+            box1 = (box[1])	
+
+            box2 = (box[2])
+                
+            box3 = (box[3])
+            
+            #line for vertical path
+            v_start_left = (int((box0[0] + box1[0]) / 2), int((box0[1] + box1[1]) / 2))
+            v_end_right = (int((box2[0] + box3[0]) / 2), int((box2[1] + box3[1]) / 2))
+
+            #line for horizantal path
+            h_start_left = (int((box0[0] + box3[0]) / 2), int((box0[1] + box3[1]) / 2))
+            h_end_right = (int((box1[0] + box2[0]) / 2), int((box1[1] + box2[1]) / 2))
+            
+            #calculate distance of the vertical line (using the distance formula)
+            v_distance = math.sqrt((v_end_right[0] - v_start_left[0])**2 + (v_end_right[1] - v_start_left[1])**2)
+
+            #calculate distance of the horizantal line (using the distance formula)
+            h_distance = math.sqrt((h_end_right[0] - h_start_left[0])**2 + (h_end_right[1] - h_start_left[1])**2)
+
+            #drawing the largest line
+            if v_distance > h_distance:
+                cv2.line(orig_frame, v_start_left, v_end_right, (0, 255, 0), 2)
+                x1, y1 = v_start_left
+                x2, y2 = v_end_right
+                start_left = v_start_left
+                end_right = v_end_right
+                print(v_distance, h_distance)
+            else:
+                cv2.line(orig_frame, h_start_left, h_end_right, (0, 255, 0), 2)
+                x1, y1 = h_start_left
+                x2, y2 = h_end_right
+                start_left = h_start_left
+                end_right = h_end_right
+                print(v_distance, h_distance)
+
+            #calculating the slope
+            if x2 - x1 != 0:
+                slope = (y2 - y1)/(x2 - x1)
+                print(f"Slope of Line: {slope}")
+            else:
+                slope = 10000
+                print("Vertical line: infinite slope")
+            
+        #motion code
+        threshold_slope = 10
+        if abs(slope) > threshold_slope:
+            self.oriented = True
+        else:
+            self.oriented = False
+            if slope > 0:
+                yaw = -1
+            elif slope < 0:
+                yaw = 1
+            else:
+                pass
+        
+        # TODO: Figure out motion values to detect object if object is not on screen
+        # TODO: Figure out how to move based on previous orientation
+
+        if self.oriented:
+            x_threshold = 20 # Pixels
+            center_x = self.shape[0]
+            center_line_x = (start_left[0] + end_right[0])/2
+            if abs(center_line_x - center_x) < x_threshold:
+                self.aligned = True
+            elif center_line_x - center_x > x_threshold:
+                lateral = 1 # Move right
+            elif center_line_x - center_x < - x_threshold:
+                lateral = -1 # Move left
+
+        if self.aligned and self.oriented:
+            lateral = 0
+            yaw = 0
             forward = 1
 
-        # Step 0: align with the path correctly
-        # Step 1: Move forward along the path -- do so in a way that if you move off the path, you'll
-        # move back to step 0 and align properly again.
+        # Continuously return motion commands, the state of the mission, and the visualized frame.
+        return {"lateral": 0, "forward": 0, "yaw" : yaw, "end": end}, orig_frame
 
-        # Return the frame and the motion values.
-        return {"lateral" : lateral, "forward" : forward, "yaw" : yaw}, frame
-
-# This if statement is just saying what to do if this script is run directly. 
 if __name__ == "__main__":
-    # Example of how to obtain a training video. Make sure to follow this template when capturing your own video, in case 
-    # another team member needs to run this code on his/her device. 
-    
-    # NOTE: When downloading the training data, the training data folder itself, which contains all of the data.
-    video_root_path = "/Users/avikaprasad/Desktop/RoboSub 2024/Training Data" # Computer path through the training data folder.
-    mission_name = "Follow the Path/" # Mission folder
-    video_name = "Follow the Path Video 4.mp4" # Specified video
+    video_root_path = "/Users/avikaprasad/Desktop/RoboSub 2024/Training Data/"
+    mission_name = "Follow the Path/"
+    video_name = "Follow the Path Video 3.mp4"
     video_path = os.path.join(video_root_path, mission_name, video_name)
-
-    # For testing
     print(f"Video path: {video_path}")
 
-    # Initialize an instance of the class.
     cv = CV("Blue")
 
-    # Verify the path exists.
     if not os.path.exists(video_path):
         print(f"[ERROR] Video file not found {video_path}")
     else:
-        # Capture the video object (basically access the specified video) at the specified path.
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             print(f"[ERROR] Unable to open video file: {video_path}")
         else:
             while True:
-                # Access each frame of the video.
                 ret, frame = cap.read()
                 if not ret:
                     print("[INFO] End of file.")
                     break
 
-                # Run the run function on the frame, and get back the relevant results.
                 motion_values, viz_frame = cv.run(frame)
                 if viz_frame is not None:
                     cv2.imshow("frame", viz_frame)
                 else:
                     print("[ERROR] Unable to display frame.")
-
-                # For testing purposes.
-                print(f"Motion: {motion_values}")
                 
+                print(f"Motion values: {motion_values}")
                 time.sleep(0.05)
 
                 if cv2.waitKey(1) & 0xFF == ord("q"):
