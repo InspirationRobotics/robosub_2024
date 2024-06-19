@@ -145,11 +145,11 @@ class DVL:
             # data["Distance_from_bottom"] = float(BD[4])
             # data["Time_since_valid"] = float(BD[5])
 
-            milli = int(TS[1][12:14]) * 0.1
+            centi = int(TS[1][12:14]) * 0.01
             seconds = int(TS[1][10:12])
             minutes = int(TS[1][8:10]) * 60
             hours = int(TS[1][6:8]) * 60 * 60
-            t = hours + minutes + seconds + milli
+            t = hours + minutes + seconds + centi
 
             # this is the only data we need
             data["time"] = t
