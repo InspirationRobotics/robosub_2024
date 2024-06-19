@@ -31,9 +31,11 @@ class CV:
         self.oriented = False
         self.aligned = False
 
+        self.start_time_search = None
+        self.start_search = False
+        self.last_lateral_search_movement = 0
+
     def run(self, orig_frame):
-        # set the testing vid
-        # video = cv2.VideoCapture("/Users/avikaprasad/Desktop/RoboSub 2024/Training Data/Follow the Path/Follow the Path Video 4.mp4")
         lateral = 0
         forward = 0
         yaw = 0
@@ -73,6 +75,7 @@ class CV:
 
         boundingBoxes = np.empty((0, 4), float)
         if len(cnts) > 0:
+            self.detected = True
             contour = cnts[0]
 
             rect = cv2.minAreaRect(contour)
@@ -129,6 +132,14 @@ class CV:
                 print("Vertical line: infinite slope")
             
         #motion code
+        if self.detected = False:
+            self.start_search = True
+            self.start_time_search = time.time()
+
+        if self.start_search = True:
+            if self.last_lateral_search_movement = 0:
+                lateral = 1
+        
         threshold_slope = 10
         if abs(slope) > threshold_slope:
             self.oriented = True
