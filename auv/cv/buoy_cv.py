@@ -62,7 +62,8 @@ class CV:
         detections_info = repr(detections)
         for detection in detections:
             detection_type = type(detection)
-            print(f"Detection type: {detection_type}")
+            detection_label = detection.label
+            print(f"Detection type: {detection_type}, Detection label: {detection_label}")
         # detection_str = str(detections)
         # detection_label = detections.label
 
