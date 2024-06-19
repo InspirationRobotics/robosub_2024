@@ -19,8 +19,7 @@ class DVL:
     def __init__(self, autostart=True, compass=False, test=False):
         self.test = test
         if not self.test:
-            # self.dvlPort = deviceHelper.dataFromConfig("dvl")
-            self.dvlPort = '/dev/ttyUSB0'
+            self.dvlPort = deviceHelper.dataFromConfig("dvl")
             print(self.dvlPort)
             sub = deviceHelper.variables.get("sub")
             if sub == "onyx":
