@@ -304,7 +304,6 @@ class _ScriptHandler:
             self.pub_out.publish(json.dumps(result))
 
             if viz_img is not None:
-                self.pub_out.publish(self.br.cv2_to_imgmsg(viz_img))
                 self.pub_viz.publish(self.br.cv2_to_imgmsg(viz_img)) # Publish the visualization of the frame as a ROS Image
 
     def stop(self):
