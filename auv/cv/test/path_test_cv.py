@@ -24,7 +24,6 @@ class CV:
         self.config = config # Blue counterclockwise, Red clockwise
         self.step = 0
 
-        self.forward_times = 0 # The theory behind this is that we should only go forward past the buoy twice.
         self.end = False
 
         # Test variables.
@@ -47,6 +46,25 @@ class CV:
         # Downscale the image to a reasonable size to reduce compute
         scale = 1
 
+
+        """
+        First find the object.
+
+        If not detected, execute lateral search pattern:
+        - We cannot just execute search pattern if the path is not detected.
+        - If the path has not been detected, we want to move back and forth laterally:
+            - Specifically, move right 3 secs, then move left for slightly longer (4 secs ex.)
+            - Keep moving right and left with slightly longer time iterations until the path has been detected.
+
+        If detected, yaw to orient correctly with slope. 
+
+        If oriented correctly, laterally move to align with center -- do this simultaneously with 
+        continuous checking of slope.
+
+        If aligned and oriented correctly, move forward. If after moving forward detection is gone, that means
+        mission has been successful and we can end.
+
+        """
         # Minimize false detects by eliminating contours less than a percentage of the image
         area_threshold = 0.01
         croppedPixels = 150
@@ -135,6 +153,9 @@ class CV:
                 slope = 10000
                 print("Vertical line: infinite slope")
             
+        else:
+            self.detected = False
+
         #motion code
         if self.detected == False and self.following_path == False:
             self.lateral_search = True
@@ -219,7 +240,7 @@ if __name__ == "__main__":
                     break
 
                 motion_values, viz_frame = cv.run(frame)
-                print(f"{cv.last_lateral} {cv.detected} Lateral search: {cv.lateral_search}")
+                print(f"Last lateral: {cv.last_lateral}, Detected : {cv.detected}, Lateral search: {cv.lateral_search}")
                 print(f"Start lateral: {cv.start_time}")
                 if viz_frame is not None:
                     cv2.imshow("frame", viz_frame)
