@@ -21,7 +21,7 @@ class CV:
         self.aligned = False
         self.shape = (640, 480)
         self.detected = False
-        self.config = config # Blue counterclockwise, Red clockwise
+        self.config = config 
         self.step = 0
 
         self.end = False
@@ -31,10 +31,9 @@ class CV:
         self.aligned = False
 
         self.following_path = False
+        
         self.lateral_search = False
-
         self.start_time = None
-        self.time_at_search = 0
         self.lateral_time_search = 3 # Seconds
         self.last_lateral = 0
 
@@ -46,25 +45,6 @@ class CV:
         # Downscale the image to a reasonable size to reduce compute
         scale = 1
 
-
-        """
-        First find the object.
-
-        If not detected, execute lateral search pattern:
-        - We cannot just execute search pattern if the path is not detected.
-        - If the path has not been detected, we want to move back and forth laterally:
-            - Specifically, move right 3 secs, then move left for slightly longer (4 secs ex.)
-            - Keep moving right and left with slightly longer time iterations until the path has been detected.
-
-        If detected, yaw to orient correctly with slope. 
-
-        If oriented correctly, laterally move to align with center -- do this simultaneously with 
-        continuous checking of slope.
-
-        If aligned and oriented correctly, move forward. If after moving forward detection is gone, that means
-        mission has been successful and we can end.
-
-        """
         # Minimize false detects by eliminating contours less than a percentage of the image
         area_threshold = 0.01
         croppedPixels = 150
@@ -166,20 +146,59 @@ class CV:
         if self.detected == False and self.following_path == True:
             self.end = True
 
+        """
+        First find the object.
+
+        If not detected, execute lateral search pattern:
+        - We cannot just execute search pattern if the path is not detected.
+        - If the path has not been detected, we want to move back and forth laterally:
+            - Specifically, move right 3 secs, then move left for slightly longer (4 secs ex.)
+            - Keep moving right and left with slightly longer time iterations until the path has been detected.
+
+        If detected, yaw to orient correctly with slope. 
+
+        If oriented correctly, laterally move to align with center -- do this simultaneously with 
+        continuous checking of slope.
+
+        If aligned and oriented correctly, move forward. If after moving forward detection is gone, that means
+        mission has been successful and we can end.
+
+        """
         # Back and forth lateral pattern
         if self.lateral_search == True:
             if self.start_time is None:
                 self.start_time = time.time()
-            if time.time() - self.start_time < self.lateral_time_search and self.last_lateral == 0:
-                lateral = 1
-            elif time.time() - self.start_time > self.lateral_time_search:
-                if self.last_lateral == 1:
-                    lateral = -1
-                elif self.last_lateral == -1:
-                    lateral = 1
+            elapsed_time = time.time() - self.start_time
+            if elapsed_time < self.lateral_time_search and self.last_lateral == 0:
+                lateral = 1 # Intial direction
+            elif elapsed_time > self.lateral_time_search and self.last_lateral == 0: 
+                self.last_lateral = lateral # Maintain current direction
+                self.start_time = time.time()
                 self.lateral_time_search += 1
-
-            self.last_lateral = lateral
+                lateral = -1
+            elif elapsed_time < self.lateral_time_search and self.last_lateral != 0:
+                if self.last_lateral < 0:
+                    lateral = 1
+                elif self.last_lateral > 0:
+                    lateral = -1
+            elif elapsed_time > self.lateral_time_search and self.last_lateral != 0:
+                self.last_lateral = lateral # Maintain current direction
+                self.start_time = time.time()
+                self.lateral_time_search += 1
+            
+                 
+        # else: 
+        #     # switch direction after the interval 
+        #     if self.last_lateral == 1:
+        #             lateral = -1
+        #     elif self.last_lateral == -1:
+        #             lateral = 1
+        #         # Reset the start time for the next interval
+        #     self.start_time = time.time()
+        #         # Increment the interval time
+        #     self.lateral_time_search += 1
+        #     # Update last lateral
+        #     self.last_lateral = lateral
         
         if self.detected:
             threshold_slope = 10
@@ -218,7 +237,7 @@ class CV:
         return {"lateral": lateral, "forward": forward, "yaw" : yaw, "end": end}, orig_frame
 
 if __name__ == "__main__":
-    video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/"
+    video_root_path = "/Users/avikaprasad/Desktop/RoboSub 2024/Training Data"
     mission_name = "Gate/"
     video_name = "Gate Video 3.mp4"
     video_path = os.path.join(video_root_path, mission_name, video_name)
