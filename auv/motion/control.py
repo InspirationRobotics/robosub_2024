@@ -80,7 +80,7 @@ def control():
         lateral = 0
         yaw = 0
         run = False
-        disarm.disarm()
+        disarm()
     else:
         print("Invalid command.")
 
