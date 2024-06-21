@@ -116,19 +116,17 @@ class CV:
                 x2, y2 = v_end_right
                 start_left = v_start_left
                 end_right = v_end_right
-                print(v_distance, h_distance)
             else:
                 cv2.line(orig_frame, h_start_left, h_end_right, (0, 255, 0), 2)
                 x1, y1 = h_start_left
                 x2, y2 = h_end_right
                 start_left = h_start_left
                 end_right = h_end_right
-                print(v_distance, h_distance)
 
             #calculating the slope
             if x2 - x1 != 0:
                 slope = (y2 - y1)/(x2 - x1)
-                print(f"Slope of Line: {slope}")
+
             else:
                 slope = 10000
                 print("Vertical line: infinite slope")
@@ -165,25 +163,19 @@ class CV:
 
         """
         # Back and forth lateral pattern
-        if self.lateral_search == True:
+        if self.lateral_search:
             if self.start_time is None:
                 self.start_time = time.time()
+                self.last_lateral = 1  # Initial direction
             elapsed_time = time.time() - self.start_time
-            if elapsed_time < self.lateral_time_search and self.last_lateral == 0:
-                lateral = 1 # Intial direction
-            elif elapsed_time > self.lateral_time_search and self.last_lateral == 0: 
-                self.last_lateral = lateral # Maintain current direction
+
+            if elapsed_time < self.lateral_time_search:
+                lateral = self.last_lateral
+            else:
+                # Switch direction and reset timer
+                self.last_lateral = -self.last_lateral
                 self.start_time = time.time()
-                self.lateral_time_search += 1
-                lateral = -1
-            elif elapsed_time < self.lateral_time_search and self.last_lateral != 0:
-                if self.last_lateral < 0:
-                    lateral = 1
-                elif self.last_lateral > 0:
-                    lateral = -1
-            elif elapsed_time > self.lateral_time_search and self.last_lateral != 0:
-                self.last_lateral = lateral # Maintain current direction
-                self.start_time = time.time()
+                lateral = self.last_lateral
                 self.lateral_time_search += 1
             
                  
@@ -212,19 +204,20 @@ class CV:
                     yaw = 1
                 else:
                     pass
-            
-            # TODO: Figure out motion values to detect object if object is not on screen
-            # TODO: Figure out how to move based on previous orientation
 
             if self.oriented:
                 x_threshold = 20 # Pixels
-                center_x = self.shape[0]
+                center_x = self.shape[0]/2
                 center_line_x = (start_left[0] + end_right[0])/2
+
                 if abs(center_line_x - center_x) < x_threshold:
                     self.aligned = True
+                    lateral = 0
                 elif center_line_x - center_x > x_threshold:
+                    self.aligned = False
                     lateral = 1 # Move right
                 elif center_line_x - center_x < - x_threshold:
+                    self.aligned = False
                     lateral = -1 # Move left
 
             if self.aligned and self.oriented:
@@ -237,9 +230,9 @@ class CV:
         return {"lateral": lateral, "forward": forward, "yaw" : yaw, "end": end}, orig_frame
 
 if __name__ == "__main__":
-    video_root_path = "/Users/avikaprasad/Desktop/RoboSub 2024/Training Data"
-    mission_name = "Gate/"
-    video_name = "Gate Video 3.mp4"
+    video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/"
+    mission_name = "Follow the Path/"
+    video_name = "Follow the Path Video 2.mp4"
     video_path = os.path.join(video_root_path, mission_name, video_name)
     print(f"Video path: {video_path}")
 
@@ -259,8 +252,7 @@ if __name__ == "__main__":
                     break
 
                 motion_values, viz_frame = cv.run(frame)
-                print(f"Last lateral: {cv.last_lateral}, Detected : {cv.detected}, Lateral search: {cv.lateral_search}")
-                print(f"Start lateral: {cv.start_time}")
+
                 if viz_frame is not None:
                     cv2.imshow("frame", viz_frame)
                 else:
