@@ -40,6 +40,9 @@ def list_devices():
     forward_Oak_MXID = deviceHelper.dataFromConfig("forwardOak")
     bottom_Oak_MXID = deviceHelper.dataFromConfig("bottomOak")
 
+    print(forward_Oak_MXID)
+    print(bottom_Oak_MXID)
+
     available_devices = []
     for device in dai.Device.getAllAvailableDevices():
         available_devices.append(device.getMxId())
@@ -48,11 +51,12 @@ def list_devices():
         pass
     elif len(available_devices) == 2:
         for device in available_devices:
+            print(device)
             if device == forward_Oak_MXID:
                 available_devices[0] = device
             elif device == bottom_Oak_MXID:
                 available_devices[1] = device
-                
+
     return available_devices
 
 
