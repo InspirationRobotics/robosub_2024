@@ -10,9 +10,9 @@ import rospy
 import keyboard
 import time
 import threading
-from motion.robot_control import RobotControl
-from motion.servo import Servo
-from utils import arm, disarm, deviceHelper
+from auv.motion.robot_control import RobotControl
+from auv.motion.servo import Servo
+from auv.utils import arm, disarm, deviceHelper
 
 rospy.init_node("Control", anonymous=True)
 
