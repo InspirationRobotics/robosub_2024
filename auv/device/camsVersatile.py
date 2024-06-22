@@ -46,17 +46,17 @@ def list_devices():
     available_devices = []
     for device in dai.Device.getAllAvailableDevices():
         available_devices.append(device.getMxId())
-        
+
     print(available_devices)
     if len(available_devices) < 2:
         pass
     elif len(available_devices) == 2:
-        for device in available_devices:
-            print(device)
-            if device == forward_Oak_MXID:
-                available_devices[0] = device
-            elif device == bottom_Oak_MXID:
-                available_devices[1] = device
+        for mxid in available_devices:
+            print(mxid)
+            if mxid == forward_Oak_MXID:
+                available_devices[0] = mxid
+            elif mxid == bottom_Oak_MXID:
+                available_devices[1] = mxid
 
     return available_devices
 
