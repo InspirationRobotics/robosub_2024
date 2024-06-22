@@ -46,7 +46,8 @@ def list_devices():
     available_devices = []
     for device in dai.Device.getAllAvailableDevices():
         available_devices.append(device.getMxId())
-
+        
+    print(available_devices)
     if len(available_devices) < 2:
         pass
     elif len(available_devices) == 2:
