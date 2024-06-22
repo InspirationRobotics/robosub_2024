@@ -43,22 +43,39 @@ def list_devices():
     print(forward_Oak_MXID)
     print(bottom_Oak_MXID)
 
-    available_devices = []
-    for device in dai.Device.getAllAvailableDevices():
-        available_devices.append(device.getMxId())
-
+    available_devices = [device.getMxId() for device in dai.Device.getAllAvailableDevices()]
     print(available_devices)
+
     if len(available_devices) < 2:
         pass
     elif len(available_devices) == 2:
+        ordered_devices = [None, None]
         for mxid in available_devices:
             print(mxid)
             if mxid == forward_Oak_MXID:
-                available_devices[0] = mxid
+                ordered_devices[0] = mxid
             elif mxid == bottom_Oak_MXID:
-                available_devices[1] = mxid
+                ordered_devices[1] = mxid
+
+        available_devices = ordered_devices
 
     return available_devices
+
+    # for device in dai.Device.getAllAvailableDevices():
+    #     available_devices.append(device.getMxId())
+
+    # print(available_devices)
+    # if len(available_devices) < 2:
+    #     pass
+    # elif len(available_devices) == 2:
+    #     for mxid in available_devices:
+    #         print(mxid)
+    #         if mxid == forward_Oak_MXID:
+    #             available_devices[0] = mxid
+    #         elif mxid == bottom_Oak_MXID:
+    #             available_devices[1] = mxid
+
+    # return available_devices
 
 
 def difference(string1, string2):
