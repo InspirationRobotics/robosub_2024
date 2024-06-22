@@ -36,9 +36,23 @@ def list_devices():
     Returns:
         list: List of avaliable DepthAI devices (OAK-D cams)
     """
+    # We want to return Forward Oak then Bottom Oak
+    forward_Oak_MXID = deviceHelper.dataFromConfig("forwardOak")
+    bottom_Oak_MXID = deviceHelper.dataFromConfig("bottomOak")
+
     available_devices = []
     for device in dai.Device.getAllAvailableDevices():
         available_devices.append(device.getMxId())
+
+    if len(available_devices) < 2:
+        pass
+    elif len(available_devices) == 2:
+        for device in available_devices:
+            if device == forward_Oak_MXID:
+                available_devices[0] = device
+            elif device == bottom_Oak_MXID:
+                available_devices[1] = device
+                
     return available_devices
 
 
