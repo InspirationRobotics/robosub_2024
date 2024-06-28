@@ -1,5 +1,7 @@
 """
-Bin CV and logic test
+Bin CV and logic test.
+
+Author: Brandon Tran
 """
 
 import time
@@ -25,10 +27,13 @@ class CV:
         self.config = config.lower()  # Ensure config is in lowercase
         self.step = 0
         self.end = False
+        self.drop_ball = False
 
         print(f"[INFO] Bin CV Init with target color: {self.config.capitalize()}")
         self.viz_frame = None
         self.error_buffer = []
+
+        self.threshold = 0.1
 
     def get_bbox_center(self, detection):
         """
@@ -152,6 +157,19 @@ class CV:
         # Calculate yaw based on horizontal position
         yaw = (target_midpoint[0] - center_x) / center_x
 
+        # We want to yaw, then move laterally, then move forward.
+        if abs(yaw) > self.threshold:
+            forward = 0
+            lateral = 0
+
+        if abs(yaw) < self.threshold and abs(lateral) > self.threshold:
+            yaw = 0
+            forward = 0
+
+        if abs(forward) > self.threshold and abs(lateral) < self.threshold and abs(yaw) < self.threshold:
+            yaw = 0
+            lateral = 0
+
         return forward, lateral, depth, yaw
     
     def run(self, raw_frame):
@@ -161,14 +179,17 @@ class CV:
         midpoints = self.get_midpoints(raw_frame)
         frame_shape = raw_frame.shape[:2]
         forward, lateral, depth, yaw = self.calculate_movement(midpoints, frame_shape)
+        self.drop(forward, lateral, depth, yaw)
 
         # Annotate movements on the frame
         cv2.putText(raw_frame, f"Forward: {forward:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
         cv2.putText(raw_frame, f"Lateral: {lateral:.2f}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
         cv2.putText(raw_frame, f"Depth: {depth:.2f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-        cv2.putText(raw_frame, f"Yaw: {yaw:.2f}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-
-        return raw_frame, forward, lateral, depth, yaw
+        cv2.putText(raw_frame, f"Yaw: {yaw:.2f}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)        
+        
+        if self.drop_ball == True:
+            self.end = True
+        return {"lateral" : lateral, "forward" : forward, "yaw" : yaw, "drop_ball" : self.drop_ball, "end" : self.end}, raw_frame
     
     def drop(self, forward, lateral, depth, yaw):
         """
@@ -176,12 +197,14 @@ class CV:
         """
         if abs(forward) < 0.1 and abs(lateral) < 0.1 and abs(depth) < 0.1 and abs(yaw) < 0.1:
             print("[INFO] Dropping object at target location")
+            self.drop_ball = True
             # Code to trigger the drop mechanism of the robot
         else:
             print("[INFO] Aligning with target, cannot drop object yet")
 
 if __name__ == "__main__":
-    video_root_path = "/Users/brandontran3/downloads/Training Data/"
+    # video_root_path = "/Users/brandontran3/downloads/Training Data/"
+    video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/"
     mission_name = "Bins/"
     video_name = "Bins Video 5.mp4"
     video_path = os.path.join(video_root_path, mission_name, video_name)
@@ -205,14 +228,15 @@ if __name__ == "__main__":
                     print("[INFO] End of file.")
                     break
 
-                viz_frame, forward, lateral, depth, yaw = cv.run(frame)
+                motion_values, viz_frame = cv.run(frame)
                 if viz_frame is not None:
-                    cv.drop(forward, lateral, depth, yaw)
                     cv2.imshow("frame", viz_frame)
 
                 # Break the loop when 'q' key is pressed
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
+
+                print(f"Motion values: {motion_values}")
 
             cap.release()
             cv2.destroyAllWindows()

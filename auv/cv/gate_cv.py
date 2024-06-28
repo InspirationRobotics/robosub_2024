@@ -33,11 +33,50 @@ class CV:
             config: Dictionary that contains the configuration of the devices on the sub.
         """
 
-        self.shape = (480, 640)
+        self.config = config
+        self.shape = (640, 480)
+        self.end = False
+
+        self.state = None
+        self.aligned = False
+        self.tolerance = 20 # Pixels
+
+        self.target = None
 
         print("[INFO] Gate CV init")
 
-    def run(self, frame, target, detections):
+    def yaw_smart(self, detection):
+        """Determine yaw either clockwise or counterclockwise if there is one detection on the screen, based on where the detection is on the screen."""
+
+        detection_midpoint = (detection.xmin + detection.xmax)/2
+        midpoint_frame = self.shape[0]/2
+
+        # If detection is to the left of the center of the frame.
+        if detection_midpoint < midpoint_frame - self.tolerance: 
+            yaw = -1
+        # If detection is to the right of the center of the frame.
+        elif detection_midpoint > midpoint_frame + self.tolerance:
+            yaw = 1
+        else:
+            yaw = 1
+
+        return yaw
+    
+    def strafe_smart(self, detection_x):
+        """Strafe to align with the correct side of the gate based on target x_coordinate."""
+        midpoint_frame = self.shape[0]/2
+        # If detection is to the left of the center of the frame.
+        if detection_x < midpoint_frame - self.tolerance: 
+            lateral = -1
+        # If detection is to the right of the center of the frame.
+        elif detection_x > midpoint_frame + self.tolerance:
+            lateral = 1
+        else:
+            lateral = 0
+
+        return lateral
+
+    def run(self, frame, target="Blue", detections=None):
         """
         Run the CV script.
 
@@ -57,81 +96,63 @@ class CV:
         forward = 0
         lateral = 0
         yaw = 0
-        end = 0
-
-        detections_info = detections
-
-        print(f"{forward} {lateral} {yaw} {end} {detections_info}")
-        # targetDetection = None
-        # targetDetected = False
-        # step = 0
-        # end = False
-
-        # if len(detections) < 2:
-        #     yaw = 1
-
-        # if len(detections) == 2:
-        #     for detection in detections:
-        #         if target in detection.label:
-        #             targetDetection = detection
-
-        # if targetDetection is not None:
-        #     if targetDetection.confidence > 0.5:
-        #         targetDetected = True
-        #     else:
-        #         targetDetected = False
         
-        # if targetDetected == True:
-        #     step = 1
+        target_x = None
+        other_x = None
 
-        # if step == 1:
-        #     # Align with the target.
-        #     lateral = 0
-        #     forward = 0
-        
-        # if end == True:
-        #     print("Ending mission")
-                    
-        # # If the length of detections is not equal to two, then yaw to find the detections.
-        # # Find the detection with the target label.
-        # # If the confidence of the detection is high enough, then obtain the x and y coordinates of the detection on the frame.
-        # # Align so that the x midpoint is aligned with the midpoint of the frame, and the y coordinate should be significantly higher than the y midpoint.
-        # # End.
+        # If there are zero detections, yaw.
+        # If there is one detection, note on which side of the screen it is and then yaw accordingly (offsource to a different function).
+        # If there are two detections, check confidences and label, then begin strafe.
+        # Once aligned, end.
 
-        # Continuously return motion commands, the state of the mission, and the visualized frame.
-        return {"lateral": lateral, "forward": forward, "yaw": yaw, "end": end}, frame
+        if len(detections) == 0:
+            yaw = 1
+        elif len(detections) == 1:
+            detection = detections[0]
+            yaw = self.yaw_smart(detection)
+        elif len(detections) == 2:
+            for detection in detections:
+                x_midpoint = (detection.xmin + detection.xmax)/2 
+                if detection.confidence > 0.6 and target in detection.label:
+                    target_x = x_midpoint
+                    self.target = detection.label
+                    self.state == "strafe"
+                elif detection.confidence > 0.6 and target not in detection.label:
+                    other_x = x_midpoint
+                    other_label = detection.label
+                else:
+                    print(f"[WARN] Detections have low confidence, going for the highest confidence label.")
+                    self.state == "target_determination"
 
+            if target_x == None and other_x is not None:
+                print("[INFO] Switching targets because original set target is not confirmed.")
+                target_x = other_x
+                self.target = other_label
+                self.state == "strafe"
 
-if __name__ == "__main__":
-    cv = CV()
-    data, frame = cv.run(None, None, None)
-    print(data)
+        if self.state == "target_determination":
+            confidence = 0
+            if (detection.xmax - detection.xmin) * (detection.ymax - detection.ymin) < 400:
+                print("[INFO] Moving forward.")
+                forward = 1
+            elif (detection.xmax - detection.xmin) * (detection.ymax - detection.ymin) > 650:
+                print("[INFO] Moving backward.")
+                forward = -1
+            else:
+                self.state == "strafe" # Strafe anyway
+            for detection in detections:
+                if detection.confidence > confidence:
+                    target_x = (detection.xmin + detection.xmax) / 2
+                    confidence = detection.confidence
+                    self.target = detection.label
 
-    # # This is the code that will be executed if you run this file directly.
-    # # It is here for testing purposes.
-    # # You can run this file independently using: "python -m auv.cv.template_cv".
+        if self.state == "strafe":
+            yaw = 0 # Just in case not already 0
+            lateral = self.strafe_smart(target_x)
+            if lateral == 0:
+                self.aligned = True
 
-    # # Create a CV object with arguments
-    # cv = CV()
-
-    # # Here you can initialize your camera, etc.
-
-    # # Capture the video object for processing
-    # cap = cv2.VideoCapture(0)
-
-    # while True:
-    #     # Grab and read a frame from the video object.
-    #     ret, frame = cap.read()
-    #     if not ret:
-    #         break
-
-    #     # Run the CV script.
-    #     result = cv.run(frame, "some_info", None)
-
-    #     # Do something with the result. 
-    #     print(f"[INFO] {result}")
-
-    #     # Debug the visualized frame.
-    #     cv2.imshow("frame", frame)
-    #     if cv2.waitKey(1) & 0xFF == ord("q"):
-    #         break
+        if self.aligned == True:
+            self.end = True
+            
+        return {"lateral": lateral, "forward": forward, "yaw": yaw, "target": self.target, "end": self.end}, frame
