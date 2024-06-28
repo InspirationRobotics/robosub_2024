@@ -66,6 +66,7 @@ class DVL:
 
         self.vel_rot = [0, 0, 0]  # rotated velocity vector
         self.position = [0, 0, 0]  # position in meters
+        self.dvl_rot = math.radians(45)
         self.is_valid = False
         self.data_available = False
 
@@ -185,10 +186,11 @@ class DVL:
         self.prev_time = current_time
 
         # rotate velocity vector using compass heading
+        # plus 45 degrees
         # X = lateral, Y = forward, Z = vertical
         self.vel_rot = [
-            vel[0] * math.cos(self.compass_rad) + vel[1] * math.sin(self.compass_rad),
-            vel[1] * math.cos(self.compass_rad) - vel[0] * math.sin(self.compass_rad),
+            vel[0] * math.cos(self.compass_rad + self.dvl_rot) + vel[1] * math.sin(self.compass_rad + self.dvl_rot),
+            vel[1] * math.cos(self.compass_rad + self.dvl_rot) - vel[0] * math.sin(self.compass_rad + self.dvl_rot),
             vel[2],
         ]
 
@@ -200,10 +202,10 @@ class DVL:
         ]
 
         vel_rot_error = [
-            (vel[0] + self.dvl_error) * math.cos(self.compass_rad + self.compass_error)
-            + (vel[1] + self.dvl_error) * math.sin(self.compass_rad + self.compass_error),
-            (vel[1] + self.dvl_error) * math.cos(self.compass_rad + self.compass_error)
-            - (vel[0] + self.dvl_error) * math.sin(self.compass_rad + self.compass_error),
+            (vel[0] + self.dvl_error) * math.cos(self.compass_rad + self.dvl_rot + self.compass_error)
+            + (vel[1] + self.dvl_error) * math.sin(self.compass_rad + self.dvl_rot + self.compass_error),
+            (vel[1] + self.dvl_error) * math.cos(self.compass_rad + self.dvl_rot + self.compass_error)
+            - (vel[0] + self.dvl_error) * math.sin(self.compass_rad + self.dvl_rot + self.compass_error),
             vel[2] + self.dvl_error,  # we actually have a sensor for depth, so useless
         ]
 
@@ -242,11 +244,19 @@ class DVL:
 
         self.prev_time = current_time
 
+        # Rotate velocity vector by DVL rotation of 45 degrees
+
+        self.vel_rot = [
+            vel[0] * math.cos(self.dvl_rot) + vel[1] * math.sin(self.dvl_rot),
+            vel[1] * math.cos(self.dvl_rot) - vel[0] * math.sin(self.dvl_rot),
+            vel[2],
+        ]
+
         # integrate velocity to position with respect to time
         self.position = [
-            self.position[0] + vel[0] * dt,
-            self.position[1] + vel[1] * dt,
-            self.position[2] + vel[2] * dt,
+            self.position[0] + self.vel_rot[0] * dt,
+            self.position[1] + self.vel_rot[1] * dt,
+            self.position[2] + self.vel_rot[2] * dt,
         ]
 
         vel_error = [
