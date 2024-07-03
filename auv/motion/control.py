@@ -2,7 +2,7 @@ import rospy
 import time
 from mavros_msgs.msg import OverrideRCIn
 from mavros_msgs.srv import CommandBool
-from . import robot_control
+from . import robot_control as rc
 from ..utils import arm, disarm
 
 rospy.init_node("Control")
@@ -68,8 +68,8 @@ def control():
                 drop += 0.2
                 print(f'{drop}')
                 
-        # depth = input("Absolute depth: ")
-        # rc.set_depth(depth)
+        depth = input("Absolute depth: ")
+        rc.set_depth(depth)
     elif var == 'i':
         forward = 0
         lateral = 0
