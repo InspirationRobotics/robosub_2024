@@ -9,12 +9,12 @@ from std_msgs.msg import String
 
 from ..device import cv_handler # For running mission-specific CV scripts
 from ..motion import robot_control # For running the motors on the sub
-
+from .. utils import disarm
 
 class TemplateMission:
     cv_files = ["template_cv"] # CV file to run
 
-    def __init__(self, **config):
+    def __init__(self, target=None, **config):
         """
         Initialize the mission class; here should be all of the things needed in the run function. 
 
@@ -30,15 +30,15 @@ class TemplateMission:
         self.cv_handler = cv_handler.CVHandler(**self.config)
 
         # Initialize the CV handlers; dummys are used to input a video file instead of the camera stream as data for the CV script to run on
-        dummys = self.config.get("cv_dummy", [None] * len(self.cv_files))
-        for file_name, dummy in zip(self.cv_files, dummys):
-            self.cv_handler.start_cv(file_name, self.callback, dummy=dummy)
+        for file_name in self.cv_files:
+            self.cv_handler.start_cv(file_name, self.callback)
 
-        print("[INFO] Template mission init")
+        self.cv_handler.set_target("template_cv", target)
+        print("[INFO] Template Mission Init")
 
     def callback(self, msg):
         """
-        Calls back the cv_handler output -- you can have multiple callback for multiple CV handlers. Converts the output into JSON format.
+        Calls back the cv_handler output -- you can have multiple callbacks for multiple CV handlers. Converts the output into JSON format.
 
         Args:
             msg: cv_handler output -- this will be a dictionary of motion commands and potentially the visualized frame as well as servo commands (like the torpedo launcher)
@@ -70,12 +70,19 @@ class TemplateMission:
             self.received = False
             self.next_data = {}
 
-            # TODO: do something with the data
+            # Do something with the data.
+            lateral = self.data["template_cv"].get("lateral", None)
+            forward = self.data["template_cv"].get("forward", None)
+            yaw = self.data["template_cv"].get("yaw", None)
+            end = self.data["template_cv"].get("end", None)
 
-            # Here is an example of how to set the target for the CV file
-            self.cv_handler.set_target("template_cv", "albedo")
-
-            break  # TODO: remove this line when making your mission
+            if end:
+                print("Ending")
+                self.robot_control.movement(lateral = 0, forward = 0, yaw = 0)
+                break
+            else:
+                self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
+                print(forward, lateral, yaw) 
 
         print("[INFO] Template mission run")
 
@@ -88,7 +95,7 @@ class TemplateMission:
             self.cv_handler.stop_cv(file_name)
 
         # Idle the robot
-        self.robot_control.movement()
+        self.robot_control.movement(lateral = 0, forward = 0, yaw = 0)
         print("[INFO] Template mission terminate")
 
 
@@ -115,5 +122,4 @@ if __name__ == "__main__":
 
     # Run the mission
     mission.run()
-    time.sleep(2)
     mission.cleanup()

@@ -1,119 +1,102 @@
 """
-Handles the running of the Gate mission
-Picks a side, either Abydos or Earth, to move through
+Mission file for the Gate class. Essentially takes the output from gate_cv and sends it over to robot_control to move the AUV.
 """
 
 import json
-import time
 
 import rospy
 from std_msgs.msg import String
 
-from ..device import cv_handler # For running CV scripts
-from ..motion import robot_control # For moving the sub
-from ..utils import disarm # For disarming the sub
-
+from ..device import cv_handler # For running mission-specific CV scripts
+from ..motion import robot_control # For running the motors on the sub
+from .. utils import disarm
 
 class GateMission:
-    """
-    Class to handle the Gate mission
-    """
-    cv_files = ["gate_cv"] # CV script to run
+    cv_files = ["gate_cv"] # CV file to run
 
-    def __init__(self, target="abydos", **config):
+    def __init__(self, target="Red", **config):
         """
-        Initializes the GateMission class
+        Initialize the mission class; here should be all of the things needed in the run function. 
 
         Args:
-            target (str): the side of the gate to pass through (either Earth or Abydos), defaults to abydos
-            config: Mission-specific parameters to run the mission
+            config: Mission-specific parameters to run the mission.
         """
         self.config = config
-        self.data = {}  # Dictionary to store the data from the CV handler(s)
-        self.next_data = {}  # Dictionary to store the most updated data from the CV handler(s). This will later be merged with self.data.
+        self.data = {}  # Dictionary to store the data from the CV handler
+        self.next_data = {}  # Dictionary to store the newest data from the CV handler; this data will be merged with self.data.
         self.received = False
 
         self.robot_control = robot_control.RobotControl()
         self.cv_handler = cv_handler.CVHandler(**self.config)
 
-        # Initialize the CV handler
+        # Initialize the CV handlers; dummys are used to input a video file instead of the camera stream as data for the CV script to run on
         for file_name in self.cv_files:
             self.cv_handler.start_cv(file_name, self.callback)
 
-        # Set the target for the gate (either Earth or Abydos)
         self.cv_handler.set_target("gate_cv", target)
-        print("[INFO] Gate mission init")
+        print("[INFO] Gate Mission Init")
 
     def callback(self, msg):
         """
-        Callback for the cv_handler output. Converts the output to JSON format and puts it in self.next_data, the list that holds 
-        the most updated CV output data.
+        Calls back the cv_handler output -- you can have multiple callbacks for multiple CV handlers. Converts the output into JSON format.
 
         Args:
-            msg: Data from the CV handler
+            msg: cv_handler output -- this will be a dictionary of motion commands and potentially the visualized frame as well as servo commands (like the torpedo launcher)
         """
-        file_name = msg._connection_header["topic"].split("/")[-1]
-        data = json.loads(msg.data)
-        self.next_data[file_name] = data
+        file_name = msg._connection_header["topic"].split("/")[-1] # Get the file name from the topic name
+        data = json.loads(msg.data) # Convert the data to JSON
+        self.next_data[file_name] = data 
         self.received = True
 
-        #print(f"[DEBUG] Received data from {file_name}")
+        print(f"[DEBUG] Received data from {file_name}")
 
     def run(self):
         """
-        Run the gate mission.
+        Here should be all the code required to run the mission.
+        This could be a loop, a finite state machine, etc.
         """
 
         while not rospy.is_shutdown():
             if not self.received:
                 continue
-            
-            self.robot_control.set_depth(0.8) # Set the depth to 0.8 m
 
-            # Merge the data from self.next_data with self.data, and wipe self.next_data so it can take the new, more updated data from
-            # the CV handler.
+            # Merge self.next_data, which contains the updated CV handler output, with self.data, which contains the previous CV handler output.
+            # self.next_data will be wiped so that it can be updated with the new CV handler output.
             for key in self.next_data.keys():
                 if key in self.data.keys():
-                    self.data[key].update(self.next_data[key]) # If the key is already present, just merge the data with the corresponding key
+                    self.data[key].update(self.next_data[key]) # Merge the data
                 else:
-                    self.data[key] = self.next_data[key] # Create a new key and merge the data
-            self.received = False 
+                    self.data[key] = self.next_data[key] # Update the keys if necessary
+            self.received = False
             self.next_data = {}
 
-            if not "gate_cv" in self.data.keys():
-                continue
-
-            # Get the lateral and forward values from the CV handler output (if they exist)
+            # Do something with the data.
             lateral = self.data["gate_cv"].get("lateral", None)
             forward = self.data["gate_cv"].get("forward", None)
             yaw = self.data["gate_cv"].get("yaw", None)
-            end = self.data["gate_cv"].get("end", False)
+            end = self.data["gate_cv"].get("end", None)
 
-            #if any(i == None for i in (lateral, forward, yaw)):
-            #    continue
-            # direcly feed the cv output to the robot control
-
-            # After the mission, move a little more forward to ensure we actually pass the gate
             if end:
-                print("Ending...")
-                self.robot_control.forwardDist(6, 2)
-                self.robot_control.movement(lateral=0, yaw=0, forward=0)
+                print("Ending")
+                self.robot_control.movement(lateral = 0, forward = 0, yaw = 0)
                 break
             else:
-                self.robot_control.movement(lateral=lateral, forward=forward, yaw=yaw)
-                print(lateral, forward, yaw)
+                self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
+                print(forward, lateral, yaw) 
 
-        print("[INFO] Gate mission run")
+        print("[INFO] gate mission run")
 
     def cleanup(self):
         """
-        Clean up the gate mission by stopping the mission-specific CV scripts and idling the sub
+        Here should be all the code required after the run function.
+        This could be cleanup, saving data, closing files, etc.
         """
         for file_name in self.cv_files:
             self.cv_handler.stop_cv(file_name)
 
-        self.robot_control.movement(lateral=0, forward=0, yaw=0)
-        print("[INFO] Gate mission terminate")
+        # Idle the robot
+        self.robot_control.movement(lateral = 0, forward = 0, yaw = 0)
+        print("[INFO] gate mission terminate")
 
 
 if __name__ == "__main__":
@@ -121,11 +104,11 @@ if __name__ == "__main__":
     # It is here for testing purposes
     # you can run this file independently using: "python -m auv.mission.gate_mission"
     # You can also import it in a mission file outside of the package
-
     import time
     from auv.utils import deviceHelper
 
     rospy.init_node("gate_mission", anonymous=True)
+
     config = deviceHelper.variables
     config.update(
         {
