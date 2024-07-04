@@ -90,7 +90,7 @@ import os
 class CV:
     camera = "/auv/camera/videoOAKdRawForward" 
 
-    def __init__(self, config):
+    def __init__(self, **config):
         self.aligned = False
         self.shape = (640, 480)
         self.detected = False
@@ -130,7 +130,7 @@ class CV:
 
             if cv2.contourArea(largest_contour) > 0:
                 x, y, w, h = cv2.boundingRect(largest_contour)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                # cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 detected = True
                 return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}, frame
         
