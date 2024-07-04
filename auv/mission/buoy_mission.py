@@ -1,6 +1,5 @@
 """
-Class for running the Buoy misson.
-Bumps the correct characters on the buoy.
+Mission class for the buoy.
 """
 
 import json
@@ -9,63 +8,53 @@ import rospy
 from std_msgs.msg import String
 
 from ..device import cv_handler # For running mission-specific CV scripts
-from ..motion import robot_control # For controlling the thrusters of the sub
-import time
-
+from ..motion import robot_control # For running the motors on the sub
+from .. utils import disarm
 
 class BuoyMission:
-    """
-    Run the Buoy mission
-    """
-    cv_files = ["buoy_cv"] # CV script to run
+    cv_files = ["buoy_cv"] # CV file to run
 
-    def __init__(self, target="earth1", **config):
+    def __init__(self, target=None, **config):
         """
-        Initialize the BuoyMission class
+        Initialize the mission class; here should be all of the things needed in the run function. 
 
         Args:
-            config (dict): Configuration settings to run the mission
+            config: Mission-specific parameters to run the mission.
         """
         self.config = config
-        self.data = {}  # Dictionary to store the data from the CV handler(s)
-        self.next_data = {}  # Dictionary to store the most updated data from the CV handler(s)
+        self.data = {}  # Dictionary to store the data from the CV handler
+        self.next_data = {}  # Dictionary to store the newest data from the CV handler; this data will be merged with self.data.
         self.received = False
-        self.target = target
-        self.side = None
-        self.baseDepth = 3 # 2.3 (bottom of buoy)
-        self.upDepth = 2.4 # 1.8 (top of buoy)
-            
+
         self.robot_control = robot_control.RobotControl()
         self.cv_handler = cv_handler.CVHandler(**self.config)
 
-        # Initialize the CV script
+        # Initialize the CV handlers; dummys are used to input a video file instead of the camera stream as data for the CV script to run on
         for file_name in self.cv_files:
             self.cv_handler.start_cv(file_name, self.callback)
-        self.cv_handler.set_target("buoy_cv", self.target)
-        print("[INFO] Buoy mission init")
+
+        self.cv_handler.set_target("buoy_cv", target)
+        print("[INFO] Buoy Mission Init")
 
     def callback(self, msg):
         """
-        Callback function for obtaining output from the CV handler. Multiple callback functions can be used for multiple CV handlers. Converts the 
-        message data to JSON format.
+        Calls back the cv_handler output -- you can have multiple callbacks for multiple CV handlers. Converts the output into JSON format.
 
         Args:
-            msg: Output from the CV handler. This will be a dictionary of motion values, possible the visualized frame, and potentially servo commands
+            msg: cv_handler output -- this will be a dictionary of motion commands and potentially the visualized frame as well as servo commands (like the torpedo launcher)
         """
         file_name = msg._connection_header["topic"].split("/")[-1] # Get the file name from the topic name
-        data = json.loads(msg.data) # Convert to JSON format
-        self.next_data[file_name] = data
+        data = json.loads(msg.data) # Convert the data to JSON
+        self.next_data[file_name] = data 
         self.received = True
 
-        # print(f"[DEBUG] Received data from {file_name}")
+        print(f"[DEBUG] Received data from {file_name}")
 
     def run(self):
         """
-        Run the buoy mission
+        Here should be all the code required to run the mission.
+        This could be a loop, a finite state machine, etc.
         """
-
-        self.robot_control.set_depth(self.baseDepth) # Move to the bottom of the buoy
-        time.sleep(4)
 
         while not rospy.is_shutdown():
             if not self.received:
@@ -75,77 +64,38 @@ class BuoyMission:
             # self.next_data will be wiped so that it can be updated with the new CV handler output.
             for key in self.next_data.keys():
                 if key in self.data.keys():
-                    self.data[key].update(self.next_data[key])
+                    self.data[key].update(self.next_data[key]) # Merge the data
                 else:
-                    self.data[key] = self.next_data[key]
+                    self.data[key] = self.next_data[key] # Update the keys if necessary
             self.received = False
             self.next_data = {}
 
-            self.cv_handler.set_target("buoy_cv", self.target) # Set the target of the CV script (not really a physical "target" in this case)
-            if not "buoy_cv" in self.data.keys(): 
-                continue
-
-            if self.data["buoy_cv"].get("end", False):
-                # TODO: go up and forward
-                print("Ended")
-                # self.robot_control.set_depth(1)
-                # time.sleep(2)
-                # self.robot_control.set_depth(0.5)
-                # time.sleep(2)
-                # self.robot_control.forwardDist(1, 1.2)
-                break
-            
-            # If the buoy mission is running, and the target is an actual target, run a preset motion routine to bump the correct characters
-            if self.data["buoy_cv"].get("finished", False) and self.target != "board":
-                print("Doing bump procedure")
-                # TODO: go forward, bump, back, up, opposite diagonal, bump, back
-                self.robot_control.forwardDist(3.2, 2) #1.6
-                print("Finished forward, going back")
-                self.robot_control.forwardDist(3.2, -2)
-                print("Bump 1 complete")
-                if self.side != None:
-                    self.robot_control.set_depth(self.upDepth)
-                    time.sleep(4)
-                    if self.side == 0: # 0 is left and 1 is right (for og target)
-                        print("Going to right side")
-                        self.robot_control.lateralUni(1.5,5)
-                    else:
-                        print("Going to left side")
-                        self.robot_control.lateralUni(-1.5,5)
-                    print("Now going forward")
-                    self.robot_control.forwardDist(4.4, 2) # bump it 4.4
-                    print("Bumped other side")
-                    self.robot_control.forwardDist(4, -2) # go back
-                print("Done bumping, aligning with board")
-                self.target = "board" # Realign with the board
-
-            # Take the output from the CV handler -- second method
-            self.cv_handler.set_target("buoy_cv", self.target)
+            # Do something with the data.
             lateral = self.data["buoy_cv"].get("lateral", None)
-            yaw = self.data["buoy_cv"].get("yaw", None)
             forward = self.data["buoy_cv"].get("forward", None)
-            vertical = self.data["buoy_cv"].get("vertical", None)
-            if self.data["buoy_cv"].get("targetSide", None) != None:
-                self.side = self.data["buoy_cv"].get("targetSide")
-                #print(f"Got side:{self.side}")
+            yaw = self.data["buoy_cv"].get("yaw", None)
+            end = self.data["buoy_cv"].get("end", None)
 
-            # If forward or lateral == None, then simply continue
-            if any(i == None for i in (lateral, forward)):
-                continue
-            self.robot_control.movement(lateral=lateral, forward=forward, yaw=yaw, vertical=0)
-            #print(forward, lateral, yaw, vertical)
+            if end:
+                print("Ending")
+                self.robot_control.movement(lateral = 0, forward = 0, yaw = 0)
+                break
+            else:
+                self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
+                print(forward, lateral, yaw) 
 
         print("[INFO] Buoy mission run")
 
     def cleanup(self):
         """
-        Clean up after the surfacing mission. Stops the CV script, and idles the robot.
+        Here should be all the code required after the run function.
+        This could be cleanup, saving data, closing files, etc.
         """
         for file_name in self.cv_files:
-            self.cv_handler.stop_cv(file_name) # Stop the CV script
+            self.cv_handler.stop_cv(file_name)
 
         # Idle the robot
-        self.robot_control.movement()
+        self.robot_control.movement(lateral = 0, forward = 0, yaw = 0)
         print("[INFO] Buoy mission terminate")
 
 
@@ -156,16 +106,6 @@ if __name__ == "__main__":
     # You can also import it in a mission file outside of the package
     import time
     from auv.utils import deviceHelper
-    # from ..motion import robot_control
-    # import rospy
-
-    # rospy.init_node("buoy_mission", anonymous=True)
-    # rc = robot_control.RobotControl()
-    # time.sleep(2)
-    # rc.forwardDist(1.5, -2) #dist power
-    # # time.sleep(1)
-    # # rc.lateralUni(1.2,4) #power time
-    # print("Finished forward")
 
     rospy.init_node("buoy_mission", anonymous=True)
 
@@ -182,5 +122,4 @@ if __name__ == "__main__":
 
     # Run the mission
     mission.run()
-    time.sleep(2)
     mission.cleanup()
