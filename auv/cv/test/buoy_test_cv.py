@@ -204,7 +204,7 @@ class CV:
 if __name__ == "__main__":
     video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/"
     mission_name = "Buoy/"
-    video_name = "Train Video 1.mp4"
+    video_name = "Buoy Video 1.mp4"
     video_path = os.path.join(video_root_path, mission_name, video_name)
     print(f"Video path: {video_path}")
 
