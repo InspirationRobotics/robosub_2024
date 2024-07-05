@@ -334,7 +334,7 @@ class AUV(RosHandler):
         sensor_thread = threading.Thread(target=self.get_sensors, daemon=True)
         thruster_thread = threading.Thread(target=self.publish_thrusters, daemon=True)
         sensor_thread.start()
-        thruster_thread.start()
+        # thruster_thread.start()
 
     def publish_sensors(self):
         """Publish IMU and compass data to their corresponding publishers"""
