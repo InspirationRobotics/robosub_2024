@@ -367,8 +367,8 @@ class AUV(RosHandler):
                     if time.time() - self.thrustTime > 1:
                         channels = [1500] * 18
                     # Hold depth at the calculated PWM value necessary to hold the depth
-                    if self.do_hold_depth:
-                        channels[2] = self.depth_pwm
+                    #if self.do_hold_depth:
+                    #    channels[2] = self.depth_pwm
                     thruster_data = mavros_msgs.msg.OverrideRCIn()
                     thruster_data.channels = channels
                     # print(f"[THRUSTER_SEND]: {thruster_data.channels}")
