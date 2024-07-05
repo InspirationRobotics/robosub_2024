@@ -8,7 +8,11 @@ def override_callback(data):
 def override_listener():
     rospy.init_node('override_listener', anonymous=True)
     rospy.Subscriber("/mavros/rc/override", OverrideRCIn, override_callback)
+    rospy.loginfo("Override listener node initialized.")
     rospy.spin()  # Keeps the node running until it is shutdown
 
 if __name__ == '__main__':
-    override_listener()
+    try:
+        override_listener()
+    except rospy.ROSInterruptException:
+        rospy.loginfo("Shutting down override listener node.")
