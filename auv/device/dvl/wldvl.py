@@ -264,6 +264,6 @@ class WlDVL(WlDVLBase):
 if __name__ == '__main__':
     print(deviceHelper.dataFromConfig("dvl"))
 
-    # dvla50 = WlDVL(deviceHelper.dataFromConfig("dvl"), debug=True)
-    # dvla50._serial.open()
-    # print(dvla50.serial)
+    dvla50 = WlDVL('/dev/ttyS1', debug=True)
+    dvla50._serial.open()
+    print(dvla50.serial)
