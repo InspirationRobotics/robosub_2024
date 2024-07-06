@@ -248,7 +248,7 @@ class AUV(RosHandler):
             if depth < -9 or depth > 100:
                 return
             # Calculate PWM value to maintain the depth
-            self.depth_pwm = int(self.depth_pid(depth) * 1 + self.depth_pid_offset)
+            self.depth_pwm = int(self.depth_pid(depth) * -1 + self.depth_pid_offset)
             # Print debug information (depth to 4 decimal places, depth_pwm, depth value to be at)
             print(f"[depth_hold] depth: {depth:.4f} depthMotorPower: {self.depth_pwm} Target: {self.depth_pid.setpoint}")
             # Assume motor range is 1200-1800 so +-300
@@ -367,8 +367,8 @@ class AUV(RosHandler):
                     if time.time() - self.thrustTime > 1:
                         channels = [1500] * 18
                     # Hold depth at the calculated PWM value necessary to hold the depth
-                    #if self.do_hold_depth:
-                    #    channels[2] = self.depth_pwm
+                    if self.do_hold_depth:
+                        channels[2] = self.depth_pwm
                     thruster_data = mavros_msgs.msg.OverrideRCIn()
                     thruster_data.channels = channels
                     # print(f"[THRUSTER_SEND]: {thruster_data.channels}")
