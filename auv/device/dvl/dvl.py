@@ -109,7 +109,7 @@ class DVL:
                 self.graey_data["vy"] = float(line["vy"])
                 self.graey_data["vz"] = float(line["vz"])
                 self.graey_data["error"] = float(line["fom"])
-                self.graey_data["valid"] = True if line["velocity_valid"] == "true" else False
+                self.graey_data["valid"] = line["velocity_valid"]
                 return self.graey_data
         except:
             print("I threw an exception!")
@@ -238,6 +238,7 @@ class DVL:
 
         vel = [packet.get("vx", 0), packet.get("vy", 0), packet.get("vz", 0)]
         current_time = packet.get("time", 0)  # seconds
+        self.dvl_error = packet.get("error", 0)
 
         if self.prev_time is None:
             self.prev_time = current_time
