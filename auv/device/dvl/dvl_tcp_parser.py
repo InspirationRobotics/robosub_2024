@@ -139,7 +139,7 @@ def arguments_parser():
     parser.add_argument(
         "-i",
         "--ip",
-        default = "192.168.2.95",
+        default = "192.168.2.10", # originally 192.168.2.95 in docs
         help = "IP address of DVL")
     parser.add_argument(
         "-t",
@@ -162,25 +162,24 @@ def arguments_parser():
     return parser
 
 def main():
-    arguments = arguments_parser().parse_args()
-    csv_file_path = arguments.csv
-    message_type = _type(arguments.message_type)
-    time_format = arguments.time_format
-    if csv_file_path:
-        with open(csv_file_path, "w") as csv_file:
-            _process_messages(
-                _start_dvl_socket(arguments.ip),
-                message_type,
-                time_format,
-                _CSVWriter(csv_file, arguments.message_type))
-    else:
-        processor_iterator = _process_messages(
-            _start_dvl_socket(arguments.ip),
-            message_type,
-            time_format)
-        for line in processor_iterator:
-            # pass our data to an iterator in dvl.py
-            yield line
+    # arguments = arguments_parser().parse_args()
+    # csv_file_path = arguments.csv
+    # message_type = _type(arguments.message_type)
+    # time_format = arguments.time_format
+    # if csv_file_path:
+    #    with open(csv_file_path, "w") as csv_file:
+    #        _process_messages(
+    #            _start_dvl_socket(arguments.ip),
+    #            message_type,
+    #            time_format,
+    #            _CSVWriter(csv_file, arguments.message_type))
+    #else:
+    processor_iterator = _process_messages(
+        _start_dvl_socket("192.168.2.10"),
+        "velocity")
+    for line in processor_iterator:
+        # pass our data to an iterator in dvl.py
+        yield line
 
 if __name__ == "__main__":
     main()
