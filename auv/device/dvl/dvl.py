@@ -1,4 +1,4 @@
-# Documentation available at https://drive.google.com/file/d/1xniDtjYIJhaFOhWaSj4tj6RxBdN5inx2/view
+# Documentation for Teledyne available at https://drive.google.com/file/d/1xniDtjYIJhaFOhWaSj4tj6RxBdN5inx2/view
 # See page 93 for specs
 
 import math
@@ -32,6 +32,7 @@ class DVL:
                     bytesize=serial.EIGHTBITS,
                 )
 
+                self.dvl_rot = math.radians(45)
                 self.ser.isOpen()
                 self.ser.reset_input_buffer()
                 self.ser.send_break()
@@ -45,6 +46,7 @@ class DVL:
                 # autostart = False
                 print("[WARNING] DVL disabled, not implemented")
                 self.read = self.read_graey
+                self.dvl_rot = math.radians(0)
             else:
                 raise ValueError(f"Invalid sub {sub}")
 
@@ -56,7 +58,7 @@ class DVL:
 
         # sensor error
         self.compass_error = math.radians(1.0)  # rad/s
-        self.dvl_error = 0.002  # m/s - see documentation comment
+        
         self.error = [0, 0, 0]  # accumulated error
 
         # NORTH = 0, EAST = pi/2, SOUTH = pi, WEST = 3pi/2
@@ -64,7 +66,6 @@ class DVL:
 
         self.vel_rot = [0, 0, 0]  # rotated velocity vector
         self.position = [0, 0, 0]  # position in meters
-        self.dvl_rot = math.radians(45)
         self.is_valid = False
         self.data_available = False
 
@@ -90,6 +91,7 @@ class DVL:
             "vx": 0,  # m/s
             "vy": 0,  # m/s
             "vz": 0,  # m/s
+            "error": 0, # m/s - is placeholder for dynamic value
             "valid": False,  # boolean
             }
             for line in data_iterator:
@@ -97,6 +99,7 @@ class DVL:
                 data["vx"] = float(line["vx"])
                 data["vy"] = float(line["vy"])
                 data["vz"] = float(line["vz"])
+                data["error"] = float(line["fom"])
                 data["valid"] = True if line["velocity_valid"] == "true" else False
                 return data
 
@@ -130,6 +133,7 @@ class DVL:
             "vx": 0,  # m/s
             "vy": 0,  # m/s
             "vz": 0,  # m/s
+            "error": 0.002, # m/s - see Teledyne Documentation note above
             "valid": False,  # boolean
         }
         SA = self.__parseLine(self.ser.readline())
@@ -182,6 +186,7 @@ class DVL:
 
         vel = [packet.get("vx", 0), packet.get("vy", 0), packet.get("vz", 0)]
         current_time = packet.get("time", 0)  # seconds
+        self.dvl_error = packet.get("error", 0)
 
         if self.prev_time is None or self.compass_rad is None:
             self.prev_time = current_time
