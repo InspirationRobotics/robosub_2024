@@ -10,7 +10,7 @@ import numpy as np
 
 import serial
 
-import dvl_tcp_parser
+from . import dvl_tcp_parser
 from auv.utils import deviceHelper
 
 
