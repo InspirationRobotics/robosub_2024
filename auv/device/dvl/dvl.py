@@ -74,6 +74,17 @@ class DVL:
         self.position_memory = []
         self.error_memory = []
 
+        # DVL data packet. Must put this in __init__ to allow for the
+        # time to accumulate in read_graey
+        self.graey_data = {
+            "time": 0,  # seconds
+            "vx": 0,  # m/s
+            "vy": 0,  # m/s
+            "vz": 0,  # m/s
+            "error": 0, # m/s - is placeholder for dynamic value
+            "valid": False,  # boolean
+            }
+
         if autostart:
             self.start()
 
@@ -89,24 +100,15 @@ class DVL:
         print("I started doing stuff")
         try:
             data_iterator = dvl_tcp_parser.main()
-            # Find a way to get that dictionary from the data output
-            data = {
-            "time": 0,  # seconds
-            "vx": 0,  # m/s
-            "vy": 0,  # m/s
-            "vz": 0,  # m/s
-            "error": 0, # m/s - is placeholder for dynamic value
-            "valid": False,  # boolean
-            }
             for line in data_iterator:
                 line = json.loads(line)
-                data["time"] += float(line["time"])
-                data["vx"] = float(line["vx"])
-                data["vy"] = float(line["vy"])
-                data["vz"] = float(line["vz"])
-                data["error"] = float(line["fom"])
-                data["valid"] = True if line["velocity_valid"] == "true" else False
-                return data
+                self.graey_data["time"] += float(line["time"])
+                self.graey_data["vx"] = float(line["vx"])
+                self.graey_data["vy"] = float(line["vy"])
+                self.graey_data["vz"] = float(line["vz"])
+                self.graey_data["error"] = float(line["fom"])
+                self.graey_data["valid"] = True if line["velocity_valid"] == "true" else False
+                return self.graey_data
 
                 
         except:
