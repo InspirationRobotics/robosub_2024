@@ -97,6 +97,8 @@ class DVL:
 
         # Useful documentation for JSON strings: 
         # https://www.geeksforgeeks.org/convert-json-to-dictionary-in-python/
+
+        # On Graey run python3 -m (filepath) velocity -i 192.168.2.10
         print("I started doing stuff")
         try:
             data_iterator = dvl_tcp_parser.main()
