@@ -275,3 +275,6 @@ class CV:
 
         # We only need dictionary and visualized_frame, self.detected and data_from_detection are test variables.
         return {"lateral" : lateral, "forward" : forward, "yaw" : yaw, "end" : end}, visualized_frame
+
+        # We only need dictionary and visualized_frame, self.detected and data_from_detection are test variables.
+        return {"lateral" : lateral, "forward" : forward, "yaw" : yaw, "end" : end}, visualized_frame

@@ -1,97 +1,188 @@
 """
-Template script for creating CV logic for a specific mission, and testing it on training data.
-"""
-import cv2
-import time
-import numpy as np
+Torpedo CV and logic test.
 
+Author: Brandon Tran
+"""
+
+import time
+import cv2
+import numpy as np
 import os
 
 class CV:
-    """CV class, DO NOT change the name of the class."""
+    """
+    CV class for Torpedo mission. DO NOT change the name of the class, as this will mess up all of the backend files to run the CV scripts.
+    """
 
-    def __init__(self, config):
-        # Config is a way of passing in an argument to indicate to the logic what actions to take. Take a look at 
-        # buoy_test_cv.py for an example.
-        self.shape = (640, 480)
-
-        # Switcher variables which can be used as needed to switch states.
+    def __init__(self, ref_img_path="samples/board.png"):
+        """
+        Initialize the CV class.
+        """
+        self.shape = (640, 480)  # Set the frame shape
         self.aligned = False
         self.detected = False
+        self.step = 0
+        self.end = False
+        self.ref_img_path = ref_img_path
+        self.reference_image = cv2.imread(self.ref_img_path)
+        
+        if self.reference_image is None:
+            raise FileNotFoundError(f"Reference image not found at {ref_img_path}")
+        
+        self.reference_image = cv2.cvtColor(self.reference_image, cv2.COLOR_BGR2GRAY)
+        self.reference_image = self.apply_clahe(self.reference_image)
+        self.sift = cv2.SIFT_create()
+        self.kp_ref, self.des_ref = self.sift.detectAndCompute(self.reference_image, None)
+        self.bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+        
+        print(f"[INFO] Torpedo CV Init")
+    
+    def apply_clahe(self, image):
+        """
+        Apply CLAHE to the image to improve contrast.
+        """
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        return clahe.apply(image)
 
-        self.config = config 
-        self.step = 0 # Step counter variable.
+    def process_sift(self, frame):
+        """
+        Process the frame using SIFT feature matching.
+        """
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = self.apply_clahe(gray)
+        
+        kp_frame, des_frame = self.sift.detectAndCompute(gray, None)
+        matches = self.bf.match(self.des_ref, des_frame)
+        matches = sorted(matches, key=lambda x: x.distance)
+        
+        matched_image = cv2.drawMatches(self.reference_image, self.kp_ref, gray, kp_frame, matches[:10], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        return matched_image, matches
 
-        self.end = False # End variable to denote when the mission has finished.
+    def get_center(self, bbox):
+        """
+        Get the center of the bounding box.
+        """
+        x, y, w, h = bbox
+        cx = x + w // 2
+        cy = y + h // 2
+        return (cx, cy)
 
-        # Add variables as needed below.
+    def find_torpedo_targets(self, frame):
+        """
+        Detect the torpedo targets in the frame.
+        """
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        edges = cv2.Canny(gray, 50, 150)
+        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        detected_targets = []
+        
+        for cnt in contours:
+            approx = cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
+            if len(approx) == 8:  # Check for octagonal shapes
+                area = cv2.contourArea(cnt)
+                x, y, w, h = cv2.boundingRect(cnt)
+                detected_targets.append((area, (x, y, w, h), cnt))
+        
+        detected_targets.sort(key=lambda x: x[0])
+        return detected_targets
 
-    # You can put detection functions to detect a specific object as needed. 
+    def label_torpedo_sizes(self, frame, targets):
+        """
+        Label the sizes of the detected torpedo targets.
+        """
+        size_labels = ["smallest", "small", "large", "largest"]
+        labeled_targets = []
+        
+        for i, target in enumerate(targets[:4]):
+            area, bbox, cnt = target
+            x, y, w, h = bbox
+            label = size_labels[i]
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            labeled_targets.append((label, self.get_center(bbox)))
+        
+        return labeled_targets
 
-    def detect_hole(self, frame, detection, target):
-        pass
+    def label_midpoints(self, frame, labeled_targets):
+        """
+        Label the midpoints of the detected torpedo targets.
+        """
+        for label, (cx, cy) in labeled_targets:
+            cv2.putText(frame, f"{label} ({cx}, {cy})", (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+    
+    def align_to_target(self, target):
+        """
+        Align the vehicle to the target.
+        """
+        label, (cx, cy) = target
+        # Placeholder for alignment logic
+        print(f"[INFO] Aligning to {label} target at ({cx}, {cy})")
+    
+    def fire_torpedo(self, target):
+        """
+        Fire the torpedo at the target.
+        """
+        label, (cx, cy) = target
+        # Placeholder for firing logic
+        print(f"[INFO] Firing torpedo at {label} target at ({cx}, {cy})")
 
     def run(self, raw_frame):
-        """ Run the CV logic. Returns the motion commands and visualized frame. """
-        # Here is where all of the actual CV logic should be.
-        # It should return motion values and the visualized frame.
-        # This function will run basically every time a new frame is to be processed, which means multiple times a second.
-        # This is why we use the self.<variable_name> variables to detail the state/alignment and other variables that depend 
-        # on the current action, as those are global and will not be reinitialized to default every time this function runs.
+        """
+        Process the input frame and perform torpedo detection and firing logic.
+        """
+        raw_frame = cv2.resize(raw_frame, self.shape)
+        
+        detected_targets = self.find_torpedo_targets(raw_frame)
+        if len(detected_targets) < 2:
+            print("[ERROR] Could not find both small and next smallest torpedo targets.")
+            return raw_frame
+        
+        labeled_targets = self.label_torpedo_sizes(raw_frame, detected_targets)
+        self.label_midpoints(raw_frame, labeled_targets)
+        
+        if len(labeled_targets) >= 2:
+            self.align_to_target(labeled_targets[0])
+            self.fire_torpedo(labeled_targets[0])
+            
+            time.sleep(2)
+            
+            self.align_to_target(labeled_targets[1])
+            self.fire_torpedo(labeled_targets[1])
 
-        # Initializing motion variables -- it is in most forseeable cases advisable to do this, as not doing so may result in trying to return something that has not 
-        # been initalized, resulting in the program crashing. 
-        lateral = 0
-        forward = 0
-        yaw = 0
+        return raw_frame
 
-        # Return the frame and the motion values.
-        return {"lateral" : lateral, "forward" : forward, "yaw" : yaw}, raw_frame
-
-# This if statement is just saying what to do if this script is run directly. 
 if __name__ == "__main__":
-    # Example of how to obtain a training video. Make sure to follow this template when capturing your own video, in case 
-    # another team member needs to run this code on his/her device. 
-    
-    # NOTE: When downloading the training data, the training data folder itself, which contains all of the data.
-    video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/" # Computer path through the training data folder.
-    mission_name = "Buoy/" # Mission folder
-    video_name = "Train Video 1.mp4" # Specified video
+    # video_root_path = "/Users/brandontran3/downloads/Training Data/"
+    video_root_path = "/Users/brandontran3/downloads/Training Data/"
+    mission_name = "Torpedo/"
+    video_name = "Torpedo Video 5.mp4"
     video_path = os.path.join(video_root_path, mission_name, video_name)
 
-    # For testing
     print(f"Video path: {video_path}")
 
-    # Initialize an instance of the class.
-    cv = CV("Blue")
+    cv = CV()
 
-    # Verify the path exists.
     if not os.path.exists(video_path):
         print(f"[ERROR] Video file not found {video_path}")
     else:
-        # Capture the video object (basically access the specified video) at the specified path.
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             print(f"[ERROR] Unable to open video file: {video_path}")
         else:
             while True:
-                # Access each frame of the video.
                 ret, frame = cap.read()
                 if not ret:
                     print("[INFO] End of file.")
                     break
 
-                # Run the run function on the frame, and get back the relevant results.
-                motion_values, viz_frame = cv.run(frame)
+                viz_frame = cv.run(frame)
                 if viz_frame is not None:
                     cv2.imshow("frame", viz_frame)
-                else:
-                    print("[ERROR] Unable to display frame.")
 
-                # For testing purposes.
-                print(f"Motion: {motion_values}")
-                
-                time.sleep(0.05)
-
-                if cv2.waitKey(1) & 0xFF == ord("q"):
+                # Break the loop when 'q' key is pressed
+                if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
+
+            cap.release()
+            cv2.destroyAllWindows()

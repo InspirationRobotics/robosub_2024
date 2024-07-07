@@ -17,14 +17,17 @@ forward = 0
 lateral = 0
 yaw = 0
 drop = 0
+pitch = 0
+roll = 0
 
 rc = robot_control.RobotControl()
-
+print("Initialization finished")
 # TODO: Check the lateral, yaw and make sure that we can input it both ways.
 # TODO: Create a function that controls absolute depth, as well as simple upwards and downwards.
 
 def control():
-    global forward, lateral, yaw, drop, run
+    global forward, lateral, yaw, pitch, roll, drop, run
+    print("Successfully reached controls")
     var = input("Type in a command: ")
     if var == 'f':
         forward = 1.5
@@ -50,7 +53,20 @@ def control():
         yaw = 0
     elif var == "sd":
         drop = 0
+    elif var == "pp":
+        pitch = 0.75
+    elif var == "pn":
+        pitch = -0.75
+    elif var == "pz":
+        pitch = 0
+    elif var == "rp":
+        roll = 0.75
+    elif var == "rn":
+        roll = -0.75
+    elif var == "rz":
+        roll = 0
     elif var == 'set depth':
+        print("We're screwed")
         drop = 0
         drop_control = input("Starting power: ")
         start_time = time.time()
@@ -67,18 +83,22 @@ def control():
                 start_time = time.time()
                 drop += 0.2
                 print(f'{drop}')
-                
-        # depth = input("Absolute depth: ")
-        # rc.set_depth(depth)
+               
+        #depth = input("Absolute depth: ")
+        #rc.set_depth(depth)
     elif var == 'i':
         forward = 0
         lateral = 0
         yaw  = 0
+        pitch = 0
+        roll = 0
         drop = 0
     elif var == 's':
         forward = 0
         lateral = 0
         yaw = 0
+        pitch = 0
+        roll = 0
         run = False
         disarm.disarm()
     else:
@@ -105,6 +125,7 @@ def control():
 
 def is_convertible_to_float(value):
     try:
+        print("Let's convert a float!")
         float(value)
         return True
     except ValueError:
@@ -114,19 +135,27 @@ arm.arm()
 
 try:
     while run:
+        print("Let's try this!")
         control()
         msg = OverrideRCIn()
         channels = [1500] * 18
         channels[2] = int((drop * 80) + 1500)
-        channels[3] = int((yaw * 80)) + 1500
+        channels[3] = int((yaw * 80) + 1500)
         channels[4] = int((forward * 80) + 1500)
         channels[5] = int((lateral * 80) + 1500)
+        channels[6] = int((pitch * 80) + 1500)
+        channels[7] = int((roll * 80) + 1500)
         msg.channels = channels
         command_pub.publish(msg)
+        print(f"Our channel is {channels}")
+        print(f"Channels[6] is {channels[6]}")
+        print(f"Channels[7] is {channels[7]}")
         print(f"Forward is {forward}")
         print(f"Lateral is {lateral}")
         print(f"Yaw is {yaw}")
         print(f"Drop power is {drop}")
+        print(f"Pitch power is {pitch}")
+        print(f"Roll power is {roll}")
 
 except KeyboardInterrupt:
     channels = [1500] * 18
