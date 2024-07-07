@@ -125,17 +125,6 @@ class DVL:
             time.sleep(0.01)
 
         data = {
-            # "Attitude": [],  # roll, pitch, and heading in degrees
-            # "Salinity": 0,  # in ppt (parts per thousand)
-            # "Temp": 0,  # celcius
-            # "Transducer_depth": 0,  # meters
-            # "Speed_of_sound": [],  # meters per second
-            # "Result_code": 0,
-            # "DVL_velocity": [],  # mm/s # xyz
-            # "isDVL_velocity_valid": False,  # boolean
-            # "AUV_velocity": [],  # mm/s # xyz
-            # "Distance_from_bottom": 0,  # meters
-            # "Time_since_valid": 0,  # seconds
             "time": 0,  # seconds
             "vx": 0,  # m/s
             "vy": 0,  # m/s
