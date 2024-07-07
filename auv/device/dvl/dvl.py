@@ -5,6 +5,7 @@ import math
 import signal
 import threading
 import time
+import json
 
 import numpy as np
 
@@ -82,6 +83,9 @@ class DVL:
 
     def read_graey(self):
         """Get velocity from graey"""
+
+        # Useful documentation for JSON strings: 
+        # https://www.geeksforgeeks.org/convert-json-to-dictionary-in-python/
         print("I started doing stuff")
         try:
             data_iterator = dvl_tcp_parser.main()
@@ -95,6 +99,7 @@ class DVL:
             "valid": False,  # boolean
             }
             for line in data_iterator:
+                line = json.loads(line)
                 data["time"] += float(line["time"])
                 data["vx"] = float(line["vx"])
                 data["vy"] = float(line["vy"])
