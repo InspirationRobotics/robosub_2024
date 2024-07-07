@@ -109,12 +109,9 @@ class DVL:
                 self.graey_data["error"] = float(line["fom"])
                 self.graey_data["valid"] = True if line["velocity_valid"] == "true" else False
                 return self.graey_data
-
-                
         except:
             print("I threw an exception!")
             data = None
-        print(data)
         return data
 
     def read_onyx(self):
@@ -246,9 +243,6 @@ class DVL:
             return False
 
         dt = current_time - self.prev_time
-        print(current_time)
-        print(self.prev_time)
-        print(dt)
         if dt < 0:
             print("[WARN] DVL time error, skipping")
             return False
@@ -352,9 +346,6 @@ class DVL:
             self.error[1] + prev_error[1],
             self.error[2] + prev_error[2],
         ]
-
-
-print('yay it\'s working!!!')
 
 if __name__ == '__main__':
     # Make a new dvl instance
