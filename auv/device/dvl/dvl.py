@@ -10,6 +10,7 @@ import numpy as np
 
 import serial
 
+import dvl_tcp_parser
 from auv.utils import deviceHelper
 
 
@@ -43,9 +44,6 @@ class DVL:
             elif sub == "graey":
                 # autostart = False
                 print("[WARNING] DVL disabled, not implemented")
-                from wldvl import WlDVL
-
-                self.dvla50 = WlDVL(self.dvlPort)
                 self.read = self.read_graey
             else:
                 raise ValueError(f"Invalid sub {sub}")
@@ -85,7 +83,24 @@ class DVL:
         """Get velocity from graey"""
         print("I started doing stuff")
         try:
-            data = self.dvla50.read()
+            data_iterator = dvl_tcp_parser.main()
+            # Find a way to get that dictionary from the data output
+            data = {
+            "time": 0,  # seconds
+            "vx": 0,  # m/s
+            "vy": 0,  # m/s
+            "vz": 0,  # m/s
+            "valid": False,  # boolean
+            }
+            for line in data_iterator:
+                data["time"] += float(line["time"])
+                data["vx"] = float(line["vx"])
+                data["vy"] = float(line["vy"])
+                data["vz"] = float(line["vz"])
+                data["valid"] = True if line["velocity_valid"] == "true" else False
+                return data
+
+                
         except:
             print("I threw an exception!")
             data = None
