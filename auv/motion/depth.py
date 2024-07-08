@@ -11,6 +11,6 @@ arm.arm()
 start_time = time.time()
 
 while time.time() - start_time < 20:
-	rc.set_depth(1.5)
+	rc.set_depth(0.8)
 
 disarm.disarm()
