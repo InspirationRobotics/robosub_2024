@@ -10,9 +10,12 @@ rc = robot_control.RobotControl()
 arm.arm()
 start_time = time.time()
 
+rc.set_depth(0.7)
+
 while time.time() - start_time < 20:
 	rc.movement(lateral=0, forward=-0, yaw=1)
 
 rc.movement(lateral=0, forward=0, yaw=0)
+rc.set_depth(0.0)
 
 disarm.disarm()
