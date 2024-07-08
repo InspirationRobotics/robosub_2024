@@ -316,7 +316,7 @@ class AUV(RosHandler):
         """Gets the current state of the thrusters (values of all PWM channels)"""
         self.thrustTime = time.time()
         self.channels = list(msg.channels)
-        #print(self.channels)
+        print(self.channels)
 
     def enable_topics_for_read(self):
         """To subscribe to ROS topics"""
@@ -337,7 +337,7 @@ class AUV(RosHandler):
         sensor_thread = threading.Thread(target=self.get_sensors, daemon=True)
         thruster_thread = threading.Thread(target=self.publish_thrusters, daemon=True)
         sensor_thread.start()
-        # thruster_thread.start()
+        thruster_thread.start()
 
     def publish_sensors(self):
         """Publish IMU and compass data to their corresponding publishers"""
@@ -374,7 +374,7 @@ class AUV(RosHandler):
                         channels[2] = self.depth_pwm
                     thruster_data = mavros_msgs.msg.OverrideRCIn()
                     thruster_data.channels = channels
-                    # print(f"[THRUSTER_SEND]: {thruster_data.channels}")
+                    print(f"[THRUSTER_SEND]: {thruster_data.channels}")
                     self.TOPIC_SET_RC_OVR.set_data(thruster_data)
                     self.topic_publisher(topic=self.TOPIC_SET_RC_OVR)
                 # Handle exceptions
