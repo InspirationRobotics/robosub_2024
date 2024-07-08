@@ -11,6 +11,8 @@ arm.arm()
 start_time = time.time()
 
 while time.time() - start_time < 20:
-	rc.movement(lateral=0, forward=1, yaw=0)
+	rc.movement(lateral=0, forward=-1, yaw=0)
+
+rc.movement(lateral=0, forward=0, yaw=0)
 
 disarm.disarm()
