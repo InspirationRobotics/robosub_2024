@@ -13,8 +13,8 @@ start_time = time.time()
 rc.set_depth(0.7)
 print("[INFO] Beginning test")
 
-while time.time() - start_time < 35:
-	rc.movement(lateral=1, forward=1, yaw=1)
+while time.time() - start_time < 25:
+	rc.movement(lateral=0, forward=1, yaw=0)
 
 rc.movement(lateral=0, forward=0, yaw=0)
 rc.set_depth(0.0)
