@@ -316,7 +316,7 @@ class AUV(RosHandler):
         """Gets the current state of the thrusters (values of all PWM channels)"""
         self.thrustTime = time.time()
         self.channels = list(msg.channels)
-        print(self.channels)
+        # print(self.channels)
 
     def enable_topics_for_read(self):
         """To subscribe to ROS topics"""
