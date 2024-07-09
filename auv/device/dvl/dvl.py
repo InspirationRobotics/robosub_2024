@@ -99,12 +99,11 @@ class DVL:
         # https://www.geeksforgeeks.org/convert-json-to-dictionary-in-python/
 
         # On Graey run python3 -m (filepath) velocity -i 192.168.2.10
-        print("I started doing stuff")
         try:
             data_iterator = dvl_tcp_parser.main()
             for line in data_iterator:
                 line = json.loads(line)
-                self.graey_data["time"] += float(line["time"])
+                self.graey_data["time"] += float(line["time"]) / 1000
                 self.graey_data["vx"] = float(line["vx"])
                 self.graey_data["vy"] = float(line["vy"])
                 self.graey_data["vz"] = float(line["vz"])
