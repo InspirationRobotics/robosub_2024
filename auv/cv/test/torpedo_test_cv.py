@@ -110,6 +110,47 @@ class CV:
         """
         for label, (cx, cy) in labeled_targets:
             cv2.putText(frame, f"{label} ({cx}, {cy})", (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+
+    def calculate_movement(self, midpoints, frame_shape):
+        """
+        Calculate the forward, lateral, depth, and yaw movements based on midpoints.
+        """
+        height, width = frame_shape
+        center_x = width // 2
+        center_y = height // 2
+
+        forward = lateral = depth = yaw = 0
+
+        target_color = self.config  # Use the config to determine which color to track
+        if target_color in midpoints:
+            target_midpoint = midpoints[target_color]
+        else:
+            return forward, lateral, depth, yaw
+
+        # Calculate forward and depth based on vertical position
+        forward = (center_y - target_midpoint[1]) / center_y
+        depth = (target_midpoint[1] - center_y) / center_y
+        
+        # Calculate lateral based on horizontal position
+        lateral = (target_midpoint[0] - center_x) / center_x
+        
+        # Calculate yaw based on horizontal position
+        yaw = (target_midpoint[0] - center_x) / center_x
+
+        # We want to yaw, then move laterally, then move forward.
+        if abs(yaw) > self.threshold:
+            forward = 0
+            lateral = 0
+
+        if abs(yaw) < self.threshold and abs(lateral) > self.threshold:
+            yaw = 0
+            forward = 0
+
+        if abs(forward) > self.threshold and abs(lateral) < self.threshold and abs(yaw) < self.threshold:
+            yaw = 0
+            lateral = 0
+
+        return forward, lateral, depth, yaw
     
     def align_to_target(self, target):
         """
