@@ -60,7 +60,7 @@ class SquareMovement:
         """Move forward, then yaw. Repeat 4 times."""
         for i in range(4):
             self.move_forward(power)
-            rospy.sleep(7.0) # Adjust
+            rospy.sleep(2.0) # Adjust
             self.stop()
             rospy.sleep(1.0)
 
