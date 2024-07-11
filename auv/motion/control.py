@@ -131,37 +131,43 @@ def is_convertible_to_float(value):
     except ValueError:
         return False
 
-arm.arm()
+if __name__ == "__main__":
 
-try:
-    while run:
-        print("Let's try this!")
-        control()
-        msg = OverrideRCIn()
+    arm.arm()
+
+    try:
+        while run:
+            print("Let's try this!")
+            control()
+            # Channel formats is the same in pix_standalone
+            # from mavros_msgs.msg import OverrideRCIn
+            msg = OverrideRCIn() 
+            channels = [1500] * 18
+            channels[2] = int((drop * 80) + 1500)
+            channels[3] = int((yaw * 80) + 1500)
+            channels[4] = int((forward * 80) + 1500)
+            channels[5] = int((lateral * 80) + 1500)
+            channels[6] = int((pitch * 80) + 1500)
+            channels[7] = int((roll * 80) + 1500)
+            msg.channels = channels
+            # command_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size = 10)
+            command_pub.publish(msg)
+            print(f"Our channel is {channels}")
+            print(f"Channels[6] is {channels[6]}")
+            print(f"Channels[7] is {channels[7]}")
+            print(f"Forward is {forward}")
+            print(f"Lateral is {lateral}")
+            print(f"Yaw is {yaw}")
+            print(f"Drop power is {drop}")
+            print(f"Pitch power is {pitch}")
+            print(f"Roll power is {roll}")
+    
+    except KeyboardInterrupt:
         channels = [1500] * 18
-        channels[2] = int((drop * 80) + 1500)
-        channels[3] = int((yaw * 80) + 1500)
-        channels[4] = int((forward * 80) + 1500)
-        channels[5] = int((lateral * 80) + 1500)
-        channels[6] = int((pitch * 80) + 1500)
-        channels[7] = int((roll * 80) + 1500)
         msg.channels = channels
         command_pub.publish(msg)
-        print(f"Our channel is {channels}")
-        print(f"Channels[6] is {channels[6]}")
-        print(f"Channels[7] is {channels[7]}")
-        print(f"Forward is {forward}")
-        print(f"Lateral is {lateral}")
-        print(f"Yaw is {yaw}")
-        print(f"Drop power is {drop}")
-        print(f"Pitch power is {pitch}")
-        print(f"Roll power is {roll}")
-
-except KeyboardInterrupt:
-    channels = [1500] * 18
-    msg.channels = channels
-    command_pub.publish(msg)
-    print("Exiting...")
-    run = False
-
-disarm.disarm()
+        print("Exiting...")
+        run = False
+    
+    disarm.disarm()
+    

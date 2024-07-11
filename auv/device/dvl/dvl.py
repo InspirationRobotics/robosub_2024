@@ -66,7 +66,15 @@ class DVL:
         self.compass_rad = None  # rad
 
         self.vel_rot = [0, 0, 0]  # rotated velocity vector
-        self.position = [0, 0, 0]  # position in meters
+
+        # position in meters
+        # X = lateral
+        # Y = forward
+        # Z = {"Onyx": "distance from bottom",
+        # "Graey": "Distance from surface"}
+        self.position = [0, 0, 0]  
+
+
         self.is_valid = False
         self.data_available = False
 
@@ -103,9 +111,12 @@ class DVL:
             data_iterator = dvl_tcp_parser.main()
             for line in data_iterator:
                 line = json.loads(line)
+
+                # In Graey, x-axis is forward and y-axis is lateral,
+                # to be consistent w/ Onyx we will switch them here
                 self.graey_data["time"] += float(line["time"]) / 1000
-                self.graey_data["vx"] = float(line["vx"])
-                self.graey_data["vy"] = float(line["vy"])
+                self.graey_data["vx"] = float(line["vy"])
+                self.graey_data["vy"] = float(line["vz"])
                 self.graey_data["vz"] = float(line["vz"])
                 self.graey_data["error"] = float(line["fom"])
                 self.graey_data["valid"] = line["velocity_valid"]
