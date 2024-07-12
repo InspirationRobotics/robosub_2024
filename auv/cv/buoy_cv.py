@@ -90,7 +90,7 @@ import os
 class CV:
     camera = "/auv/camera/videoOAKdRawForward" 
 
-    def __init__(self, config):
+    def __init__(self, **config):
         self.aligned = False
         self.shape = (640, 480)
         self.detected = False
