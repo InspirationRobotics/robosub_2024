@@ -442,7 +442,7 @@ if __name__ == "__main__":
     def dummy_callback(msg):
         print(f"[INFO] received: {msg.data}")
 
-    file_name = "gate_cv"
+    file_name = "buoy_cv"
 
     cv = CVHandler()
     rospy.init_node("CV_Handler", anonymous = True)
