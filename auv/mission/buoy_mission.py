@@ -14,7 +14,7 @@ from .. utils import disarm
 class BuoyMission:
     cv_files = ["buoy_cv"] # CV file to run
 
-    def __init__(self, target=None, **config):
+    def __init__(self, target="Red", **config):
         """
         Initialize the mission class; here should be all of the things needed in the run function. 
 
@@ -77,8 +77,7 @@ class BuoyMission:
             end = self.data["buoy_cv"].get("end", None)
 
             if end:
-                print("Ending")
-                self.robot_control.movement(lateral = 0, forward = 0, yaw = 0)
+                print("[INFO] AUV has aligned with the buoy. Beginning circumnavigation.")
                 break
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
