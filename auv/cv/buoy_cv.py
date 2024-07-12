@@ -144,8 +144,7 @@ class CV:
         yaw = 0
         end = self.end
         x_tolerance = 20 # Pixels
-        if raw_frame:
-            print("[INFO] Raw frame exists.")
+
         data_from_detection, frame = self.detect_buoy(raw_frame)
 
         if frame is not None:
