@@ -95,7 +95,7 @@ class CV:
         self.shape = (640, 480)
         self.detected = False
         self.config = config # Blue counterclockwise, Red clockwise
-        self.step = 0
+        self.step = None
 
         self.forward_times = 0 # The theory behind this is that we should only go forward past the buoy twice.
         self.time_before_forward_run = 0
