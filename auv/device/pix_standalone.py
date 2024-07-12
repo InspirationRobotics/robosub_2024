@@ -198,7 +198,7 @@ class AUV(RosHandler):
         # Handle althold specially, setting mode to hold depth and to stabalize to be the new modes
         if mode == MODE_ALTHOLD:
             self.do_hold_depth = True
-            mode = MODE_STABILIZE
+            mode = MODE_MANUAL
         # Create a SetModeRequest message to change the mode
         data = mavros_msgs.srv.SetModeRequest()
         data.custom_mode = mode
@@ -316,7 +316,7 @@ class AUV(RosHandler):
         """Gets the current state of the thrusters (values of all PWM channels)"""
         self.thrustTime = time.time()
         self.channels = list(msg.channels)
-        # print(self.channels)
+        print(self.channels)
 
     def enable_topics_for_read(self):
         """To subscribe to ROS topics"""
