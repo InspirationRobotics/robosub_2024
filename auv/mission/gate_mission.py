@@ -55,7 +55,7 @@ class GateMission:
         Here should be all the code required to run the mission.
         This could be a loop, a finite state machine, etc.
         """
-
+        print("[INFO] Beginning Gate Run Function")
         while not rospy.is_shutdown():
             if not self.received:
                 continue
