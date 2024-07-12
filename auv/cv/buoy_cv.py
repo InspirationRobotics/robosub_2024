@@ -146,7 +146,8 @@ class CV:
         x_tolerance = 20 # Pixels
 
         data_from_detection, frame = self.detect_buoy(raw_frame)
-
+        print(data_from_detection)
+            
         if frame is not None:
             visualized_frame = frame
             print("[INFO] Visualized frame exists.")
