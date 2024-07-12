@@ -372,16 +372,10 @@ class AUV(RosHandler):
                     # Hold depth at the calculated PWM value necessary to hold the depth
                     if self.do_hold_depth:
                         channels[2] = self.depth_pwm
-                    # import mavros_msgs.msg
                     thruster_data = mavros_msgs.msg.OverrideRCIn()
                     thruster_data.channels = channels
-                    print(f"[THRUSTER_SEND]: {thruster_data.channels}")
-                    # from ..utils.topicService import TopicService
-                    # self.TOPIC_SET_RC_OVR = TopicService("/mavros/rc/override", mavros_msgs.msg.OverrideRCIn)
-                    # self.TOPIC_SET_RC_OVR.set_data(thruster_data)
-                    # self.topic_publisher(topic=self.TOPIC_SET_RC_OVR)
-                    command_pub = rospy.Publisher('/mavros/rc/override', mavros_msgs.msg.OverrideRCIn, queue_size = 10)
-                    command_pub.publish(thruster_data)
+                    self.TOPIC_SET_RC_OVR.set_data(thruster_data)
+                    self.topic_publisher(topic=self.TOPIC_SET_RC_OVR)
                 # Handle exceptions
                 except Exception as e:
                     print("Thrusters publish failed")
