@@ -110,12 +110,12 @@ if __name__ == "__main__":
     rospy.init_node("gate_mission", anonymous=True)
 
     config = deviceHelper.variables
-    config.update(
-        {
-            # # this dummy video file will be used instead of the camera if uncommented
-            # "cv_dummy": ["/somepath/thisisavideo.mp4"],
-        }
-    )
+    # config.update(
+    #     {
+    #         # # this dummy video file will be used instead of the camera if uncommented
+    #         # "cv_dummy": ["/somepath/thisisavideo.mp4"],
+    #     }
+    # )
 
     # Create a mission object with arguments
     mission = GateMission(**config)
