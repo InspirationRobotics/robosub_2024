@@ -57,6 +57,7 @@ class GateMission:
         """
         print("[INFO] Beginning Gate Run Function")
         while not rospy.is_shutdown():
+            print("[INFO] ROSPY run")
             if not self.received:
                 continue
 
@@ -65,6 +66,7 @@ class GateMission:
             for key in self.next_data.keys():
                 if key in self.data.keys():
                     self.data[key].update(self.next_data[key]) # Merge the data
+                    print(key)
                 else:
                     self.data[key] = self.next_data[key] # Update the keys if necessary
             self.received = False
