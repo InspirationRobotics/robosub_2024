@@ -170,6 +170,7 @@ class CV:
             self.detected = False
 
         print(f"[INFO] Detection status : {self.detected}")
+        print(f"[DEBUG] Step : {self.step})
         if self.detected == False and self.step is None:
             yaw = 1
             forward = 0
