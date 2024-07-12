@@ -92,7 +92,7 @@ class BuoyMission:
         if self.circumnavigate == True:
             yaw_time = 0.9 # Tune this value -- the amount of time it takes at power 1 or -1 to go 90 degrees
             forward_time = 1.5 # Tune this value -- the amount of time it takes to go forward at power 1
-            lateral_time = -1.5 # Tune this value -- the amount of time it takes to go lateral at power 1
+            lateral_time = 1.5 # Tune this value -- the amount of time it takes to go lateral at power 1
             if self.target == "Red":
                 movement_list = [-1, 1, 1] # lateral, forward, yaw
             elif self.target == "Blue":
