@@ -4,226 +4,325 @@ Torpedo CV and logic test.
 Author: Brandon Tran
 """
 
+import argparse
+import math
+import os
 import time
+
 import cv2
 import numpy as np
-import os
+
+file_dir = os.path.dirname(os.path.abspath(__file__))
 
 class CV:
-    """
-    CV class for Torpedo mission. DO NOT change the name of the class, as this will mess up all of the backend files to run the CV scripts.
-    """
+    camera = 0  # Change this to your camera source, e.g., "/auv/camera/videoUSBRaw0" if needed
 
-    def __init__(self, ref_img_path="/Users/brandontran3/downloads/Torpedo Image.jpg"):
+    def __init__(self, **config):
         """
-        Initialize the CV class.
+        Init of torpedo CV,
         """
-        self.shape = (640, 480)  # Set the frame shape
-        self.aligned = False
-        self.detected = False
-        self.step = 0
-        self.end = False
-        self.ref_img_path = ref_img_path
-        self.reference_image = cv2.imread(self.ref_img_path)
         
-        if self.reference_image is None:
-            raise FileNotFoundError(f"Reference image not found at {ref_img_path}")
-        
-        self.reference_image = cv2.cvtColor(self.reference_image, cv2.COLOR_BGR2GRAY)
-        self.reference_image = self.apply_clahe(self.reference_image)
+        self.reference_images = {
+            "torpedo_board": cv2.imread(f"{file_dir}/Torpedo Board.png"),
+        }
+
+        for name, img in self.reference_images.items():
+            assert img is not None, f"Image for {name} not found."
+
+        self.clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
         self.sift = cv2.SIFT_create()
-        self.kp_ref, self.des_ref = self.sift.detectAndCompute(self.reference_image, None)
-        self.bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+        self.bf = cv2.BFMatcher()
         
-        print(f"[INFO] Torpedo CV Init")
-    
-    def apply_clahe(self, image):
-        """
-        Apply CLAHE to the image to improve contrast.
-        """
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        return clahe.apply(image)
+        self.keypoints_descriptors = {
+            name: self.sift.detectAndCompute(img, None)
+            for name, img in self.reference_images.items()
+        }
 
-    def process_sift(self, frame):
+        self.ref_shapes = {
+            name: img.shape for name, img in self.reference_images.items()
+        }
+
+        self.shape = (480, 640, 3)
+        self.step = 0
+
+        self.center_positions = {name: [] for name in self.reference_images.keys()}
+
+        self.offset_center = 0.5
+        self.target_coords = (0.0, 0.0)
+        self.yaw_threshold = 4
+        self.x_threshold = 0.1
+        self.y_threshold = 0.1
+
+        self.counter = 0
+        self.aligned = True
+        self.firing_range = 950
+        self.near_range = 750
+        self.fired1 = False
+        self.fired2 = False
+
+        print("[INFO] Torpedo cv Init")
+
+    def equalize_clahe(self, image):
+        """Equalize the histogram of the image"""
+        b, g, r = cv2.split(image)
+        b = self.clahe.apply(b)
+        g = self.clahe.apply(g)
+        r = self.clahe.apply(r)
+        return cv2.merge((b, g, r))
+
+    def equilize(img):
+        """Equilize the histogram of the image"""
+        b, g, r = cv2.split(img)
+        b = cv2.equalizeHist(b)
+        g = cv2.equalizeHist(g)
+        r = cv2.equalizeHist(r)
+        return cv2.merge((b, g, r))
+
+    def process_sift(self, ref_img, img, kp1, des1, kp2=None, des2=None, threshold=0.65, window_viz=None):
         """
-        Process the frame using SIFT feature matching.
+        Sift matching with reference points
+        if kp2 and des2 are not given, it will compute them
         """
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = self.apply_clahe(gray)
+        if kp2 is None or des2 is None:
+            kp2, des2 = self.sift.detectAndCompute(img, None)
+        matches = self.bf.knnMatch(des1, des2, k=2)
+        good = []
+        for m, n in matches:
+            if m.distance < threshold * n.distance:
+                good.append(m)
+
+        if len(good) < 4:
+            return None
+
+        src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+        dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+        H, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+
+        if window_viz is not None:
+            # draw the matches
+            img = cv2.drawMatches(ref_img, kp1, img, kp2, good, None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+            cv2.imshow(window_viz, img)
+        return H
+
+    def get_center(self, H, src_shape, norm=False):
+        """Get center of a given homography H"""
+        h, w, _ = src_shape
+        center = np.array([[w / 2, h / 2]]).reshape(-1, 1, 2)
+        center = cv2.perspectiveTransform(center, H).astype(np.int32)[0][0]
+        if norm:
+            center = [(center[0] - 320) / 320, (center[1] - 240) / 240]
+        return center
+
+    def projection(self, H, src_shape, points_normalized):
+        """
+        Get projection of a given homography H
+        Points are normalized between -1 and 1
+        """
+        h, w, _ = src_shape
+        points = np.array(points_normalized)
+        points[:, 0] = points[:, 0] * w // 2 + w // 2
+        points[:, 1] = points[:, 1] * h // 2 + h // 2
+        points = points.reshape(-1, 1, 2).astype(np.float32)
+        points = cv2.perspectiveTransform(points, H).astype(np.int32).reshape(-1, 2)
+        return points
         
-        kp_frame, des_frame = self.sift.detectAndCompute(gray, None)
-        matches = self.bf.match(self.des_ref, des_frame)
-        matches = sorted(matches, key=lambda x: x.distance)
-        
-        matched_image = cv2.drawMatches(self.reference_image, self.kp_ref, gray, kp_frame, matches[:10], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-        return matched_image, matches
+    def get_orientation(self, H, src_shape):
+        h, w, _ = src_shape
+        pts = (
+            np.array(
+                [
+                    [0, 0],
+                    [w, 0],
+                    [w, h],
+                    [0, h],
+                ]
+            )
+            .reshape(-1, 1, 2)
+            .astype(np.float32)
+        )
+        pts = cv2.perspectiveTransform(pts, H).astype(np.int32).reshape(4, 2)
 
-    def get_center(self, bbox):
-        """
-        Get the center of the bounding box.
-        """
-        x, y, w, h = bbox
-        cx = x + w // 2
-        cy = y + h // 2
-        return (cx, cy)
+        # get an estimation of the Y axis rotation
+        left_h_dist = np.linalg.norm(pts[0] - pts[3])
+        right_h_dist = np.linalg.norm(pts[1] - pts[2])
+        width = w / np.linalg.norm(pts[0] - pts[1])
 
-    def find_torpedo_targets(self, frame):
-        """
-        Detect the torpedo targets in the frame.
-        """
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        edges = cv2.Canny(gray, 50, 150)
-        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        detected_targets = []
-        
-        for cnt in contours:
-            approx = cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
-            if len(approx) == 8:  # Check for octagonal shapes
-                area = cv2.contourArea(cnt)
-                x, y, w, h = cv2.boundingRect(cnt)
-                detected_targets.append((area, (x, y, w, h), cnt))
-        
-        detected_targets.sort(key=lambda x: x[0])
-        return detected_targets
+        yaw = math.atan((left_h_dist - right_h_dist) / (left_h_dist + right_h_dist))
+        yaw = math.degrees(yaw)
+        print(f"[INFO] Yaw: {yaw}")
+        return yaw, width
 
-    def label_torpedo_sizes(self, frame, targets):
-        """
-        Label the sizes of the detected torpedo targets.
-        """
-        size_labels = ["smallest", "small", "large", "largest"]
-        labeled_targets = []
-        
-        for i, target in enumerate(targets[:4]):
-            area, bbox, cnt = target
-            x, y, w, h = bbox
-            label = size_labels[i]
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            labeled_targets.append((label, self.get_center(bbox)))
-        
-        return labeled_targets
+    def detect_holes(self, img):
+        """Detect all the holes in the image and their positions"""
+        kp2, des2 = self.sift.detectAndCompute(img, None)
+        centers = {}
+        for name, (kp1, des1) in self.keypoints_descriptors.items():
+            H = self.process_sift(self.reference_images[name], img, kp1, des1, kp2, des2, threshold=0.65)
+            if H is not None:
+                centers[name] = self.get_center(H, self.ref_shapes[name])
+        return centers
 
-    def label_midpoints(self, frame, labeled_targets):
-        """
-        Label the midpoints of the detected torpedo targets.
-        """
-        for label, (cx, cy) in labeled_targets:
-            cv2.putText(frame, f"{label} ({cx}, {cy})", (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-
-    def calculate_movement(self, midpoints, frame_shape):
-        """
-        Calculate the forward, lateral, depth, and yaw movements based on midpoints.
-        """
-        height, width = frame_shape
-        center_x = width // 2
-        center_y = height // 2
-
-        forward = lateral = depth = yaw = 0
-
-        target_color = self.config  # Use the config to determine which color to track
-        if target_color in midpoints:
-            target_midpoint = midpoints[target_color]
+    def align_yaw(self, H, ref_shape):
+        yaw, dist = self.get_orientation(H, ref_shape)
+        yaw_required = (self.yaw_threshold < yaw < -self.yaw_threshold)
+        if yaw_required:
+            yaw = np.clip(yaw * 1, -1, 1)
         else:
-            return forward, lateral, depth, yaw
-
-        # Calculate forward and depth based on vertical position
-        forward = (center_y - target_midpoint[1]) / center_y
-        depth = (target_midpoint[1] - center_y) / center_y
-        
-        # Calculate lateral based on horizontal position
-        lateral = (target_midpoint[0] - center_x) / center_x
-        
-        # Calculate yaw based on horizontal position
-        yaw = (target_midpoint[0] - center_x) / center_x
-
-        # We want to yaw, then move laterally, then move forward.
-        if abs(yaw) > self.threshold:
-            forward = 0
-            lateral = 0
-
-        if abs(yaw) < self.threshold and abs(lateral) > self.threshold:
             yaw = 0
-            forward = 0
+            if self.aligned:
+                self.step = 2
+                self.aligned = False
+            else:
+                self.aligned = True
+        return yaw_required, yaw, dist
 
-        if abs(forward) > self.threshold and abs(lateral) < self.threshold and abs(yaw) < self.threshold:
-            yaw = 0
+    def align_lateral(self, target):
+        lateral = np.clip(target[0] * 3.5, -1, 1)
+        lateral_required = (self.x_threshold < lateral < -self.x_threshold)
+        if not lateral_required:
             lateral = 0
+            if self.aligned:
+                self.step = 3
+                self.aligned = False
+            else:
+                self.aligned = True
+        return lateral_required, lateral
 
-        return forward, lateral, depth, yaw
-    
-    def align_to_target(self, target):
-        """
-        Align the vehicle to the target.
-        """
-        label, (cx, cy) = target
-        # Placeholder for alignment logic
-        print(f"[INFO] Aligning to {label} target at ({cx}, {cy})")
-    
-    def fire_torpedo(self, target):
-        """
-        Fire the torpedo at the target.
-        """
-        label, (cx, cy) = target
-        # Placeholder for firing logic
-        print(f"[INFO] Firing torpedo at {label} target at ({cx}, {cy})")
+    def align_depth(self, target):
+        vertical = np.clip(target[1] * 2, -0.2, 0.2)
+        vertical_required = (self.y_threshold < vertical < -self.y_threshold)
+        if not vertical_required:
+            vertical = 0
+            if self.aligned:
+                self.step = 4
+                self.aligned = False
+            else:
+                self.aligned = True
+        return vertical_required, vertical
 
-    def run(self, raw_frame):
-        """
-        Process the input frame and perform torpedo detection and firing logic.
-        """
-        raw_frame = cv2.resize(raw_frame, self.shape)
+    def move_forward(self, H, ref_shape, target):
+        yaw_required, yaw, dist = self.align_yaw(H, ref_shape)
+        lateral_required, lateral = self.align_lateral(target)
+        vertical_required, vertical = self.align_depth(target)
+
+        if not(yaw_required or lateral_required or vertical_required):
+            if dist < self.firing_range:
+                forward = 1
+            elif dist > self.firing_range + 200:
+                forward = -1
+            return 0, 0, 0, forward
+
+        else:
+            if yaw_required:
+                return yaw, 0, 0, 0
+            elif lateral_required:
+                return 0, lateral, 0, 0
+            elif vertical_required:
+                return 0, 0, vertical, 0
+            if yaw_required:
+                return yaw, 0, 0, 0
+
+    def update_center(self, img):
+        centers = self.detect_holes(img)
+        print(f"[INFO] centers {centers}")
+
+        for name, (kp1, des1) in self.keypoints_descriptors.items():
+            if name in centers:
+                self.center_positions[name].append(centers[name])
+
+        if self.step == 1 and "torpedo_board" in centers:
+            H = self.process_sift(self.reference_images["torpedo_board"], img, kp1, des1, threshold=0.65, window_viz=None)
+            if H is not None:
+                yaw, lateral, vertical, forward = self.move_forward(H, self.ref_shapes["torpedo_board"], centers["torpedo_board"])
+                print(f"[INFO] Moving to hole 1: yaw {yaw} lateral {lateral} vertical {vertical} forward {forward}")
+                return yaw, lateral, vertical, forward
+        # Repeat similar if conditions for other steps if necessary
+        return 0, 0, 0, 0
+
+    def run(self):
+        cap = cv2.VideoCapture(self.camera)
+        if not cap.isOpened():
+            print("[ERROR] Unable to open camera")
+            return
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                print("[ERROR] Unable to read from camera")
+                break
+
+            yaw, lateral, vertical, forward = self.update_center(frame)
+            # Implement the control logic for your AUV here using the yaw, lateral, vertical, and forward values.
+            print(f"[INFO] Yaw: {yaw}, Lateral: {lateral}, Vertical: {vertical}, Forward: {forward}")
+
+            time.sleep(0.1)
+
+        cap.release()
+        cv2.destroyAllWindows()
+
+def main():
+    parser = argparse.ArgumentParser(description="Run torpedo CV")
+    parser.add_argument("--config", help="Configuration file", default="config.yaml")
+    parser.add_argument("--video", help="Path to the video file for testing", default=None)
+    args = parser.parse_args()
+
+    config = {}
+    cv = CV(**config)
+
+    if args.video:
+        # Use video file for testing
+        video_path = args.video
+
+        print(f"Video path: {video_path}")
+
+        # Verify the path exists.
+        if not os.path.exists(video_path):
+            print(f"[ERROR] Video file not found: {video_path}")
+            return
         
-        detected_targets = self.find_torpedo_targets(raw_frame)
-        if len(detected_targets) < 2:
-            print("[ERROR] Could not find both small and next smallest torpedo targets.")
-            return raw_frame
-        
-        labeled_targets = self.label_torpedo_sizes(raw_frame, detected_targets)
-        self.label_midpoints(raw_frame, labeled_targets)
-        
-        if len(labeled_targets) >= 2:
-            self.align_to_target(labeled_targets[0])
-            self.fire_torpedo(labeled_targets[0])
-            
-            time.sleep(2)
-            
-            self.align_to_target(labeled_targets[1])
-            self.fire_torpedo(labeled_targets[1])
-
-        return raw_frame
-
-if __name__ == "__main__":
-    # video_root_path = "/Users/brandontran3/downloads/Training Data/"
-    video_root_path = "/Users/brandontran3/downloads/Training Data/"
-    mission_name = "Torpedo/"
-    video_name = "Torpedo Video 5.mp4"
-    video_path = os.path.join(video_root_path, mission_name, video_name)
-
-    print(f"Video path: {video_path}")
-
-    cv = CV()
-
-    if not os.path.exists(video_path):
-        print(f"[ERROR] Video file not found {video_path}")
-    else:
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             print(f"[ERROR] Unable to open video file: {video_path}")
-        else:
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    print("[INFO] End of file.")
-                    break
+            return
+        
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                print("[INFO] End of file.")
+                break
 
-                viz_frame = cv.run(frame)
-                if viz_frame is not None:
-                    cv2.imshow("frame", viz_frame)
+            yaw, lateral, vertical, forward = cv.update_center(frame)
+            print(f"[INFO] Yaw: {yaw}, Lateral: {lateral}, Vertical: {vertical}, Forward: {forward}")
 
-                # Break the loop when 'q' key is pressed
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+            cv2.imshow("Frame", frame)
+            time.sleep(0.05)
 
-            cap.release()
-            cv2.destroyAllWindows()
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+
+        cap.release()
+        cv2.destroyAllWindows()
+    else:
+        # Use camera input
+        cap = cv2.VideoCapture(cv.camera)
+        if not cap.isOpened():
+            print("[ERROR] Unable to open camera")
+            return
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                print("[ERROR] Unable to read from camera")
+                break
+
+            yaw, lateral, vertical, forward = cv.update_center(frame)
+            print(f"[INFO] Yaw: {yaw}, Lateral: {lateral}, Vertical: {vertical}, Forward: {forward}")
+
+            time.sleep(0.1)
+
+        cap.release()
+        cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    main()
+
