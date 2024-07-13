@@ -83,7 +83,7 @@ class CV:
         # If detected, move forward and yaw to get close to the buoy while remaining aligned.
         if self.step == 1 and self.detected == True:
             # Yaw to align orientation with buoy
-            x_coordinate = detection.get("xmin") + detection.get("xmax")
+            x_coordinate = int((detection.get("xmin") + detection.get("xmax"))/2)
             if x_coordinate < self.midpoint - self.tolerance:
                 yaw = -0.5
             elif x_coordinate > self.midpoint + self.tolerance:
