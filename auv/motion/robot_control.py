@@ -178,7 +178,7 @@ class RobotControl:
         pwm.channels = channels
 
         # Publish PWMs to /auv/devices/thrusters
-        print(f"[INFO] Channels sent to pixhawk = {pwm}")
+        # print(f"[INFO] Channels sent to pixhawk = {pwm}")
         if vertical!=0: self.set_relative_depth(vertical)
         self.pub_thrusters.publish(pwm)
 
