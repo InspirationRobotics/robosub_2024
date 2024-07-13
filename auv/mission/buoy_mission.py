@@ -90,7 +90,7 @@ class BuoyMission:
             print("[INFO] Buoy mission run")
         
         if self.circumnavigate == True:
-            yaw_time = 1 # Tune this value -- the amount of time it takes at power 1 or -1 to go 90 degrees
+            yaw_time = 1.5 # Tune this value -- the amount of time it takes at power 1 or -1 to go 90 degrees
             forward_time = 5 # Tune this value -- the amount of time it takes to go forward at power 1
             lateral_time = 4 # Tune this value -- the amount of time it takes to go lateral at power 1
             if self.target == "Red":
@@ -100,14 +100,14 @@ class BuoyMission:
 
             # First move laterally, then move around the buoy
             self.robot_control.movement(lateral = movement_list[0])
-            time.sleep(lateral_time)
+            rospy.sleep(lateral_time)
             for i in range(3):
                 self.robot_control.movement(forward = movement_list[1])
-                time.sleep(forward_time)
+                rospy.sleep(forward_time)
                 self.robot_control.movement(yaw = movement_list[2])
-                time.sleep(yaw_time)
+                rospy.sleep(yaw_time)
             self.robot_control.movement(lateral = -movement_list[0])
-            time.sleep(lateral_time)
+            rospy.sleep(lateral_time)
 
     def cleanup(self):
         """
