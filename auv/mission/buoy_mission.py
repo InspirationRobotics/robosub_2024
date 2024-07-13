@@ -97,7 +97,6 @@ class BuoyMission:
         self.first_time = time.time()
 
     def circumnavigate(self):
-        time_target = 1
         self.first_time = time.time()
         # yaw_time = 2.2 # Tune this value -- the amount of time it takes at power 1 or -1 to go 90 degrees
         # forward_time = 10 # Tune this value -- the amount of time it takes to go forward at power 1
@@ -107,17 +106,17 @@ class BuoyMission:
         elif self.target == "Blue":
             movement_list = [2, 2, -1] # lateral, forward, yaw
         # First move laterally, then move around the buoy
-        while time.time() - self.first_time < time_target:
+        while time.time() - self.first_time < 1:
             self.robot_control.movement(lateral = movement_list[0])
         self.sleep()
         for i in range(3):
-            while time.time() - self.first_time < time_target:
+            while time.time() - self.first_time < 3:
                 self.robot_control.movement(forward = movement_list[1])
             self.sleep()
-            while time.time() - self.first_time < time_target:
+            while time.time() - self.first_time < 0.75:
                 self.robot_control.movement(yaw = movement_list[2])
             self.sleep()
-        while time.time() - self.first_time < time_target:
+        while time.time() - self.first_time < 1:
             self.robot_control.movement(lateral = -movement_list[0])
         
 
