@@ -96,6 +96,8 @@ class CV:
                 forward = 1
             elif buoy_area > 7/8 * self.frame_area:
                 forward = -1
+            print(f"[INFO] Frame area : {self.frame_area}")
+            print(f"[INFO] Buoy area : {buoy_area}")
 
         return forward, lateral, yaw
 
