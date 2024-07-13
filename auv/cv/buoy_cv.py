@@ -92,9 +92,9 @@ class CV:
                 yaw = 0
 
             buoy_area = abs(detection.get("xmax") - detection.get("xmin")) * abs(detection.get("ymin") - detection.get("ymax"))
-            if buoy_area < 1/5 * self.frame_area:
+            if buoy_area < 3/4 * self.frame_area:
                 forward = 1
-            elif buoy_area > 1/2 * self.frame_area:
+            elif buoy_area > 7/8 * self.frame_area:
                 forward = -1
 
         return forward, lateral, yaw
