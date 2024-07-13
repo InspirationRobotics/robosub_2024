@@ -4,12 +4,6 @@ Torpedo CV and logic test.
 Author: Brandon Tran
 """
 
-"""
-Torpedo CV and logic test.
-
-Author: Brandon Tran
-"""
-
 import argparse
 import math
 import os
