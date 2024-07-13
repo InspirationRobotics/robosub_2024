@@ -53,9 +53,9 @@ class BuoyMission:
 
         print(f"[DEBUG] Received data from {file_name}")
 
-    def run(self):
+    def approach(self):
         """
-        Here should be all the code required to run the mission.
+        Here should be all the code required to approach the buoy.
         This could be a loop, a finite state machine, etc.
         """
 
@@ -93,10 +93,14 @@ class BuoyMission:
             self.circumnavigate()
     
     def sleep(self):
+        """Allows AUV to dissipate momentum then reset
+        the time used to move in a particular direction"""
         rospy.sleep(2)
         self.first_time = time.time()
 
     def circumnavigate(self):
+        """Circumnavigates the buoy based on the gate mission choice. 
+        Aims to make a square around the buoy"""
         self.first_time = time.time()
         # yaw_time = 2.2 # Tune this value -- the amount of time it takes at power 1 or -1 to go 90 degrees
         # forward_time = 10 # Tune this value -- the amount of time it takes to go forward at power 1
@@ -155,5 +159,5 @@ if __name__ == "__main__":
     mission = BuoyMission(**config)
 
     # Run the mission
-    mission.circumnavigate()
+    mission.approach()
     mission.cleanup()
