@@ -30,7 +30,7 @@ class BuoyMission:
         self.robot_control = robot_control.RobotControl()
         self.cv_handler = cv_handler.CVHandler(**self.config)
 
-        self.circumnavigate = False
+        self.positioned = False
 
         # Initialize the CV handlers; dummys are used to input a video file instead of the camera stream as data for the CV script to run on
         for file_name in self.cv_files:
@@ -81,7 +81,7 @@ class BuoyMission:
 
             if end:
                 print("[INFO] AUV has aligned with the buoy. Beginning circumnavigation.")
-                self.circumnavigate = True
+                self.positioned = True
                 break
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
@@ -89,25 +89,27 @@ class BuoyMission:
             
             print("[INFO] Buoy mission run")
         
-        if self.circumnavigate == True:
-            yaw_time = 2.2 # Tune this value -- the amount of time it takes at power 1 or -1 to go 90 degrees
-            forward_time = 10 # Tune this value -- the amount of time it takes to go forward at power 1
-            lateral_time = 8 # Tune this value -- the amount of time it takes to go lateral at power 1
-            if self.target == "Red":
-                movement_list = [-2, 2, 1] # lateral, forward, yaw
-            elif self.target == "Blue":
-                movement_list = [2, 2, -1] # lateral, forward, yaw
+        if self.positioned == True:
+            self.circumnavigate()
 
-            # First move laterally, then move around the buoy
-            self.robot_control.movement(lateral = movement_list[0])
-            rospy.sleep(lateral_time)
-            for i in range(3):
-                self.robot_control.movement(forward = movement_list[1])
-                rospy.sleep(forward_time)
-                self.robot_control.movement(yaw = movement_list[2])
-                rospy.sleep(yaw_time)
-            self.robot_control.movement(lateral = -movement_list[0])
-            rospy.sleep(lateral_time)
+    def circumnavigate(self):
+        yaw_time = 2.2 # Tune this value -- the amount of time it takes at power 1 or -1 to go 90 degrees
+        forward_time = 10 # Tune this value -- the amount of time it takes to go forward at power 1
+        lateral_time = 8 # Tune this value -- the amount of time it takes to go lateral at power 1
+        if self.target == "Red":
+            movement_list = [-2, 2, 1] # lateral, forward, yaw
+        elif self.target == "Blue":
+            movement_list = [2, 2, -1] # lateral, forward, yaw
+        # First move laterally, then move around the buoy
+        self.robot_control.movement(lateral = movement_list[0])
+        rospy.sleep(lateral_time)
+        for i in range(3):
+            self.robot_control.movement(forward = movement_list[1])
+            rospy.sleep(forward_time)
+            self.robot_control.movement(yaw = movement_list[2])
+            rospy.sleep(yaw_time)
+        self.robot_control.movement(lateral = -movement_list[0])
+        rospy.sleep(lateral_time)
 
     def cleanup(self):
         """
