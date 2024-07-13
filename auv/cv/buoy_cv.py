@@ -17,7 +17,7 @@ class CV:
     def __init__(self, **config):
         self.aligned = False
         self.shape = (640, 480)
-        self.midpoint = self.shape[0]
+        self.midpoint = self.shape[0] / 2
         self.frame_area = self.shape[0] * self.shape[1]
         self.tolerance = 20 # Pixels
 
