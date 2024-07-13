@@ -51,8 +51,6 @@ class BuoyMission:
         self.next_data[file_name] = data 
         self.received = True
 
-        print(f"[DEBUG] Received data from {file_name}")
-
     def approach(self):
         """
         Here should be all the code required to approach the buoy.

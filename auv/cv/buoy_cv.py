@@ -70,6 +70,7 @@ class CV:
         yaw = 0
 
         if detection.get("status") == True:
+            print("Buoy detected")
             self.detected = True
             self.step = 1
         else:
@@ -107,7 +108,6 @@ class CV:
         visualized_frame = None
 
         data_from_detection, frame = self.detect_buoy(raw_frame)
-        print(data_from_detection)
             
         if frame is not None:
             visualized_frame = frame
@@ -119,6 +119,7 @@ class CV:
 
         if forward == 0 and lateral == 0 and yaw == 0:
             self.end = True
+            print("Starting circumnavigation")
 
         end = self.end
 
