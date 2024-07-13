@@ -4,6 +4,12 @@ Torpedo CV and logic test.
 Author: Brandon Tran
 """
 
+"""
+Torpedo CV and logic test.
+
+Author: Brandon Tran
+"""
+
 import argparse
 import math
 import os
@@ -153,14 +159,22 @@ class CV:
         return yaw, width
 
     def detect_holes(self, img):
-        """Detect all the holes in the image and their positions"""
+        """Detect all the holes in the image and their positions and return bounding boxes."""
         kp2, des2 = self.sift.detectAndCompute(img, None)
-        centers = {}
+        detections = {}
         for name, (kp1, des1) in self.keypoints_descriptors.items():
             H = self.process_sift(self.reference_images[name], img, kp1, des1, kp2, des2, threshold=0.65)
             if H is not None:
-                centers[name] = self.get_center(H, self.ref_shapes[name])
-        return centers
+                center = self.get_center(H, self.ref_shapes[name])
+                bbox = self.get_bounding_box(H, self.ref_shapes[name])
+                detections[name] = {"center": center, "bbox": bbox}
+        return detections
+
+    def get_bounding_box(self, H, src_shape):
+        h, w, _ = src_shape
+        pts = np.array([[0, 0], [w, 0], [w, h], [0, h]], dtype=np.float32).reshape(-1, 1, 2)
+        bbox = cv2.perspectiveTransform(pts, H).astype(np.int32)
+        return bbox
 
     def align_yaw(self, H, ref_shape):
         yaw, dist = self.get_orientation(H, ref_shape)
@@ -223,21 +237,31 @@ class CV:
                 return yaw, 0, 0, 0
 
     def update_center(self, img):
-        centers = self.detect_holes(img)
-        print(f"[INFO] centers {centers}")
+        detections = self.detect_holes(img)
+        print(f"[INFO] detections: {detections}")
 
-        for name, (kp1, des1) in self.keypoints_descriptors.items():
-            if name in centers:
-                self.center_positions[name].append(centers[name])
+        for name, detection in detections.items():
+            center = detection["center"]
+            bbox = detection["bbox"]
 
-        if self.step == 1 and "torpedo_board" in centers:
+            # Draw center
+            cv2.circle(img, tuple(center), 1, (0, 255, 0), 3)
+            
+            # Draw bounding box
+            cv2.polylines(img, [bbox], True, (255, 0, 0), 3)
+
+            if name in self.keypoints_descriptors:
+                self.center_positions[name].append(center)
+
+        if self.step == 1 and "torpedo_board" in detections:
             H = self.process_sift(self.reference_images["torpedo_board"], img, kp1, des1, threshold=0.65, window_viz=None)
             if H is not None:
-                yaw, lateral, vertical, forward = self.move_forward(H, self.ref_shapes["torpedo_board"], centers["torpedo_board"])
+                yaw, lateral, vertical, forward = self.move_forward(H, self.ref_shapes["torpedo_board"], detections["torpedo_board"]["center"])
                 print(f"[INFO] Moving to hole 1: yaw {yaw} lateral {lateral} vertical {vertical} forward {forward}")
                 return yaw, lateral, vertical, forward
         # Repeat similar if conditions for other steps if necessary
         return 0, 0, 0, 0
+
 
     def run(self):
         cap = cv2.VideoCapture(self.camera)
@@ -254,6 +278,10 @@ class CV:
             yaw, lateral, vertical, forward = self.update_center(frame)
             # Implement the control logic for your AUV here using the yaw, lateral, vertical, and forward values.
             print(f"[INFO] Yaw: {yaw}, Lateral: {lateral}, Vertical: {vertical}, Forward: {forward}")
+
+            cv2.imshow("Frame", frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
             time.sleep(0.1)
 
@@ -304,25 +332,7 @@ def main():
         cv2.destroyAllWindows()
     else:
         # Use camera input
-        cap = cv2.VideoCapture(cv.camera)
-        if not cap.isOpened():
-            print("[ERROR] Unable to open camera")
-            return
-
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                print("[ERROR] Unable to read from camera")
-                break
-
-            yaw, lateral, vertical, forward = cv.update_center(frame)
-            print(f"[INFO] Yaw: {yaw}, Lateral: {lateral}, Vertical: {vertical}, Forward: {forward}")
-
-            time.sleep(0.1)
-
-        cap.release()
-        cv2.destroyAllWindows()
+        cv.run()
 
 if __name__ == "__main__":
     main()
-
