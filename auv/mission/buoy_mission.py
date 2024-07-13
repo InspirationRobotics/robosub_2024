@@ -94,9 +94,9 @@ class BuoyMission:
             forward_time = 5 # Tune this value -- the amount of time it takes to go forward at power 1
             lateral_time = 4 # Tune this value -- the amount of time it takes to go lateral at power 1
             if self.target == "Red":
-                movement_list = [-1, 1, 1] # lateral, forward, yaw
+                movement_list = [-2, 2, 1] # lateral, forward, yaw
             elif self.target == "Blue":
-                movement_list = [1, 1, -1] # lateral, forward, yaw
+                movement_list = [2, 2, -1] # lateral, forward, yaw
 
             # First move laterally, then move around the buoy
             self.robot_control.movement(lateral = movement_list[0])
