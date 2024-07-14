@@ -74,7 +74,7 @@ class CV:
             self.step = 1
         else:
             self.detected = False
-            self.step == None
+            self.step = None
 
         # None means we have to first detect the object
         if self.step == None:
@@ -117,7 +117,6 @@ class CV:
             
         if frame is not None:
             visualized_frame = frame
-            print("[INFO] Visualized frame exists.")
         else:
             visualized_frame = None
 
