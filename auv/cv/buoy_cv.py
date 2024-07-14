@@ -83,8 +83,15 @@ class CV:
         
         # If detected, move forward and yaw to get close to the buoy while remaining aligned.
         if self.step == 1 and self.detected == True:
-            # Yaw to align orientation with buoy
+            # Find area and x-midpoint of buoy bounding box
+            buoy_area = abs(detection.get("xmax") - detection.get("xmin")) * abs(detection.get("ymin") - detection.get("ymax"))
             x_coordinate = int((detection.get("xmin") + detection.get("xmax"))/2)
+            
+            # Yaw to align orientation with buoy
+            
+            if buoy_area < 200:
+                # Filter extraneous detections
+                yaw = 0
             if x_coordinate < self.midpoint - self.tolerance:
                 # If central x is less than bound for midpoint
                 # i.e object is too far right - we should yaw
@@ -98,10 +105,10 @@ class CV:
             else:
                 yaw = 0
 
-            buoy_area = abs(detection.get("xmax") - detection.get("xmin")) * abs(detection.get("ymin") - detection.get("ymax"))
-            if buoy_area < 0.3 * self.frame_area:
+            
+            if buoy_area < 5000: # number of pixels in buoy's bounding box
                 forward = 1
-            elif buoy_area > 0.4 * self.frame_area:
+            elif buoy_area > 10000:
                 forward = -1
             print(f"[INFO] Frame area : {self.frame_area}")
             print(f"[INFO] Buoy area : {buoy_area}")
