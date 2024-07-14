@@ -89,7 +89,7 @@ class CV:
             
             # Yaw to align orientation with buoy
 
-            if buoy_area < 0:
+            if buoy_area < 200:
                 # Filter extraneous detections
                 yaw = 1
             if x_coordinate < self.midpoint - self.tolerance:
