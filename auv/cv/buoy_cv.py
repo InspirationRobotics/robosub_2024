@@ -106,9 +106,9 @@ class CV:
                 yaw = 0
 
             
-            if buoy_area < 2500: # number of pixels in buoy's bounding box
+            if buoy_area < 1250: # number of pixels in buoy's bounding box
                 forward = 1
-            elif buoy_area > 5000:
+            elif buoy_area > 2500:
                 forward = -1
             print(f"[INFO] Frame area : {self.frame_area}")
             print(f"[INFO] Buoy area : {buoy_area}")
