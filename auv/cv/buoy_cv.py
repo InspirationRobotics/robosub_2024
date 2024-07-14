@@ -88,7 +88,7 @@ class CV:
             x_coordinate = int((detection.get("xmin") + detection.get("xmax"))/2)
             
             # Yaw to align orientation with buoy
-            
+
             if buoy_area < 200:
                 # Filter extraneous detections
                 yaw = 0
@@ -106,9 +106,9 @@ class CV:
                 yaw = 0
 
             
-            if buoy_area < 5000: # number of pixels in buoy's bounding box
+            if buoy_area < 2500: # number of pixels in buoy's bounding box
                 forward = 1
-            elif buoy_area > 10000:
+            elif buoy_area > 5000:
                 forward = -1
             print(f"[INFO] Frame area : {self.frame_area}")
             print(f"[INFO] Buoy area : {buoy_area}")
