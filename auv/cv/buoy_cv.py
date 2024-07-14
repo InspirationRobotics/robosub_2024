@@ -88,7 +88,7 @@ class CV:
             if self.yaw_magnitude == 0.05:
                 # Prevent sub from stopping yaw
                 self.yaw_magnitude = 0.1
-        
+        self.detected
         self.prev_detected = self.detected
 
         # None means we have to first detect the object
@@ -115,9 +115,9 @@ class CV:
                 # Buoy is too far right, yaw clockwise
                 yaw = self.yaw_magnitude
                             
-            if buoy_area < 12500: # number of pixels in buoy's bounding box
+            if buoy_area < 5000: # number of pixels in buoy's bounding box
                 forward = 1
-            elif buoy_area > 25000:
+            elif buoy_area > 10000:
                 forward = -1
             print(f"[INFO] Frame area : {self.frame_area}")
             print(f"[INFO] Buoy area : {buoy_area}")
