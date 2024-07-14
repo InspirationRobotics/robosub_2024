@@ -89,9 +89,9 @@ class CV:
             
             # Yaw to align orientation with buoy
 
-            if buoy_area < 200:
+            if buoy_area < 100:
                 # Filter extraneous detections
-                yaw = 0
+                yaw = 1
             if x_coordinate < self.midpoint - self.tolerance:
                 # If central x is less than bound for midpoint
                 # i.e object is too far right - we should yaw
