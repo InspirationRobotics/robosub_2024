@@ -85,7 +85,7 @@ class BuoyMission:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
                 print(forward, lateral, yaw) 
             
-            print("[INFO] Buoy mission run")
+        print("[INFO] Buoy mission run")
         
         if self.positioned == True:
             self.circumnavigate()
@@ -99,6 +99,7 @@ class BuoyMission:
     def circumnavigate(self):
         """Circumnavigates the buoy based on the gate mission choice. 
         Aims to make a square around the buoy"""
+        print("Starting circumnavigation")
         self.first_time = time.time()
         # yaw_time = 2.2 # Tune this value -- the amount of time it takes at power 1 or -1 to go 90 degrees
         # forward_time = 10 # Tune this value -- the amount of time it takes to go forward at power 1

@@ -70,7 +70,6 @@ class CV:
         yaw = 0
 
         if detection.get("status") == True:
-            print("Buoy detected")
             self.detected = True
             self.step = 1
         else:
@@ -79,6 +78,7 @@ class CV:
 
         # None means we have to first detect the object
         if self.step == None:
+            # positive is clockwise
             yaw = 1
         
         # If detected, move forward and yaw to get close to the buoy while remaining aligned.
@@ -86,8 +86,14 @@ class CV:
             # Yaw to align orientation with buoy
             x_coordinate = int((detection.get("xmin") + detection.get("xmax"))/2)
             if x_coordinate < self.midpoint - self.tolerance:
+                # If central x is less than bound for midpoint
+                # i.e object is too far right - we should yaw
+                # clockwise
                 yaw = -0.5
             elif x_coordinate > self.midpoint + self.tolerance:
+                # if central x is greater than bound for midpoint
+                # i.e. object is too far left - we should yaw
+                # counterclockwise
                 yaw = 0.5
             else:
                 yaw = 0
@@ -119,7 +125,6 @@ class CV:
 
         if forward == 0 and lateral == 0 and yaw == 0:
             self.end = True
-            print("Starting circumnavigation")
 
         end = self.end
 
