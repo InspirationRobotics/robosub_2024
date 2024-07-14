@@ -22,6 +22,7 @@ class CV:
         self.tolerance = 20 # Pixels
 
         self.detected = False
+        self.prev_detected = False
         self.config = config # Blue counterclockwise, Red clockwise
         self.step = None
 
@@ -29,6 +30,10 @@ class CV:
         self.time_before_forward_run = 0
         self.before_end_lateral_time = 0
         self.end = False
+
+        # Sets yaw magnitude. Due to camera latency, this needs to decrease
+        # when the buoy gets off the screen
+        self.yaw_magnitude = 0.5
 
         # Test variables.
         self.detection_area = None
@@ -68,7 +73,7 @@ class CV:
         forward = 0
         lateral = 0
         yaw = 0
-
+        
         if detection.get("status") == True:
             self.detected = True
             self.step = 1
@@ -76,10 +81,20 @@ class CV:
             self.detected = False
             self.step = None
 
+        if not self.detected and self.prev_detected:
+            # We lost sight of the buoy, yaw more slowly
+            # to zero in on it (camera latency)
+            self.yaw_magnitude -= 0.05
+            if self.yaw_magnitude == 0.05:
+                # Prevent sub from stopping yaw
+                self.yaw_magnitude = 0.1
+        
+        self.prev_detected = self.detected
+
         # None means we have to first detect the object
         if self.step == None:
             # positive is clockwise
-            yaw = 1
+            yaw = self.yaw_magnitude
         
         # If detected, move forward and yaw to get close to the buoy while remaining aligned.
         if self.step == 1 and self.detected == True:
@@ -90,22 +105,16 @@ class CV:
             # Yaw to align orientation with buoy
 
             if buoy_area < 200:
-                # Filter extraneous detections
-                yaw = 1
-            if x_coordinate < self.midpoint - self.tolerance:
-                # If central x is less than bound for midpoint
-                # i.e object is too far right - we should yaw
-                # clockwise
-                yaw = -0.5
+                # Filter extraneous detections - does not change yaw
+                yaw = yaw
+            elif x_coordinate < self.midpoint - self.tolerance:
+                # Buoy is too far left, yaw counterclockwise
+                yaw = -self.yaw_magnitude
+                
             elif x_coordinate > self.midpoint + self.tolerance:
-                # if central x is greater than bound for midpoint
-                # i.e. object is too far left - we should yaw
-                # counterclockwise
-                yaw = 0.5
-            else:
-                yaw = 0
-
-            
+                # Buoy is too far right, yaw clockwise
+                yaw = self.yaw_magnitude
+                            
             if buoy_area < 12500: # number of pixels in buoy's bounding box
                 forward = 1
             elif buoy_area > 25000:
