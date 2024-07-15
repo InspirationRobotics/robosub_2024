@@ -95,7 +95,7 @@ class CV:
             
             # We lost sight of the buoy, yaw more slowly
             # to zero in on it (camera latency)
-            self.search_yaw -= 0.05
+            self.search_yaw += 0.05 * (-1 ** self.pass_count)
 
             # Yaw in opposite direction (due to camera
             # latency, the sub has yawed too far)
