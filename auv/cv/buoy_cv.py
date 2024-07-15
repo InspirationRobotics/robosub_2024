@@ -77,6 +77,7 @@ class CV:
         if detection.get("status") == True:
             self.detected = True
             self.step = 1
+            self.yaw_magnitude = abs(self.yaw_magnitude)
         else:
             self.detected = False
             self.step = None
@@ -85,9 +86,13 @@ class CV:
             # We lost sight of the buoy, yaw more slowly
             # to zero in on it (camera latency)
             self.yaw_magnitude -= 0.05
-            if self.yaw_magnitude < 0.5:
+
+            # Yaw in opposite direction (due to camera
+            # latency, the sub has yawed too far)
+            self.yaw_magnitude *= -1
+            if abs(self.yaw_magnitude) < 0.5:
                 # Prevent sub from stopping yaw
-                self.yaw_magnitude = 0.5
+                self.yaw_magnitude = -0.5
         self.detected
         self.prev_detected = self.detected
 
