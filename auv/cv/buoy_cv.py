@@ -33,7 +33,7 @@ class CV:
 
         # Sets yaw magnitude. Due to camera latency, this needs to decrease
         # when the buoy gets off the screen
-        self.search_yaw = 0.75
+        self.search_yaw = 0.50
         self.pass_count = 0
 
         # Test variables.
@@ -95,7 +95,7 @@ class CV:
             
             # We lost sight of the buoy, yaw more slowly
             # to zero in on it (camera latency)
-            self.search_yaw += 0.05 * ((-1) ** self.pass_count)
+            self.search_yaw += 0.02 * ((-1) ** self.pass_count)
 
             # Yaw in opposite direction (due to camera
             # latency, the sub has yawed too far)
@@ -122,11 +122,11 @@ class CV:
 
             if x_coordinate < self.midpoint - self.tolerance:
                 # Buoy is too far left, yaw counterclockwise
-                yaw = -0.5
+                yaw = -0.4
                 
             elif x_coordinate > self.midpoint + self.tolerance:
                 # Buoy is too far right, yaw clockwise
-                yaw = 0.5
+                yaw = 0.4
                             
             if buoy_area < 15000: # number of pixels in buoy's bounding box
                 forward = 1
