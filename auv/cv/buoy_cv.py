@@ -34,6 +34,7 @@ class CV:
         # Sets yaw magnitude. Due to camera latency, this needs to decrease
         # when the buoy gets off the screen
         self.search_yaw = 0.50
+        self.yaw_mag = 0.4
         self.pass_count = 0
 
         # Test variables.
@@ -119,14 +120,15 @@ class CV:
             x_coordinate = int((detection.get("xmin") + detection.get("xmax"))/2)
             
             # Yaw to align orientation with buoy
-
+            # For some reason the scripts are a little bit picky
+            
             if x_coordinate < self.midpoint - self.tolerance:
                 # Buoy is too far left, yaw counterclockwise
-                yaw = -0.4
+                yaw = -self.yaw_mag
                 
             elif x_coordinate > self.midpoint + self.tolerance:
                 # Buoy is too far right, yaw clockwise
-                yaw = 0.4
+                yaw = self.yaw_mag
                             
             if buoy_area < 15000: # number of pixels in buoy's bounding box
                 forward = 1
