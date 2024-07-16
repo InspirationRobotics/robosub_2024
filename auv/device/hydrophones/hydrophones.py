@@ -9,17 +9,16 @@ from auv.utils.deviceHelper import dataFromConfig
 
 #hydrophone --> hydrophone pcb --> teensy --> computer (jetson)
 
-# class Hydrophones:
-#     def __init__(self):
-#         #intialize the usb port 
-#         self.usb = serial.Serial(port=dataFromConfig('teensy'))
-    
-#     def read_teensy(self):
-#         if self.usb.in_waiting > 0:
-#             line = self.usb.readline().decode('utf-8').strip()
-#             v1, v2, v3 = map(int, line.split(', '))
-
 class Hydrophones:
+    def __init__(self):
+        #intialize the usb port 
+        self.usb = serial.Serial(port=dataFromConfig('teensy'))
+    
+    def read_teensy(self):
+        if self.usb.in_waiting > 0:
+            line = self.usb.readline().decode('utf-8').strip()
+            v1, v2, v3 = map(int, line.split(', '))
+
     def get_signal(self):
         #Voltage data from microphones
         mic1_vol = np.array([....])
@@ -71,4 +70,4 @@ class Hydrophones:
 
         #source coordinates
         source_coords = result.x
-        print(f"Estimated source coordinates: {soruce_coords}")
+        print(f"Estimated source coordinates: {source_coords}")
