@@ -152,5 +152,5 @@ if __name__ == "__main__":
     mission = BuoyMission(**config)
 
     # Run the mission
-    mission.approach()
+    mission.circumnavigate()
     mission.cleanup()
