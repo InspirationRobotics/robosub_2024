@@ -77,10 +77,12 @@ class CV:
         lateral = 0
         yaw = 0
         
+        # Detect the buoy
         if detection.get("status") == True:
-            # Find pixel area of buoy bounding box and filter
-            # extraneous detections
+            # Find pixel area of buoy bounding box
             buoy_area = abs(detection.get("xmax") - detection.get("xmin")) * abs(detection.get("ymin") - detection.get("ymax"))
+
+            # Filter false positives
             if buoy_area < 500:
                 self.detected = False
                 self.step = None
@@ -91,6 +93,9 @@ class CV:
             self.detected = False
             self.step = None
 
+        
+        # Switch directionality, decrease yaw magnitude
+        # if we passed the buoy
         if not self.detected and self.prev_detected:
             self.pass_count += 1
             
@@ -108,7 +113,8 @@ class CV:
         
         self.prev_detected = self.detected
 
-        # None means we have to first detect the object
+        # None means we have to first detect the object,
+        # search for the buoy
         if self.step == None:
             # positive is clockwise, 
             # negative is counterclockwise
@@ -119,21 +125,20 @@ class CV:
             # Find x-midpoint of buoy bounding box
             x_coordinate = int((detection.get("xmin") + detection.get("xmax"))/2)
             
-            # Yaw to align orientation with buoy
-            # For some reason the scripts are a little bit picky
-            
+            # Yaw to align orientation with buoy (center the aproach)
             if x_coordinate < self.midpoint - self.tolerance:
                 # Buoy is too far left, yaw counterclockwise
                 yaw = -self.yaw_mag
-                
             elif x_coordinate > self.midpoint + self.tolerance:
                 # Buoy is too far right, yaw clockwise
                 yaw = self.yaw_mag
-                            
-            if buoy_area < 15000: # number of pixels in buoy's bounding box
-                forward = 1
-            elif buoy_area > 17500:
-                forward = -1
+            else:
+                # Once approach is centered, AUV approaches the buoy
+                yaw = 0
+                if buoy_area < 15000: # number of pixels in buoy's bounding box
+                    forward = 1
+                elif buoy_area > 17500:
+                    forward = -1
             print(f"[INFO] Frame area : {self.frame_area}")
             print(f"[INFO] Buoy area : {buoy_area}")
 
