@@ -8,6 +8,8 @@ import rospy
 from mavros_msgs.msg import OverrideRCIn
 from mavros_msgs.srv import CommandBool
 
+from auv.motion import robot_control
+
 class SquareMovement:
     def __init__(self):
         self.rate = rospy.Rate(10) # 10 Hz
@@ -34,21 +36,21 @@ class SquareMovement:
         except rospy.ServiceException as e:
             rospy.logwarn("Failed to disarm vehicle: %s" % e)
     
-    def move_forward(self, power):
-        """Move forward at a certain speed by changing the PWM value for a specific thruster (through channels)"""
-        msg = OverrideRCIn()
-        channels = [1500] * 18
-        channels[4] = int((power * 80) + 1500)
-        msg.channels = channels
-        self.command_pub.publish(msg)
+    # def move_forward(self, power):
+    #     """Move forward at a certain speed by changing the PWM value for a specific thruster (through channels)"""
+    #     msg = OverrideRCIn()
+    #     channels = [1500] * 18
+    #     channels[4] = int((power * 80) + 1500)
+    #     msg.channels = channels
+    #     self.command_pub.publish(msg)
 
-    def yaw_right(self, power):
-        """Yaw by changing PWM value for a specific thruster (through channels)"""
-        msg = OverrideRCIn()
-        channels = [1500] * 18
-        channels[3] = int((power * 80) + 1500)
-        msg.channels = channels
-        self.command_pub.publish(msg)
+    # def yaw_right(self, power):
+    #     """Yaw by changing PWM value for a specific thruster (through channels)"""
+    #     msg = OverrideRCIn()
+    #     channels = [1500] * 18
+    #     channels[3] = int((power * 80) + 1500)
+    #     msg.channels = channels
+    #     self.command_pub.publish(msg)
 
     def stop(self):
         """Sets PWMs to neutral values in order to stop the sub"""
@@ -59,12 +61,12 @@ class SquareMovement:
     def move_in_square(self, power):
         """Move forward, then yaw. Repeat 4 times."""
         for i in range(4):
-            self.move_forward(power)
+            robot_control.movement(forward = power)
             rospy.sleep(2.0) # Adjust
             self.stop()
             rospy.sleep(1.0)
 
-            self.yaw_right(power)
+            robot_control.movement(yaw = power)
             rospy.sleep(1.2) # Adjust
             self.stop()
             rospy.sleep(1.0)
