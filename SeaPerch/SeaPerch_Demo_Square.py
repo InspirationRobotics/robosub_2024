@@ -61,12 +61,13 @@ class SquareMovement:
     def move_in_square(self, power):
         """Move forward, then yaw. Repeat 4 times."""
         for i in range(4):
-            robot_control.movement(forward = power)
+            rc = robot_control()
+            rc.movement(forward = power)
             rospy.sleep(2.0) # Adjust
             self.stop()
             rospy.sleep(1.0)
 
-            robot_control.movement(yaw = power)
+            rc.movement(yaw = power)
             rospy.sleep(1.2) # Adjust
             self.stop()
             rospy.sleep(1.0)
