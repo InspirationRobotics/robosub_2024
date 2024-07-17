@@ -42,35 +42,17 @@ class CV:
         self.detection_area = None
 
     def detect_buoy(self, frame):
-        """
-        Uses HSV color space and masking to detect a red object. Returns bounding box coordinates and the visualized frame.
-        """
-        detected = False
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-        lower_red_mask_1 = np.array([0, 120, 70])
-        upper_red_mask_1 = np.array([10, 255, 255])
-        lower_red_range_mask = cv2.inRange(hsv, lower_red_mask_1, upper_red_mask_1)
-
-        lower_red_mask_2 = np.array([170, 120, 70])
-        upper_red_mask_2 = np.array([180, 255, 255])
-        upper_red_range_mask = cv2.inRange(hsv, lower_red_mask_2, upper_red_mask_2)
-
-        mask = lower_red_range_mask + upper_red_range_mask
-
-        # Find contours
+        mask = cv2.inRange(hsv, np.array([0, 120, 70]), np.array([10, 255, 255])) + \
+               cv2.inRange(hsv, np.array([170, 120, 70]), np.array([180, 255, 255]))
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
         if contours:
-            largest_contour = max(contours, key = cv2.contourArea)
-
+            largest_contour = max(contours, key=cv2.contourArea)
             if cv2.contourArea(largest_contour) > 0:
                 x, y, w, h = cv2.boundingRect(largest_contour)
-                # cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                detected = True
-                return {"status": detected, "xmin" : x, "xmax" : (x + w), "ymin" : (y), "ymax" : (y + h)}, frame
+                return {"status": True, "xmin": x, "xmax": x + w, "ymin": y, "ymax": y + h}, frame
+        return {"status": False, "xmin": None, "xmax": None, "ymin": None, "ymax": None}, frame
         
-        return {"status": detected, "xmin" : None, "xmax" : None, "ymin" : None, "ymax" : None}, frame        
     
     def movement_calculation(self, detection):
         """TODO: Split into search and approach portions"""
