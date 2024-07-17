@@ -155,7 +155,9 @@ class CV:
         visualized_frame = None
 
         data_from_detection, frame = self.detect_buoy(raw_frame)
-            
+
+        print(time.time() - self.prev_time)
+        self.prev_time = time.time()    
         if frame is not None:
             visualized_frame = frame
         else:
@@ -163,6 +165,9 @@ class CV:
 
         forward, lateral, yaw = self.movement_calculation(data_from_detection)
 
+        print(time.time() - self.prev_time)
+        self.prev_time = time.time()
+        
         if forward == 0 and lateral == 0 and yaw == 0:
             self.end = True
 
