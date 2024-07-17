@@ -150,13 +150,13 @@ class CV:
 
     def run(self, raw_frame, target, detections):
         """Run the CV logic."""
-        print(time.time() - self.prev_time)
+        print("Run the function:", time.time() - self.prev_time)
         self.prev_time = time.time()
         visualized_frame = None
 
         data_from_detection, frame = self.detect_buoy(raw_frame)
 
-        print(time.time() - self.prev_time)
+        print("Detected the buoy:", time.time() - self.prev_time)
         self.prev_time = time.time()    
         if frame is not None:
             visualized_frame = frame
@@ -165,9 +165,9 @@ class CV:
 
         forward, lateral, yaw = self.movement_calculation(data_from_detection)
 
-        print(time.time() - self.prev_time)
+        print("Made movement decisions:", time.time() - self.prev_time)
         self.prev_time = time.time()
-        
+
         if forward == 0 and lateral == 0 and yaw == 0:
             self.end = True
 
