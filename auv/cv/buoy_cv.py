@@ -36,6 +36,7 @@ class CV:
         self.search_yaw = 0.50
         self.yaw_mag = 0.375
         self.pass_count = 0
+        self.prev_time = time.time()
 
         # Test variables.
         self.detection_area = None
@@ -149,6 +150,8 @@ class CV:
 
     def run(self, raw_frame, target, detections):
         """Run the CV logic."""
+        print(time.time() - self.prev_time)
+        self.prev_time = time.time()
         visualized_frame = None
 
         data_from_detection, frame = self.detect_buoy(raw_frame)
