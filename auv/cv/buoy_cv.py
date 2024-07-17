@@ -34,7 +34,7 @@ class CV:
         # Sets yaw magnitude. Due to camera latency, this needs to decrease
         # when the buoy gets off the screen
         self.search_yaw = 0.50
-        self.yaw_mag = 0.35
+        self.yaw_mag = 0.375
         self.pass_count = 0
 
         # Test variables.
@@ -135,7 +135,9 @@ class CV:
             else:
                 # Once approach is centered, AUV approaches the buoy
                 yaw = 0
-                if buoy_area < 15000: # number of pixels in buoy's bounding box
+                if buoy_area < 10000:
+                    forward = 1.0
+                elif buoy_area < 15000: # number of pixels in buoy's bounding box
                     forward = 0.5
                 elif buoy_area > 17500:
                     forward = -0.5
