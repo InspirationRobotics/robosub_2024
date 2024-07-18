@@ -19,7 +19,7 @@ class CV:
         self.shape = (640, 480)
         self.midpoint = self.shape[0] / 2
         self.frame_area = self.shape[0] * self.shape[1]
-        self.tolerance = 50 # Pixels
+        self.tolerance = 100 # Pixels
 
         self.detected = False
         self.prev_detected = False
