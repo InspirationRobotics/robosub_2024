@@ -90,15 +90,15 @@ class CV:
             
             # We lost sight of the buoy, yaw more slowly
             # to zero in on it (camera latency)
-            self.search_yaw += 0.25 * ((-1) ** self.pass_count)
+            self.search_yaw += 0.3 * ((-1) ** self.pass_count)
 
             # Yaw in opposite direction (due to camera
             # latency, the sub has yawed too far)
             
             self.search_yaw *= -1
-            if abs(self.search_yaw) < 0.50:
+            if abs(self.search_yaw) < 0.45:
                 # Prevent sub from stopping yaw
-                self.search_yaw = 0.5 * ((-1) ** self.pass_count)
+                self.search_yaw = 0.45 * ((-1) ** self.pass_count)
         
         self.prev_detected = self.detected
 
