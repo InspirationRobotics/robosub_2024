@@ -41,12 +41,12 @@ class CV:
 
         # Test variables.
         self.detection_area = None
-        print("Time for detecting buoy: ", timeit.timeit(self.detect_buoy()))
-        print("Time for making movement decision: ", timeit.timeit(self.movement_calculation()))
+        # print("Time for detecting buoy: ", timeit.timeit(self.detect_buoy()))
+        # print("Time for making movement decision: ", timeit.timeit(self.movement_calculation()))
 
     def detect_buoy(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        print("Time for line 1:", timeit.timeit(cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)))
+        # print("Time for line 1:", timeit.timeit(cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)))
         mask = cv2.inRange(hsv, np.array([0, 120, 70]), np.array([10, 255, 255])) + \
                cv2.inRange(hsv, np.array([170, 120, 70]), np.array([180, 255, 255]))
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
