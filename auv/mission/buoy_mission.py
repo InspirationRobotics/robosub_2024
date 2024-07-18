@@ -109,22 +109,22 @@ class BuoyMission:
         elif self.target == "Blue":
             movement_list = [2, 2, -1] # lateral, forward, yaw
         # First move laterally, then move around the buoy
-        while time.time() - self.first_time < 1:
+        while time.time() - self.first_time < 1.5:
             self.robot_control.movement(lateral = movement_list[0])
         self.sleep()
         for i in range(3):
             if not i % 2:
-                while time.time() - self.first_time < 3.5:
+                while time.time() - self.first_time < 3.0:
                     self.robot_control.movement(forward = movement_list[1])
             else:
-                while time.time() - self.first_time < 4.5:
+                while time.time() - self.first_time < 4.0:
                     self.robot_control.movement(forward = movement_list[1])
             self.sleep()
             while time.time() - self.first_time < 0.6:
                 self.robot_control.movement(yaw = movement_list[2])
             self.sleep()
-        while time.time() - self.first_time < 1:
-            self.robot_control.movement(lateral = -movement_list[0])
+        while time.time() - self.first_time < 1.5:
+            self.robot_control.movement(lateral = movement_list[0])
         
 
     def cleanup(self):
