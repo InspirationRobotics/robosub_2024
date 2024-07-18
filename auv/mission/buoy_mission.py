@@ -113,8 +113,12 @@ class BuoyMission:
             self.robot_control.movement(lateral = movement_list[0])
         self.sleep()
         for i in range(3):
-            while time.time() - self.first_time < 3.5:
-                self.robot_control.movement(forward = movement_list[1])
+            if not i % 2:
+                while time.time() - self.first_time < 3.5:
+                    self.robot_control.movement(forward = movement_list[1])
+            else:
+                while time.time() - self.first_time < 4.5:
+                    self.robot_control.movement(forward = movement_list[1])
             self.sleep()
             while time.time() - self.first_time < 0.6:
                 self.robot_control.movement(yaw = movement_list[2])
@@ -158,5 +162,5 @@ if __name__ == "__main__":
     mission = BuoyMission(**config)
 
     # Run the mission
-    mission.approach()
+    mission.circumnavigate()
     mission.cleanup()
