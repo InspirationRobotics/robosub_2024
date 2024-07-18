@@ -86,7 +86,7 @@ class CV:
         # Switch directionality, decrease yaw magnitude
         # if we passed the buoy
         if not self.detected and self.prev_detected:
-            # self.pass_count += 1
+            self.pass_count += 1
             
             # We lost sight of the buoy, yaw more slowly
             # to zero in on it (camera latency)
@@ -96,7 +96,7 @@ class CV:
             # latency, the sub has yawed too far)
             
             self.search_yaw *= -1
-            if abs(self.search_yaw) < 0.5:
+            if abs(self.search_yaw) < 0.50:
                 # Prevent sub from stopping yaw
                 self.search_yaw = 0.5 * ((-1) ** self.pass_count)
         
