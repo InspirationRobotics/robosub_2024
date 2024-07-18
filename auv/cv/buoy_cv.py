@@ -9,11 +9,10 @@ import time
 import numpy as np
 
 import os
-import timeit
 
 
 class CV:
-    camera = "/auv/camera/videoUSBRaw0" 
+    camera = "/auv/camera/videoOAKdRawForward" 
 
     def __init__(self, **config):
         self.aligned = False
@@ -35,27 +34,20 @@ class CV:
         # Sets yaw magnitude. Due to camera latency, this needs to decrease
         # when the buoy gets off the screen
         self.search_yaw = 0.50
-        self.yaw_mag = 0.50
+        self.yaw_mag = 0.375
         self.pass_count = 0
         self.prev_time = time.time()
 
         # Test variables.
         self.detection_area = None
-        # print("Time for detecting buoy: ", timeit.timeit(self.detect_buoy()))
-        # print("Time for making movement decision: ", timeit.timeit(self.movement_calculation()))
 
     def detect_buoy(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        # print("Time for line 1:", timeit.timeit(cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)))
         mask = cv2.inRange(hsv, np.array([0, 120, 70]), np.array([10, 255, 255])) + \
                cv2.inRange(hsv, np.array([170, 120, 70]), np.array([180, 255, 255]))
-        # print("Time for line 2:", timeit.timeit(cv2.inRange(hsv, np.array([0, 120, 70]), np.array([10, 255, 255])) + \
-        #       cv2.inRange(hsv, np.array([170, 120, 70]), np.array([180, 255, 255]))))
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        # print("Time for line 3: ", timeit.timeit(cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)))
         if contours:
             largest_contour = max(contours, key=cv2.contourArea)
-         #   print("Time for line 4: ", timeit.timeit(max(contours, key=cv2.contourArea)))
             if cv2.contourArea(largest_contour) > 0:
                 x, y, w, h = cv2.boundingRect(largest_contour)
                 return {"status": True, "xmin": x, "xmax": x + w, "ymin": y, "ymax": y + h}, frame
@@ -98,9 +90,9 @@ class CV:
             # latency, the sub has yawed too far)
             
             self.search_yaw *= -1
-            if abs(self.search_yaw) < 0.5:
+            if abs(self.search_yaw) < 0.4:
                 # Prevent sub from stopping yaw
-                self.search_yaw = 0.5 * ((-1) ** self.pass_count)
+                self.search_yaw = 0.4 * ((-1) ** self.pass_count)
         
         self.prev_detected = self.detected
 
