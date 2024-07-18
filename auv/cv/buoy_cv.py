@@ -9,10 +9,11 @@ import time
 import numpy as np
 
 import os
+import timeit
 
 
 class CV:
-    camera = "/auv/camera/videoOAKdRawForward" 
+    camera = "/auv/camera/videoUSBRaw0" 
 
     def __init__(self, **config):
         self.aligned = False
@@ -34,15 +35,18 @@ class CV:
         # Sets yaw magnitude. Due to camera latency, this needs to decrease
         # when the buoy gets off the screen
         self.search_yaw = 0.50
-        self.yaw_mag = 0.375
+        self.yaw_mag = 0.50
         self.pass_count = 0
         self.prev_time = time.time()
 
         # Test variables.
         self.detection_area = None
+        print("Time for detecting buoy: ", timeit.timeit(self.detect_buoy()))
+        print("Time for making movement decision: ", timeit.timeit(self.movement_calculation()))
 
     def detect_buoy(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        print("Time for line 1:", timeit.timeit(cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)))
         mask = cv2.inRange(hsv, np.array([0, 120, 70]), np.array([10, 255, 255])) + \
                cv2.inRange(hsv, np.array([170, 120, 70]), np.array([180, 255, 255]))
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -90,9 +94,9 @@ class CV:
             # latency, the sub has yawed too far)
             
             self.search_yaw *= -1
-            if abs(self.search_yaw) < 0.4:
+            if abs(self.search_yaw) < 0.5:
                 # Prevent sub from stopping yaw
-                self.search_yaw = 0.4 * ((-1) ** self.pass_count)
+                self.search_yaw = 0.5 * ((-1) ** self.pass_count)
         
         self.prev_detected = self.detected
 
