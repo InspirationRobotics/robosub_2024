@@ -33,7 +33,7 @@ class CV:
 
         # Sets yaw magnitude. Due to camera latency, this needs to decrease
         # when the buoy gets off the screen
-        self.search_yaw = 0.60
+        self.search_yaw = 0.75
         self.yaw_mag = 0.45
         self.pass_count = 0
         self.prev_time = time.time()
@@ -90,15 +90,15 @@ class CV:
             
             # We lost sight of the buoy, yaw more slowly
             # to zero in on it (camera latency)
-            # self.search_yaw += 0.2 * ((-1) ** self.pass_count)
+            self.search_yaw += 0.25 * ((-1) ** self.pass_count)
 
             # Yaw in opposite direction (due to camera
             # latency, the sub has yawed too far)
             
             self.search_yaw *= -1
-            if abs(self.search_yaw) < 0.4:
+            if abs(self.search_yaw) < 0.5:
                 # Prevent sub from stopping yaw
-                self.search_yaw = 0.4 * ((-1) ** self.pass_count)
+                self.search_yaw = 0.5 * ((-1) ** self.pass_count)
         
         self.prev_detected = self.detected
 
