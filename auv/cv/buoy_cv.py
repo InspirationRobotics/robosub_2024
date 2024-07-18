@@ -46,12 +46,16 @@ class CV:
 
     def detect_buoy(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        # print("Time for line 1:", timeit.timeit(cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)))
+        print("Time for line 1:", timeit.timeit(cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)))
         mask = cv2.inRange(hsv, np.array([0, 120, 70]), np.array([10, 255, 255])) + \
                cv2.inRange(hsv, np.array([170, 120, 70]), np.array([180, 255, 255]))
+        print("Time for line 2:", timeit.timeit(cv2.inRange(hsv, np.array([0, 120, 70]), np.array([10, 255, 255])) + \
+               cv2.inRange(hsv, np.array([170, 120, 70]), np.array([180, 255, 255]))))
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        print("Time for line 3: ", timeit.timeit(cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)))
         if contours:
             largest_contour = max(contours, key=cv2.contourArea)
+            print("Time for line 4: ", timeit.timeit(max(contours, key=cv2.contourArea)))
             if cv2.contourArea(largest_contour) > 0:
                 x, y, w, h = cv2.boundingRect(largest_contour)
                 return {"status": True, "xmin": x, "xmax": x + w, "ymin": y, "ymax": y + h}, frame
