@@ -112,6 +112,8 @@ class BuoyMission:
         while time.time() - self.first_time < 1.5:
             self.robot_control.movement(lateral = movement_list[0])
         self.sleep()
+        while time.time() - self.first_time < 0.5:
+            self.robot_control.movement(yaw = movement_list[2])
         for i in range(3):
             if not i % 2:
                 while time.time() - self.first_time < 3.0:
