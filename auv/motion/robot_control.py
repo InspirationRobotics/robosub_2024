@@ -30,7 +30,7 @@ class RobotControl:
     Class to control the robot
     """
 
-    def __init__(self, enable_dvl=True):
+    def __init__(self, enable_dvl=True, enable_fog = False):
         """
         Initialize the RobotControl class
 
@@ -50,7 +50,7 @@ class RobotControl:
         # else:
         self.dvl = None
 
-        fog_enable = True
+        fog_enable = enable_fog
 
         if fog_enable == True:
             self.fog = fog.FOG()
