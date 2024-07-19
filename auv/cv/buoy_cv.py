@@ -33,8 +33,8 @@ class CV:
 
         # Sets yaw magnitude. Due to camera latency, this needs to decrease
         # when the buoy gets off the screen
-        self.search_yaw = 0.75
-        self.yaw_mag = 0.40
+        self.search_yaw = 2.0
+        self.yaw_mag = 0.5
         self.pass_count = 0
         self.prev_time = time.time()
 
@@ -90,7 +90,7 @@ class CV:
             
             # We lost sight of the buoy, yaw more slowly
             # to zero in on it (camera latency)
-            self.search_yaw += 0.3 * ((-1) ** self.pass_count)
+            self.search_yaw += 0.8 * ((-1) ** self.pass_count)
 
             # Yaw in opposite direction (due to camera
             # latency, the sub has yawed too far)
@@ -98,7 +98,7 @@ class CV:
             self.search_yaw *= -1
             if abs(self.search_yaw) < 0.45:
                 # Prevent sub from stopping yaw
-                self.search_yaw = 0.45 * ((-1) ** self.pass_count)
+                self.search_yaw = 1.2 * ((-1) ** self.pass_count)
         
         self.prev_detected = self.detected
 
@@ -125,13 +125,11 @@ class CV:
                 # Once approach is centered, AUV approaches the buoy
                 yaw = 0
                 if buoy_area < 5000:
-                    forward = 2.5
-                elif buoy_area < 10000:
-                    forward = 1.5
-                elif buoy_area < 15000: # number of pixels in buoy's bounding box
-                    forward = 1.0
-                elif buoy_area > 17500:
-                    forward = -0.75
+                    forward = 3.0
+                elif buoy_area < 22500: # number of pixels in buoy's bounding box
+                    forward = 1.25
+                elif buoy_area > 25000:
+                    forward = -1.0
             print(f"[INFO] Frame area : {self.frame_area}")
             print(f"[INFO] Buoy area : {buoy_area}")
 
