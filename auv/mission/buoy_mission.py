@@ -9,7 +9,7 @@ from std_msgs.msg import String
 
 from ..device import cv_handler # For running mission-specific CV scripts
 from ..motion import robot_control # For running the motors on the sub
-from ..utils import disarm
+from ..utils import arm, disarm
 
 class BuoyMission:
     cv_files = ["buoy_cv"] # CV file to run
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     mission = BuoyMission(**config)
 
     # Run the mission
+    arm.arm()
     mission.circumnavigate()
     mission.cleanup()
-    disarm_var = disarm()
-    disarm_var.disarm()
+    disarm.disarm()
