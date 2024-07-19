@@ -127,6 +127,7 @@ class BuoyMission:
         self.sleep()
         while time.time() - self.first_time < 1.0:
             self.robot_control.movement(yaw = -movement_list[2])
+        self.sleep()
         
 
     def cleanup(self):
