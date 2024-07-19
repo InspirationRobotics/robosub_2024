@@ -51,7 +51,7 @@ class BuoyMission:
         self.next_data[file_name] = data 
         self.received = True
 
-    def approach(self):
+    def run(self):
         """
         Here should be all the code required to approach the buoy.
         This could be a loop, a finite state machine, etc.
@@ -113,19 +113,19 @@ class BuoyMission:
             self.robot_control.movement(lateral = movement_list[0])
         self.sleep()
         for i in range(4):
-            while time.time() - self.first_time < 1.55:
+            while time.time() - self.first_time < 2.5:
                 self.robot_control.movement(forward = movement_list[1])
             self.sleep()
-            while time.time() - self.first_time < 0.55:
+            while time.time() - self.first_time < 1:
                 self.robot_control.movement(yaw = movement_list[2])
             self.sleep()
         while time.time() - self.first_time < 0.75:
             self.robot_control.movement(lateral = -movement_list[0])
         self.sleep()
-        while time.time() - self.first_time < 1.55:
+        while time.time() - self.first_time < 2.5:
             self.robot_control.movement(forward = -movement_list[1])
         self.sleep()
-        while time.time() - self.first_time < 0.55:
+        while time.time() - self.first_time < 0.75:
             self.robot_control.movement(yaw = -movement_list[2])
         self.sleep()
         
@@ -166,6 +166,6 @@ if __name__ == "__main__":
 
     # Run the mission
     arm.arm()
-    mission.circumnavigate()
+    mission.run()
     mission.cleanup()
     disarm.disarm()

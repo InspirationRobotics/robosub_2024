@@ -87,7 +87,7 @@ class AUV(RosHandler):
         self.depth_pid_offset = config.get("depth_pid_offset", 1500) # Get PID offset from key, if not found set PWM value to default neutral (1500)
         
         # Initialize the depth PID controller
-        self.depth_pid = PID(*self.depth_pid_params, setpoint=0.1) # Go to depth at 0.5 m
+        self.depth_pid = PID(*self.depth_pid_params, setpoint=0.5) # Go to depth at 0.5 m
         self.depth_pid.output_limits = (-self.depth_pid_params[0], self.depth_pid_params[0]) # Output limits of PID controller
 
         # Initialize topics from Pixhawk (through MAVROS)
@@ -198,7 +198,7 @@ class AUV(RosHandler):
         # Handle althold specially, setting mode to hold depth and to stabalize to be the new modes
         if mode == MODE_ALTHOLD:
             self.do_hold_depth = True
-            mode = MODE_STABALIZE
+            mode = MODE_STABILIZE
         # Create a SetModeRequest message to change the mode
         data = mavros_msgs.srv.SetModeRequest()
         data.custom_mode = mode
@@ -316,7 +316,7 @@ class AUV(RosHandler):
         """Gets the current state of the thrusters (values of all PWM channels)"""
         self.thrustTime = time.time()
         self.channels = list(msg.channels)
-        print(self.channels)
+        # print(self.channels)
 
     def enable_topics_for_read(self):
         """To subscribe to ROS topics"""
