@@ -51,7 +51,7 @@ class BuoyMission:
         self.next_data[file_name] = data 
         self.received = True
 
-    def approach(self):
+    def run(self):
         """
         Here should be all the code required to approach the buoy.
         This could be a loop, a finite state machine, etc.
@@ -166,6 +166,6 @@ if __name__ == "__main__":
 
     # Run the mission
     arm.arm()
-    mission.circumnavigate()
+    mission.run()
     mission.cleanup()
     disarm.disarm()
