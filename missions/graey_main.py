@@ -32,7 +32,7 @@ time.sleep(1)
 
 # Run buoy mission
 
-marker_mission.approach()
+marker_mission.run()
 marker_mission.cleanup()
 
 # Move forward for 8 secs
