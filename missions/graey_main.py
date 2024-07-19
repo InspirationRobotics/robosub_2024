@@ -11,31 +11,29 @@ from auv.mission import buoy_mission
 from auv.motion import robot_control
 from auv.utils import arm, disarm, deviceHelper
 
-class PreQualMission:
-    def __init__(self) -> None:
-        self.marker_mission = buoy_mission.BuoyMission()
-        self.rc = robot_control.RobotControl()
-        self.first_time = time.time()
+marker_mission = buoy_mission.BuoyMission()
+rc = robot_control.RobotControl()
 
-    def run(self):
-        movement_list = [-2, 2, 1] # lateral, forward, yaw
-        self.first_time = time.time()
-        # move forward for 15 secs
-        while time.time() - self.first_time < 8:
-            self.rc.movement(forward = movement_list[1])
-        self.marker_mission.sleep()
-        while time.time() - self.first_time < 8:
-            self.rc.movement(forward = -movement_list[1])
-        self.marker_mission.sleep()
-        
+rospy.init_node("prequal_mission", anonymous = True)
+
+movement_list = [-2, 2, 1] # lateral, forward, yaw
+first_time = time.time()
 
 
+arm.arm()
+
+# move forward for 15 secs
+
+def sleep():
+    first_time = time.time()
+    rospy.sleep(2)
 
 
-if __name__ == "__main__":
-    rospy.init_node("prequal_mission", anonymous = True)
-    mission = PreQualMission()
-    arm.arm()
-    time.sleep(5)
-    mission.run()
-    disarm.disarm()
+while time.time() - first_time < 8:
+    rc.movement(forward = movement_list[1])
+sleep()
+while time.time() - first_time < 8:
+    rc.movement(forward = -movement_list[1])
+sleep()
+
+disarm.disarm()
