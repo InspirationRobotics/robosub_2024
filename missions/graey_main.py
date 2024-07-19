@@ -11,10 +11,12 @@ from auv.mission import buoy_mission
 from auv.motion import robot_control
 from auv.utils import arm, disarm, deviceHelper
 
+rospy.init_node("prequal_mission", anonymous = True)
+
 marker_mission = buoy_mission.BuoyMission()
 rc = robot_control.RobotControl()
 
-rospy.init_node("prequal_mission", anonymous = True)
+
 
 movement_list = [-2, 2, 1] # lateral, forward, yaw
 first_time = time.time()
