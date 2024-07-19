@@ -16,20 +16,13 @@ rospy.init_node("prequal_mission", anonymous = True)
 marker_mission = buoy_mission.BuoyMission()
 rc = robot_control.RobotControl()
 
-
-
 movement_list = [-2, 2, 1] # lateral, forward, yaw
 first_time = time.time()
 
 
 arm.arm()
 
-# move forward for 15 secs
-
-def sleep():
-    first_time = time.time()
-    rospy.sleep(2)
-
+# move forward for 8 secs
 
 while time.time() - first_time < 8:
     rc.movement(forward = movement_list[1])
@@ -37,8 +30,15 @@ while time.time() - first_time < 8:
 time.sleep(1)
 first_time = time.time()
 
+# Run buoy mission
+
+marker_mission.approach()
+marker_mission.cleanup()
+
+# Move forward for 8 secs
+
 while time.time() - first_time < 8:
-    rc.movement(forward = -movement_list[1])
+    rc.movement(forward = movement_list[1])
 
 time.sleep(1)
 
