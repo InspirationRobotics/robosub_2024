@@ -257,3 +257,26 @@ if __name__ == "__main__":
         time.sleep(0.1)
 
     fog.close()
+
+    def yaw(current_yaw, fog_heading):
+        #Normalize the yaw values to the range [0, 360):
+        current_yaw = current_yaw % 360
+        fog_heading = fog_heading % 360
+
+        #Calculate the raw yaw difference:
+        yaw_diff = fog_heading - current_yaw
+
+        #Adjust for minimal rotation:
+        if yaw_diff > 180:
+            yaw_diff -= 360
+        elif yaw_diff < -180:
+            yaw_diff += 360
+        print(f"Change in yaw: {yaw_diff}")
+
+        #Update the current yaw:
+        new_yaw = current_yaw + yaw_diff
+
+        #Normalize the new yaw to the range [0, 360)
+        new_yaw = new_yaw % 360
+
+        return new_yaw
