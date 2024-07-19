@@ -31,9 +31,13 @@ def sleep():
 
 while time.time() - first_time < 8:
     rc.movement(forward = movement_list[1])
-sleep()
+
+time.sleep(1)
+first_time = time.time()
+
 while time.time() - first_time < 8:
     rc.movement(forward = -movement_list[1])
-sleep()
+
+time.sleep(1)
 
 disarm.disarm()
