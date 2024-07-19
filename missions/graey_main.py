@@ -21,11 +21,12 @@ class PreQualMission:
         movement_list = [-2, 2, 1] # lateral, forward, yaw
         self.first_time = time.time()
         # move forward for 15 secs
-        while time.time() - self.first_time < 10:
+        while time.time() - self.first_time < 8:
             self.rc.movement(forward = movement_list[1])
         self.marker_mission.sleep()
-        while time.time() - self.first_time < 10:
+        while time.time() - self.first_time < 8:
             self.rc.movement(forward = -movement_list[1])
+        self.marker_mission.sleep()
         
 
 
