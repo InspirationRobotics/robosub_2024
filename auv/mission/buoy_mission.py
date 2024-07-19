@@ -110,10 +110,7 @@ class BuoyMission:
             movement_list = [2, 2, -1] # lateral, forward, yaw
         # First move laterally, then move around the buoy
         while time.time() - self.first_time < 1.0:
-            self.robot_control.movement(lateral = movement_list[0])
-        self.sleep()
-        while time.time() - self.first_time < 0.001:
-            self.robot_control.movement(yaw = movement_list[2])
+            self.robot_control.movement(lateral = movement_list[0], yaw = 0.05)
         self.sleep()
         for i in range(4):
             while time.time() - self.first_time < 1.75:
