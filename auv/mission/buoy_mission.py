@@ -9,7 +9,7 @@ from std_msgs.msg import String
 
 from ..device import cv_handler # For running mission-specific CV scripts
 from ..motion import robot_control # For running the motors on the sub
-from .. utils import disarm
+from ..utils import disarm
 
 class BuoyMission:
     cv_files = ["buoy_cv"] # CV file to run
@@ -109,24 +109,24 @@ class BuoyMission:
         elif self.target == "Blue":
             movement_list = [2, 2, -1] # lateral, forward, yaw
         # First move laterally, then move around the buoy
-        while time.time() - self.first_time < 1.5:
+        while time.time() - self.first_time < 1.0:
             self.robot_control.movement(lateral = movement_list[0])
         self.sleep()
         while time.time() - self.first_time < 0.5:
             self.robot_control.movement(yaw = movement_list[2])
         for i in range(3):
             if not i % 2:
-                while time.time() - self.first_time < 3.0:
-                    self.robot_control.movement(forward = movement_list[1], yaw = 0)
+                while time.time() - self.first_time < 2.0:
+                    self.robot_control.movement(forward = movement_list[1], yaw = -0.05)
             else:
-                while time.time() - self.first_time < 4.0:
-                    self.robot_control.movement(forward = movement_list[1], yaw = 0)
+                while time.time() - self.first_time < 3.0:
+                    self.robot_control.movement(forward = movement_list[1], yaw = -0.05)
             self.sleep()
             while time.time() - self.first_time < 0.6:
                 self.robot_control.movement(yaw = movement_list[2])
             self.sleep()
-        while time.time() - self.first_time < 1.5:
-            self.robot_control.movement(lateral = movement_list[0])
+        # while time.time() - self.first_time < 1.5:
+        #     self.robot_control.movement(lateral = movement_list[0])
         
 
     def cleanup(self):
@@ -166,3 +166,5 @@ if __name__ == "__main__":
     # Run the mission
     mission.circumnavigate()
     mission.cleanup()
+    disarm_var = disarm()
+    disarm_var.disarm()
