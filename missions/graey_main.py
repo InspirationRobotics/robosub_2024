@@ -28,7 +28,7 @@ while time.time() - first_time < 8:
     rc.movement(forward = movement_list[1])
 
 time.sleep(1)
-first_time = time.time()
+
 
 # Run buoy mission
 
@@ -36,6 +36,8 @@ marker_mission.approach()
 marker_mission.cleanup()
 
 # Move forward for 8 secs
+
+first_time = time.time()
 
 while time.time() - first_time < 8:
     rc.movement(forward = movement_list[1])
