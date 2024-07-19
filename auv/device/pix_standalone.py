@@ -198,7 +198,7 @@ class AUV(RosHandler):
         # Handle althold specially, setting mode to hold depth and to stabalize to be the new modes
         if mode == MODE_ALTHOLD:
             self.do_hold_depth = True
-            mode = MODE_MANUAL
+            mode = MODE_STABALIZE
         # Create a SetModeRequest message to change the mode
         data = mavros_msgs.srv.SetModeRequest()
         data.custom_mode = mode
