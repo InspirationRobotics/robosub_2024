@@ -1,28 +1,22 @@
 """
-To create a sequential order of missions for Graey to follow.
-
-Graey will complete the Rough Seas, Enter the Pacific, Path, and Hydrothermal Vent missions.
+We made this script just to move Onyx to the other side of the pool
+after a test fails - nothing to see here
 """
 
 import rospy
 import time
 
-from auv.mission import buoy_mission
 from auv.motion import robot_control
 from auv.utils import arm, disarm, deviceHelper
 
 rospy.init_node("prequal_mission", anonymous = True)
 
-marker_mission = buoy_mission.BuoyMission()
 rc = robot_control.RobotControl()
-
 movement_list = [-2, 4, 1] # lateral, forward, yaw
-
 
 
 arm.arm()
 time.sleep(5)
-
 
 first_time = time.time()
 

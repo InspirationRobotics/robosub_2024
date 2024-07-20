@@ -95,7 +95,7 @@ class CV:
             self.search_yaw *= -1
             if abs(self.search_yaw) < 0.45:
                 # Prevent sub from stopping yaw
-                self.search_yaw = 1.2 * ((-1) ** self.pass_count)
+                self.search_yaw = 0.8 * ((-1) ** self.pass_count)
         
         self.prev_detected = self.detected
 
@@ -111,7 +111,7 @@ class CV:
             if self.prev_detected == False:
                 init_time = time.time()
                 while time.time - init_time < 1:
-                    yaw = -1.2
+                    yaw = -0.5
                 time.sleep(1.5)
                 
             # Find x-midpoint of buoy bounding box
