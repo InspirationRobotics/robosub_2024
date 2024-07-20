@@ -124,15 +124,13 @@ class CV:
             elif x_coordinate > self.midpoint + self.tolerance:
                 # Buoy is too far right, yaw clockwise
                 yaw = self.yaw_mag
-            else:
-                # Once approach is centered, AUV approaches the buoy
-                yaw = 0
-                if buoy_area < 30000:
-                    forward = 1.3
-                elif buoy_area < 40000: # number of pixels in buoy's bounding box
-                    forward = 1.0
-                elif buoy_area > 45000:
-                    forward = -2.0
+            # AUV approaches the buoy
+            if buoy_area < 30000:
+                forward = 1.3
+            elif buoy_area < 40000: # number of pixels in buoy's bounding box
+                forward = 1.0
+            elif buoy_area > 45000:
+                forward = -2.0
             print(f"[INFO] Frame area : {self.frame_area}")
             print(f"[INFO] Buoy area : {buoy_area}")
 

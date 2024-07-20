@@ -165,6 +165,6 @@ if __name__ == "__main__":
     # Run the mission
     arm.arm()
     time.sleep(5)
-    mission.circumnavigate()
+    mission.run()
     mission.cleanup()
     disarm.disarm()
