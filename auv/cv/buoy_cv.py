@@ -83,8 +83,7 @@ class CV:
         # Switch directionality, decrease yaw magnitude
         # if we passed the buoy
         if not self.detected and self.prev_detected:
-            self.pass_count += 1
-            
+           
             # We lost sight of the buoy, yaw more slowly
             # to zero in on it (camera latency)
             self.search_yaw += 0.8 * ((-1) ** self.pass_count)
@@ -108,12 +107,19 @@ class CV:
         
         # If detected, move forward and yaw to approach the buoy while remaining aligned.
         if self.step == 1 and self.detected == True:
+            
+            # If we haven't previously detected the buoy, yaw to compensate
+            if self.prev_detected == False:
+                first_time = time.time()
+                self.pass_count += 1
                             
             # Find x-midpoint of buoy bounding box
             x_coordinate = int((detection.get("xmin") + detection.get("xmax"))/2)
             
             # Yaw to align orientation with buoy (center the aproach)
-            if x_coordinate < self.midpoint - self.tolerance:
+            if time.time() - first_time < 1:
+                yaw = 0.7 * ((-1) ** self.pass_count)
+            elif x_coordinate < self.midpoint - self.tolerance:
                 # Buoy is too far left, yaw counterclockwise
                 yaw = -self.yaw_mag
             elif x_coordinate > self.midpoint + self.tolerance:
