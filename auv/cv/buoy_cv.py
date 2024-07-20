@@ -127,11 +127,11 @@ class CV:
             else:
                 # Once approach is centered, AUV approaches the buoy
                 yaw = 0
-                if buoy_area < 5000:
+                if buoy_area < 30000:
                     forward = 3.0
-                elif buoy_area < 22500: # number of pixels in buoy's bounding box
+                elif buoy_area < 40000: # number of pixels in buoy's bounding box
                     forward = 1.25
-                elif buoy_area > 25000:
+                elif buoy_area > 50000:
                     forward = -1.0
             print(f"[INFO] Frame area : {self.frame_area}")
             print(f"[INFO] Buoy area : {buoy_area}")
