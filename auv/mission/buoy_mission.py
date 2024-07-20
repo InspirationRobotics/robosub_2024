@@ -93,7 +93,7 @@ class BuoyMission:
     def sleep(self):
         """Allows AUV to dissipate momentum then reset
         the time used to move in a particular direction"""
-        rospy.sleep(2)
+        rospy.sleep(2.0)
         self.first_time = time.time()
 
     def circumnavigate(self):
