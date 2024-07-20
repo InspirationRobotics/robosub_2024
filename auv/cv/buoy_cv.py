@@ -128,7 +128,7 @@ class CV:
                 # Once approach is centered, AUV approaches the buoy
                 yaw = 0
                 if buoy_area < 30000:
-                    forward = 2.0
+                    forward = 1.3
                 elif buoy_area < 40000: # number of pixels in buoy's bounding box
                     forward = 1.0
                 elif buoy_area > 45000:
