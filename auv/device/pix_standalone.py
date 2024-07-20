@@ -251,7 +251,7 @@ class AUV(RosHandler):
             print(f"Passed in depth: {depth}")
             print(f"PID Output from depth PID: {self.depth_pid(depth)}")
             print(f"PID Offset: {self.depth_pid_offset}")
-            self.depth_pwm = int(self.depth_pid(depth) * 1 + self.depth_pid_offset)
+            self.depth_pwm = int(self.depth_pid(depth) * -1 + self.depth_pid_offset)
             # Print debug information (depth to 4 decimal places, depth_pwm, depth value to be at)
             print(f"[depth_hold] depth: {depth:.4f} depthMotorPower: {self.depth_pwm} Target: {self.depth_pid.setpoint}")
             # Assume motor range is 1200-1800 so +-300
