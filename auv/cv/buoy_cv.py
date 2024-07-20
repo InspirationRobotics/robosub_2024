@@ -108,12 +108,7 @@ class CV:
         
         # If detected, move forward and yaw to approach the buoy while remaining aligned.
         if self.step == 1 and self.detected == True:
-            if self.prev_detected == False:
-                init_time = time.time()
-                while time.time - init_time < 1:
-                    yaw = -1.2
-                time.sleep(1.5)
-                
+                            
             # Find x-midpoint of buoy bounding box
             x_coordinate = int((detection.get("xmin") + detection.get("xmax"))/2)
             
