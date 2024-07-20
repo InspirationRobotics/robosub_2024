@@ -21,10 +21,11 @@ first_time = time.time()
 
 
 arm.arm()
+time.sleep(5)
 
 # move forward for 8 secs
 
-while time.time() - first_time < 8:
+while time.time() - first_time < 5:
     rc.movement(forward = movement_list[1])
 
 time.sleep(1)
@@ -39,7 +40,7 @@ marker_mission.cleanup()
 
 first_time = time.time()
 
-while time.time() - first_time < 8:
+while time.time() - first_time < 5:
     rc.movement(forward = movement_list[1])
 
 time.sleep(1)
