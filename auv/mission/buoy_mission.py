@@ -12,8 +12,7 @@ from ..motion import robot_control # For running the motors on the sub
 from ..utils import arm, disarm
 
 class BuoyMission:
-    self.cv_files = ["buoy_cv"] # CV file to run
-
+    
     def __init__(self, target="Red", **config):
         """
         Initialize the mission class; here should be all of the things needed in the run function. 
@@ -21,6 +20,7 @@ class BuoyMission:
         Args:
             config: Mission-specific parameters to run the mission.
         """
+        self.cv_files = ["buoy_cv"] # CV file to run
         self.config = config
         self.data = {}  # Dictionary to store the data from the CV handler
         self.next_data = {}  # Dictionary to store the newest data from the CV handler; this data will be merged with self.data.
