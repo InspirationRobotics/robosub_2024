@@ -12,7 +12,7 @@ from ..motion import robot_control # For running the motors on the sub
 from ..utils import arm, disarm
 
 class BuoyMission:
-    cv_files = ["buoy_cv"] # CV file to run
+    self.cv_files = ["buoy_cv"] # CV file to run
 
     def __init__(self, target="Red", **config):
         """
