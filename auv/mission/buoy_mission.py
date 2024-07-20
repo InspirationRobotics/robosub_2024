@@ -114,7 +114,7 @@ class BuoyMission:
             self.robot_control.movement(lateral = movement_list[0])
         self.sleep()
         for i in range(4):
-            while time.time() - self.first_time < 2.0:
+            while time.time() - self.first_time < 3.0:
                 self.robot_control.movement(forward = movement_list[1])
             self.sleep()
             # More than 1.0 to counteract slight left skew of forward movement
