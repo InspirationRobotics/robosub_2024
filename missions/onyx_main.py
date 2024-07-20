@@ -1,62 +1,47 @@
 """
-Script to run the planned missions for Onyx sequentially.
+To create a sequential order of missions for Graey to follow.
+
+Graey will complete the Rough Seas, Enter the Pacific, Path, and Hydrothermal Vent missions.
 """
 
-import time
-import signal
-
-from . import prequalification_mission, gateMission
-from auv.utils import arm, disarm, deviceHelper
-from auv.motion import robot_control
-from auv.device.modems import modems_api
-
 import rospy
+import time
 
-config = deviceHelper.variables
-RobotControl = robot_control.RobotControl()
+from auv.mission import buoy_mission
+from auv.motion import robot_control
+from auv.utils import arm, disarm, deviceHelper
 
-missionsNode = rospy.init_node("Missions", anonymous = True)
+rospy.init_node("prequal_mission", anonymous = True)
 
-target = "blue"
+marker_mission = buoy_mission.BuoyMission()
+rc = robot_control.RobotControl()
 
-def onExit(signum, frame):
-    """
-    Function for cleanly exiting the script.
+movement_list = [-2, 4, 1] # lateral, forward, yaw
+first_time = time.time()
 
-    Args:
-        signum (int): Signal number.
-        frame (frame): Current stack frame.
-    """
-    try:
-        print("Exiting...")
-        missionsNode.stop()
-        time.sleep(3)
-        rospy.signal_shutdown("Rospy Exited.")
-
-        while rospy.not_shutdown():
-            pass
-
-        print("\n\nCleanly Exited.")
-        exit(1)
-
-    except:
-        pass
-
-# When Ctrl + C is pressed, exit by calling onExit().
-signal.SIGINT(signal.SIGINT, onExit) 
 
 arm.arm()
 
-prequalification = prequalification_mission.PreQualificationMission()
-gate = gateMission.gateMission(target)
+# move forward for 8 secs
+
+while time.time() - first_time < 15:
+    rc.movement(forward = movement_list[1])
 
 time.sleep(1)
 
-prequalification.run()
-prequalification.cleanup()
 
-# gate_mission.run()
-# gate_mission.cleanup()
+# Run buoy mission
+
+marker_mission.run()
+marker_mission.cleanup()
+
+# Move forward for 8 secs
+
+first_time = time.time()
+
+while time.time() - first_time < 15:
+    rc.movement(forward = movement_list[1])
+
+time.sleep(1)
 
 disarm.disarm()
-

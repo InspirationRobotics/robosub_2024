@@ -26,9 +26,6 @@ class CV:
         self.config = config # Blue counterclockwise, Red clockwise
         self.step = None
 
-        self.forward_times = 0 # The theory behind this is that we should only go forward past the buoy twice.
-        self.time_before_forward_run = 0
-        self.before_end_lateral_time = 0
         self.end = False
 
         # Sets yaw magnitude. Due to camera latency, this needs to decrease
@@ -112,7 +109,11 @@ class CV:
         # If detected, move forward and yaw to approach the buoy while remaining aligned.
         if self.step == 1 and self.detected == True:
             if self.prev_detected == False:
+                init_time = time.time()
+                while time.time - init_time < 1:
+                    yaw = -1.2
                 time.sleep(1.5)
+                
             # Find x-midpoint of buoy bounding box
             x_coordinate = int((detection.get("xmin") + detection.get("xmax"))/2)
             
