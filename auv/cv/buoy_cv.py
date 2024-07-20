@@ -95,7 +95,7 @@ class CV:
             self.search_yaw *= -1
             if abs(self.search_yaw) < 0.45:
                 # Prevent sub from stopping yaw
-                self.search_yaw = 1.2 * ((-1) ** self.pass_count)
+                self.search_yaw = 0.5 * ((-1) ** self.pass_count)
         
         self.prev_detected = self.detected
 
