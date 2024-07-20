@@ -116,15 +116,16 @@ class BuoyMission:
             while time.time() - self.first_time < 2.0:
                 self.robot_control.movement(forward = movement_list[1])
             self.sleep()
-            while time.time() - self.first_time < 1.25:
+            while time.time() - self.first_time < 1.0:
                 self.robot_control.movement(yaw = movement_list[2])
             self.sleep()
         while time.time() - self.first_time < 0.75:
             self.robot_control.movement(lateral = -movement_list[0])
         self.sleep()
-        # while time.time() - self.first_time < 2:
-        #     self.robot_control.movement(yaw = -movement_list[2])
-        # self.sleep()
+        while time.time() - self.first_time < 2:
+            self.robot_control.movement(yaw = -movement_list[2])
+        self.sleep()
+    
         
 
     def cleanup(self):
