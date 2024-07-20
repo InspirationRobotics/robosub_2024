@@ -17,11 +17,13 @@ marker_mission = buoy_mission.BuoyMission()
 rc = robot_control.RobotControl()
 
 movement_list = [-2, 4, 1] # lateral, forward, yaw
-first_time = time.time()
+
 
 
 arm.arm()
 time.sleep(5)
+
+first_time = time.time()
 
 # move forward for 8 secs
 
