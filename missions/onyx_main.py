@@ -28,7 +28,7 @@ first_time = time.time()
 # move forward for 8 secs
 
 
-while time.time() - first_time < 20:
+while time.time() - first_time < 18:
     rc.movement(forward = movement_list[1])
 
 time.sleep(2)
@@ -36,15 +36,14 @@ time.sleep(2)
 
 # Run circumnavigate
 
-#marker_mission.circumnavigate()
-
+marker_mission.circumnavigate()
 
 # Move forward for 8 secs
 
 first_time = time.time()
 
-while time.time() - first_time < 20:
-    rc.movement(forward = -movement_list[1])
+while time.time() - first_time < 18:
+    rc.movement(forward = movement_list[1])
 
 time.sleep(1)
 
