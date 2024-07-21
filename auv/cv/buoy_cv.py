@@ -182,7 +182,7 @@ class CV:
         if not self.finished_yaw:
             print("[INFO] Yaw has not finished")
 
-        if not self.finished.forward:
+        if not self.finished_forward:
             print("[INFO] Forward has not finished")
 
         if self.finished_forward and self.finished_yaw:
