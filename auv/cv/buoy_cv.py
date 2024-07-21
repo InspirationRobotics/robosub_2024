@@ -179,6 +179,12 @@ class CV:
 
         forward, lateral, yaw = self.movement_calculation(data_from_detection)
 
+        if not self.finished_yaw:
+            print("[INFO] Yaw has not finished")
+
+        if not self.finished.forward:
+            print("[INFO] Forward has not finished")
+
         if self.finished_forward and self.finished_yaw:
             self.end = True
 
