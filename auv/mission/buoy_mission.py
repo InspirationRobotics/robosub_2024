@@ -110,6 +110,7 @@ class BuoyMission:
             movement_list = [4, 2.5, -2] # lateral, forward, yaw
         # First move laterally, then move around the buoy
         while time.time() - self.first_time < 3:
+            print(f"[INFO] 1st lateral first_time variable = {self.first_time}")
             self.robot_control.movement(lateral = movement_list[0])
         self.sleep()
         for i in range(4):
