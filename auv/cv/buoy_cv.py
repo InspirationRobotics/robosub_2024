@@ -92,11 +92,11 @@ class CV:
                 yaw = 0
                 self.finished_yaw = True
 
-            if buoy_area < 30000:
+            if buoy_area < 15000:
                 forward = 1.0
-            elif buoy_area < 40000: # number of pixels in buoy's bounding box
+            elif buoy_area < 30000: # number of pixels in buoy's bounding box
                 forward = 0.5
-            elif buoy_area > 45000:
+            elif buoy_area > 35000:
                 forward = -0.7
             else:
                 forward = 0
