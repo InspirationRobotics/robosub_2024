@@ -112,19 +112,19 @@ class BuoyMission:
 
         # First 90 degrees
         while time.time() - self.first_time < 1.2:
-            self.robot_control.movement(yaw = movement_list[2])
+            self.robot_control.movement(yaw = -movement_list[2])
         self.sleep()
         # 1st forward
         while time.time() - self.first_time < 3:
-            self.robot_control.movement(yaw = movement_list[1])
+            self.robot_control.movement(forward = movement_list[1])
         # Second 90 degrees
         self.sleep()
         while time.time() - self.first_time < 1.2:
-            self.robot_control.movement(yaw = movement_list[2])
+            self.robot_control.movement(yaw = -movement_list[2])
         self.sleep()
         # 2nd forward
         while time.time() - self.first_time < 3:
-            self.robot_control.movement(yaw = movement_list[1])
+            self.robot_control.movement(forward = movement_list[1])
         self.sleep()
         # Yaw to move towards the gate
         while time.time() - self.first_time < 0.6:
