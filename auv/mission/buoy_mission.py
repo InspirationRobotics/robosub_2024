@@ -109,25 +109,47 @@ class BuoyMission:
             movement_list = [-3, 2.5, 2] # lateral, forward, yaw
         elif self.target == "Blue":
             movement_list = [3, 2.5, -2] # lateral, forward, yaw
-        # First move laterally, then move around the buoy
-        while time.time() - self.first_time < 2:
-            print(f"[INFO] 1st lateral first_time variable = {self.first_time}")
-            self.robot_control.movement(lateral = movement_list[0])
+
+        # First 90 degrees
+        while time.time() - self.first_time < 1.2:
+            self.robot_control.movement(yaw = movement_list[2])
         self.sleep()
-        for i in range(4):
-            while time.time() - self.first_time < 2.5:
-                self.robot_control.movement(forward = movement_list[1])
-            self.sleep()
-            # More than 1.0 to counteract slight left skew of forward movement
-            while time.time() - self.first_time < 1.2:
-                self.robot_control.movement(yaw = movement_list[2])
-            self.sleep()
-        while time.time() - self.first_time < 0.75:
-            self.robot_control.movement(lateral = -movement_list[0]/2)
-        self.sleep()
+        # 1st forward
         while time.time() - self.first_time < 3:
-            self.robot_control.movement(yaw = -movement_list[2])
+            self.robot_control.movement(yaw = movement_list[1])
+        # Second 90 degrees
         self.sleep()
+        while time.time() - self.first_time < 1.2:
+            self.robot_control.movement(yaw = movement_list[2])
+        self.sleep()
+        # 2nd forward
+        while time.time() - self.first_time < 3:
+            self.robot_control.movement(yaw = movement_list[1])
+        self.sleep()
+        # Yaw to move towards the gate
+        while time.time() - self.first_time < 0.6:
+            self.robot_control.movement(yaw = movement_list[2])
+        self.sleep()
+        
+        # First move laterally, then move around the buoy
+        # while time.time() - self.first_time < 2:
+        #     print(f"[INFO] 1st lateral first_time variable = {self.first_time}")
+        #     self.robot_control.movement(lateral = movement_list[0])
+        # self.sleep()
+        # for i in range(4):
+        #     while time.time() - self.first_time < 2.5:
+        #         self.robot_control.movement(forward = movement_list[1])
+        #     self.sleep()
+        #     # More than 1.0 to counteract slight left skew of forward movement
+        #     while time.time() - self.first_time < 1.2:
+        #         self.robot_control.movement(yaw = movement_list[2])
+        #     self.sleep()
+        # while time.time() - self.first_time < 0.75:
+        #     self.robot_control.movement(lateral = -movement_list[0]/2)
+        # self.sleep()
+        # while time.time() - self.first_time < 3:
+        #     self.robot_control.movement(yaw = -movement_list[2])
+        # self.sleep()
 
     def cleanup(self):
         """
