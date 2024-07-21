@@ -34,10 +34,10 @@ while time.time() - first_time < 18:
 time.sleep(1)
 
 
-# Run buoy mission
+# Run circumnavigate
 
-marker_mission.run()
-marker_mission.cleanup()
+marker_mission.circumnavigate()
+
 
 # Move forward for 8 secs
 
