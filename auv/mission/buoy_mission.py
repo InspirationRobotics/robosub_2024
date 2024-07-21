@@ -100,6 +100,7 @@ class BuoyMission:
         """Circumnavigates the buoy based on the gate mission choice. 
         Aims to make a square around the buoy"""
         print("Starting circumnavigation")
+        time.sleep(2)
         self.first_time = time.time()
         # yaw_time = 2.2 # Tune this value -- the amount of time it takes at power 1 or -1 to go 90 degrees
         # forward_time = 10 # Tune this value -- the amount of time it takes to go forward at power 1
