@@ -115,11 +115,11 @@ class BuoyMission:
             self.robot_control.movement(yaw = -movement_list[2])
         self.sleep()
         # 1st forward
-        while time.time() - self.first_time < 1.7:
+        while time.time() - self.first_time < 1.9:
             self.robot_control.movement(forward = movement_list[1])
         # Yaw for the gate
         self.sleep()
-        while time.time() - self.first_time < 2.1:
+        while time.time() - self.first_time < 2.2:
             self.robot_control.movement(yaw = -movement_list[2])
         self.sleep()
         # # 2nd forward
