@@ -109,7 +109,6 @@ class BuoyMission:
         elif self.target == "Blue":
             movement_list = [4, 2.5, -2] # lateral, forward, yaw
         # First move laterally, then move around the buoy
-        time.sleep(2.0)
         while time.time() - self.first_time < 3:
             self.robot_control.movement(lateral = movement_list[0])
         self.sleep()
