@@ -113,7 +113,7 @@ class BuoyMission:
 
         # Move laterally
         self.sleep()
-        while time.time() - self.first_time < 4.7:
+        while time.time() - self.first_time < 4.0:
             self.robot_control.movement(lateral = movement_list[0])
         self.sleep()
         # Rotate 180 degrees
@@ -121,13 +121,13 @@ class BuoyMission:
             self.robot_control.movement(yaw = movement_list[2])
         self.sleep()
 
-        # # Move forward a little
-        # while time.time() - self.first_time < 10.0:
-        #     self.robot_control.movement(forward = movement_list[1])
-        # self.sleep()
-        # # Strafe to finally align with the gate
-        # while time.time() - self.first_time < 1.5:
-        #     self.robot_control.movement(lateral = movement_list[0])
+        # Move forward a little
+        while time.time() - self.first_time < 10.0:
+            self.robot_control.movement(forward = movement_list[1])
+        self.sleep()
+        # Strafe to finally align with the gate
+        while time.time() - self.first_time < 1.5:
+            self.robot_control.movement(lateral = movement_list[0])
 
         # # Move forward past the buoy
         # while time.time() - self.first_time < 4.0:
