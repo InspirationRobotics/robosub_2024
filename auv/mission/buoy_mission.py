@@ -117,7 +117,7 @@ class BuoyMission:
             self.robot_control.movement(lateral = movement_list[0])
         self.sleep()
         # Rotate 180 degrees
-        while time.time() - self.first_time < 3.2:
+        while time.time() - self.first_time < 3.0:
             self.robot_control.movement(yaw = movement_list[2])
         self.sleep()
 
