@@ -2,7 +2,7 @@ import rospy
 from auv.motion import robot_control
 
 
-rospy.init_node("Heading Test", anonymous=True)
+rospy.init_node("HeadingTest", anonymous=True)
 rc = robot_control.RobotControl()
 
 
