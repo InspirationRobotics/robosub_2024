@@ -25,28 +25,24 @@ arm.arm()
 time.sleep(5)
 first_time = time.time()
 
-while time.time() - first_time < 2.4:
-    rc.movement(yaw = movement_list[2])
-
-# move forward for 8 secs
-
-# # while time.time() - first_time < 10:
-# #     rc.movement(forward = movement_list[1])
-
-# time.sleep(1)
+# while time.time() - first_time < 2.4:
+#     rc.movement(yaw = movement_list[2])
 
 
-# # Run buoy mission
+while time.time() - first_time < 19:
+    rc.movement(forward = movement_list[1])
 
-# # marker_mission.circumnavigate()
-# # marker_mission.cleanup()
+time.sleep(1)
 
-# # Move forward for 8 secs
+marker_mission.circumnavigate()
+# marker_mission.cleanup()
 
-# first_time = time.time()
+# Move forward for 8 secs
 
-# while time.time() - first_time < 10:
-#     rc.movement(forward = - movement_list[1])
+first_time = time.time()
+
+while time.time() - first_time < 10:
+    rc.movement(forward = movement_list[1])
 
 time.sleep(1)
 
