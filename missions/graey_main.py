@@ -16,7 +16,7 @@ rospy.init_node("prequal_mission", anonymous = True)
 marker_mission = buoy_mission.BuoyMission()
 rc = robot_control.RobotControl()
 
-movement_list = [-2, 1.5, 2] # lateral, forward, yaw
+movement_list = [-2, 2.5, 2] # lateral, forward, yaw
 first_time = time.time()
 
 
