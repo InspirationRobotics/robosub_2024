@@ -25,7 +25,7 @@ arm.arm()
 time.sleep(5)
 first_time = time.time()
 
-while time.time() - first_time < 3.0:
+while time.time() - first_time < 2.4:
     rc.movement(yaw = movement_list[2])
 
 # move forward for 8 secs
