@@ -43,11 +43,12 @@ class RobotControl:
         self.depth = self.config.get("INIT_DEPTH", 0.0)
         self.compass = None
 
-        # # dvl sensor setup (both subs)
+        # dvl sensor setup (both subs)
         # if enable_dvl:
         #     self.dvl = dvl.DVL()
         #     self.dvl.start()
         # else:
+        #     self.dvl = None
         self.dvl = None
 
         fog_enable = enable_fog
