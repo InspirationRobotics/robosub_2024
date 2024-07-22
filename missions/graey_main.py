@@ -22,6 +22,9 @@ first_time = time.time()
 
 arm.arm()
 
+time.sleep(5)
+first_time = time.time()
+
 # move forward for 8 secs
 
 while time.time() - first_time < 10:
