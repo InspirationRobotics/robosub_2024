@@ -113,19 +113,19 @@ class BuoyMission:
 
         # Move laterally
         self.sleep()
-        while time.time() - self.first_time < 3.0:
-            self.robot_control.movement(lateral = movement_list[0])
+        while time.time() - self.first_time < 4.0:
+            self.robot_control.movement(lateral = -movement_list[0])
         self.sleep()
         # Rotate 180 degrees
         while time.time() - self.first_time < 2.4:
             self.robot_control.movement(yaw = movement_list[2])
         self.sleep()
         # Move forward past the buoy
-        while time.time() - self.first_time < 3.0:
+        while time.time() - self.first_time < 4.0:
             self.robot_control.movement(forward = movement_list[1])
         self.sleep()
         # Move laterally to realign with the gate
-        while time.time() - self.first_time < 3.0:
+        while time.time() - self.first_time < 4.0:
             self.robot_control.movement(lateral = -movement_list[0])
         
         # # First 90 degrees
