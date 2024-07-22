@@ -155,4 +155,5 @@ class CV:
         if self.aligned == True:
             self.end = True
             
+        print(f"[INFO] State : {self.state}")
         return {"lateral": lateral, "forward": forward, "yaw": yaw, "target": self.target, "end": self.end}, frame
