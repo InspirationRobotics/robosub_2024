@@ -8,7 +8,7 @@
     "dvl_port": "platform-70090000.xusb-usb-0:2.1.4:1.0",
     "battery_indicator": false,
     "depth_pid_params": [
-        125,
+        100,
         15,
         0.25
     ],
