@@ -369,42 +369,47 @@ class RobotControl:
                 if time.time() - curr_time > 1:
                     print(f"[DEBUG] DVL Position: {self.dvl.position} at time {self.dvl.current_time}")
                     curr_time = time.time()
-                
+                print("[DEBUG] Time check finished")
                 if not self.dvl.is_valid:
                     # print("[WARN] DVL data not valid, skipping")
                     # time.sleep(0.5)
                     continue
-
+                print("[DEBUG] Validation check passed")
                 # Ensure position data is updated/avaliable
                 if not self.dvl.data_available:
                     continue
                 self.dvl.data_available = False
-
+                print("[DEBUG] Availability check passed")
                 if prev_time == None:
                     prev_time = self.dvl.current_time
                 elif self.dvl.current_time - prev_time < 1:
                     continue
                 else:
                     prev_time = self.dvl.current_time
+                print("[DEBUG] Time check passed")
 
                 # Find the y-axis error (recall that the y-axis is the forward-backwards dimension)
                 y = self.dvl.position[1]
+                print("[DEBUG] DVL position found")
                 error = distance - y
+                print("[DEBUG] DVL error found")
 
                 # Check if the target has been reached
                 if abs(error) <= 0.1:
                     print("[INFO] Target reached")
                     break
-                
+                print("[DEBUG] Target check finished")
                 # Apply gain to the error and clip by the maximum throttle value(s)
                 if pid:
                     forward_output = self.PIDs["forward"](-error)
                 else:
                     forward_output = np.clip(error * 4, -throttle, throttle)
+                print("[DEBUG] Forward output set")
                 print(f"[DEBUG] error={error}, forward_output={forward_output}")
 
                 # Move forward using the PWM calculations in the movement function
                 self.movement(forward=forward_output)
+                print("[DEBUG] Forward output sent")
 
     def lateral_dvl(self, throttle, distance):
         """
