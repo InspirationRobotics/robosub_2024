@@ -6,7 +6,6 @@ import signal
 import threading
 import time
 import json
-import rospy
 
 import numpy as np
 
@@ -14,18 +13,12 @@ import serial
 
 from . import dvl_tcp_parser
 from auv.utils import deviceHelper
-from auv.motion import robot_control
-from simple_pid import PID
-
-config = deviceHelper.variables
-rospy.init_node("DVLTest", anonymous=True)
 
 
 class DVL:
     """DVL class to enable position estimation"""
 
     def __init__(self, autostart=True, compass=False, test=False):
-        self.config = config
         self.test = test
         if not self.test:
             self.dvlPort = deviceHelper.dataFromConfig("dvl")
@@ -63,15 +56,7 @@ class DVL:
         self.__running = False
         self.__thread_vel = None
         self.prev_time = None
-        self.rc = robot_control.RobotControl(enable_dvl=False)
-        self.PIDs = {"forward": PID(
-                self.config.get("FORWARD_PID_P", 4.0),
-                self.config.get("FORWARD_PID_I", 0.01),
-                self.config.get("FORWARD_PID_D", 0.1),
-                setpoint=0,
-                output_limits=(-2, 2),
-            )}
-
+        
         # sensor error
         self.compass_error = math.radians(1.0)  # rad/s
         
@@ -375,55 +360,10 @@ class DVL:
             self.error[1] + prev_error[1],
             self.error[2] + prev_error[2],
         ]
-    
-    def forward_dvl(self, throttle, distance, pid=True):
-        """
-        Move forward using the DVL.
-        This is a blocking function.
-
-        Args:
-            throttle (float): power at which to move forward at
-            distance (float): distance in meters to move forward by
-            pid (boolean): Whether to use PID (True) or numpy.clip() (False)
-        """
-        # if self.dvl is None:
-        #     print("[ERROR] DVL not available, cannot navigate")
-        #     return
-
-        print(f"[INFO] Moving forward {distance}m at throttle {throttle}")
-
-        # Navigate to the target point
-        while not rospy.is_shutdown():
-            if not self.is_valid:
-                # print("[WARN] DVL data not valid, skipping")
-                # time.sleep(0.5)
-                continue
-            # Ensure position data is updated/avaliable
-            if not self.data_available:
-                continue
-            self.data_available = False
-            # Find the y-axis error (recall that the y-axis is the forward-backwards dimension)
-            print("[DEBUG] DVL position: ", self.position)
-            y = self.position[1]
-            error = distance - y
-            # Check if the target has been reached
-            if abs(error) <= 0.1:
-                print("[INFO] Target reached")
-                break
-            
-            # Apply gain to the error and clip by the maximum throttle value(s)
-            if pid:
-                forward_output = self.PIDs["forward"](-error)
-            else:
-                forward_output = np.clip(error * 4, -throttle, throttle)
-            print(f"[DEBUG] error={error}, forward_output={forward_output}")
-            # Move forward using the PWM calculations in the movement function
-            self.rc.movement(forward=forward_output)
 
 if __name__ == '__main__':
     # Make a new dvl instance
     dvl1 = DVL()
-    dvl1.forward_dvl(throttle = 1, distance = 2)
     while True:
         time.sleep(1)
         print(dvl1.position)
