@@ -366,7 +366,7 @@ class RobotControl:
             while not rospy.is_shutdown():
                 if not self.dvl.is_valid:
                     print("[WARN] DVL data not valid, skipping")
-                    time.sleep(0.5)
+                    # time.sleep(0.5)
                     continue
 
                 # Ensure position data is updated/avaliable
@@ -414,7 +414,7 @@ class RobotControl:
             while not rospy.is_shutdown():
                 if not self.dvl.is_valid:
                     print("[WARN] DVL data not valid, skipping")
-                    time.sleep(0.5)
+                    # time.sleep(0.5)
                     continue
 
                 # Ensure position data is updated/avaliable
