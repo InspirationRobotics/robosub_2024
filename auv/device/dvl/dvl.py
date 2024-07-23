@@ -191,15 +191,15 @@ class DVL:
         """integrate velocity into position"""
 
         vel = [packet.get("vx", 0), packet.get("vy", 0), packet.get("vz", 0)]
-        current_time = packet.get("time", 0)  # seconds
+        self.current_time = packet.get("time", 0)  # seconds
         self.dvl_error = packet.get("error", 0)
 
         if self.prev_time is None or self.compass_rad is None:
-            self.prev_time = current_time
+            self.prev_time = self.current_time
             print("[WARN] DVL not ready, waiting for compass or some more sample")
             return False
 
-        dt = current_time - self.prev_time
+        dt = self.current_time - self.prev_time
         if dt < 0:
             print("[WARN] DVL time error, skipping")
             return False
@@ -209,7 +209,7 @@ class DVL:
             # print("[WARN] DVL velocity not valid, skipping")
             return False
 
-        self.prev_time = current_time
+        self.prev_time = self.current_time
 
         # rotate velocity vector using compass heading
         # plus 45 degrees
@@ -248,15 +248,15 @@ class DVL:
         """Integrate velocity into position without compass"""
 
         vel = [packet.get("vx", 0), packet.get("vy", 0), packet.get("vz", 0)]
-        current_time = packet.get("time", 0)  # seconds
+        self.current_time = packet.get("time", 0)  # seconds
         self.dvl_error = packet.get("error", 0)
 
         if self.prev_time is None:
-            self.prev_time = current_time
+            self.prev_time = self.current_time
             print("[WARN] DVL not ready, waiting for some more sample")
             return False
 
-        dt = current_time - self.prev_time
+        dt = self.current_time - self.prev_time
         if dt < 0:
             print("[WARN] DVL time error, skipping")
             return False
@@ -266,7 +266,7 @@ class DVL:
             # print("[WARN] DVL velocity not valid, skipping")
             return False
 
-        self.prev_time = current_time
+        self.prev_time = self.current_time
 
         # Rotate velocity vector by DVL rotation of 45 degrees
 
