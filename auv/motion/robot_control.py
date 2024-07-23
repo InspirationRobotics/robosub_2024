@@ -365,7 +365,7 @@ class RobotControl:
             # Navigate to the target point
             while not rospy.is_shutdown():
                 if not self.dvl.is_valid:
-                    print("[WARN] DVL data not valid, skipping")
+                    # print("[WARN] DVL data not valid, skipping")
                     # time.sleep(0.5)
                     continue
 
