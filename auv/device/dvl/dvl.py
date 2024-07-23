@@ -17,11 +17,14 @@ from auv.utils import deviceHelper
 from auv.motion import robot_control
 from simple_pid import PID
 
+config = deviceHelper.variables
+
 
 class DVL:
     """DVL class to enable position estimation"""
 
     def __init__(self, autostart=True, compass=False, test=False):
+        self.config = config
         self.test = test
         if not self.test:
             self.dvlPort = deviceHelper.dataFromConfig("dvl")
