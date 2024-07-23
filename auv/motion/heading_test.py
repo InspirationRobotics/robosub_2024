@@ -14,7 +14,7 @@ arm.arm()
 
 time.sleep(5)
 
-rc.forward_dvl(throttle=3, distance=3)
+rc.forward_dvl(throttle=1, distance=3)
 
 time.sleep(1)
 
