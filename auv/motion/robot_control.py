@@ -363,12 +363,13 @@ class RobotControl:
         # Enter a local scope to handle coordinates cleanly
         with self.dvl:
             curr_time = time.time()
+            prev_time = None
             # Navigate to the target point
             while not rospy.is_shutdown():
                 if time.time() - curr_time > 1:
                     print(f"[DEBUG] DVL Position: {self.dvl.position} at time {self.dvl.current_time}")
                     curr_time = time.time()
-
+                
                 if not self.dvl.is_valid:
                     # print("[WARN] DVL data not valid, skipping")
                     # time.sleep(0.5)
@@ -378,6 +379,13 @@ class RobotControl:
                 if not self.dvl.data_available:
                     continue
                 self.dvl.data_available = False
+
+                if prev_time == None:
+                    prev_time = self.dvl.current_time
+                elif self.dvl.current_time - prev_time < 1:
+                    continue
+                else:
+                    prev_time = self.dvl.current_time
 
                 # Find the y-axis error (recall that the y-axis is the forward-backwards dimension)
                 y = self.dvl.position[1]
