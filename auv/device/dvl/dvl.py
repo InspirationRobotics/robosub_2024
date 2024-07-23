@@ -295,6 +295,8 @@ class DVL:
             self.error[2] + abs(vel[2] - vel_error[2]) * dt,
         ]
 
+        print("[DEBUG] Position: ", self.position)
+
         return True
 
     def reset_position(self):
