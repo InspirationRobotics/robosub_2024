@@ -13,15 +13,17 @@ curr = time.time()
 
 print("[DEBUG] Moving forward")
 
-while time.time() - curr < 4:
+while time.time() - curr < 0.05:
     rc.movement(forward=2)
 
-
+rospy.sleep(2)
 curr = time.time()
 
 print("[DEBUG] Moving backward")
 
-while time.time() - curr < 4:
+while time.time() - curr < 0.05:
     rc.movement(forward=-2)
+rospy.sleep(2)
+
 
 disarm.disarm()
