@@ -344,7 +344,7 @@ class RobotControl:
                 print(f"[DEBUG] err_x={err_x}, err_y={err_y}, output_x={output_x}, output_y={output_y}")
                 self.movement(lateral=output_x, forward=output_y)
 
-    def forward_dvl(self, throttle, distance):
+    def forward_dvl(self, throttle, distance, pid = True):
         """
         Move forward using the DVL.
         This is a blocking function.
@@ -352,6 +352,7 @@ class RobotControl:
         Args:
             throttle (float): power at which to move forward at
             distance (float): distance in meters to move forward by
+            pid (boolean): Whether to use PID (True) or numpy.clip() (False)
         """
         if self.dvl is None:
             print("[ERROR] DVL not available, cannot navigate")
@@ -383,7 +384,10 @@ class RobotControl:
                     break
                 
                 # Apply gain to the error and clip by the maximum throttle value(s)
-                forward_output = np.clip(error * 4, -throttle, throttle)
+                if pid:
+                    forward_output = self.PIDs["forward"](-error)
+                else:
+                    forward_output = np.clip(error * 4, -throttle, throttle)
                 print(f"[DEBUG] error={error}, forward_output={forward_output}")
 
                 # Move forward using the PWM calculations in the movement function
