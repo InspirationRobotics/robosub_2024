@@ -44,12 +44,11 @@ class RobotControl:
         self.compass = None
 
         # dvl sensor setup (both subs)
-        # if enable_dvl:
-        #     self.dvl = dvl.DVL()
-        #     self.dvl.start()
-        # else:
-        #     self.dvl = None
-        self.dvl = None
+        if enable_dvl:
+            self.dvl = dvl.DVL()
+            self.dvl.start()
+        else:
+            self.dvl = None
 
         fog_enable = enable_fog
 
