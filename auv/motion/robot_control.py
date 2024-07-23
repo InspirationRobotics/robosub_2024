@@ -392,7 +392,9 @@ class RobotControl:
                 print(f"[DEBUG] error={error}, forward_output={forward_output}")
 
                 # Move forward using the PWM calculations in the movement function
+                curr_time = time.time()
                 self.movement(forward=forward_output)
+                print("[DEBUG] Time to run movement: ", time.time() - curr_time)
 
     def lateral_dvl(self, throttle, distance):
         """
