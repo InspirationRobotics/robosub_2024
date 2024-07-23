@@ -380,14 +380,7 @@ class RobotControl:
                     continue
                 self.dvl.data_available = False
                 print("[DEBUG] Availability check passed")
-                if prev_time == None:
-                    prev_time = self.dvl.current_time
-                elif self.dvl.current_time - prev_time < 1:
-                    continue
-                else:
-                    prev_time = self.dvl.current_time
-                print("[DEBUG] Time check passed")
-
+                
                 # Find the y-axis error (recall that the y-axis is the forward-backwards dimension)
                 y = self.dvl.position[1]
                 print("[DEBUG] DVL position found")
