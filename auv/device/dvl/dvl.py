@@ -184,7 +184,7 @@ class DVL:
             data["valid"] = BS[4] == "A"
         except:
             data = None
-        # print("[DEBUG] Data: ", data)
+        print("[DEBUG] Data: ", data)
         return data
 
     def process_packet_compass(self, packet):
