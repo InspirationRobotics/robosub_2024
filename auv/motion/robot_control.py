@@ -366,7 +366,7 @@ class RobotControl:
             # Navigate to the target point
             while not rospy.is_shutdown():
                 if time.time() - curr_time > 1:
-                    print("[DEBUG] DVL Position: {self.dvl.position} at time {self.dvl.current_time}")
+                    print(f"[DEBUG] DVL Position: {self.dvl.position} at time {self.dvl.current_time}")
                     curr_time = time.time()
 
                 if not self.dvl.is_valid:
