@@ -56,6 +56,7 @@ class DVL:
         self.__running = False
         self.__thread_vel = None
         self.prev_time = None
+        self.current_time = None
         
         # sensor error
         self.compass_error = math.radians(1.0)  # rad/s
