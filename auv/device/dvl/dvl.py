@@ -63,7 +63,7 @@ class DVL:
         self.__thread_vel = None
         self.prev_time = None
         self.rc = robot_control.RobotControl(enable_dvl=False)
-        self.pids = {"forward": PID(
+        self.PIDs = {"forward": PID(
                 self.config.get("FORWARD_PID_P", 4.0),
                 self.config.get("FORWARD_PID_I", 0.01),
                 self.config.get("FORWARD_PID_D", 0.1),
