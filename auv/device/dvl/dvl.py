@@ -18,6 +18,7 @@ from auv.motion import robot_control
 from simple_pid import PID
 
 config = deviceHelper.variables
+rospy.init_node("DVLTest", anonymous=True)
 
 
 class DVL:
