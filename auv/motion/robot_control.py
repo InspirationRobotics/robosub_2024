@@ -362,8 +362,13 @@ class RobotControl:
 
         # Enter a local scope to handle coordinates cleanly
         with self.dvl:
+            curr_time = time.time()
             # Navigate to the target point
             while not rospy.is_shutdown():
+                if time.time() - curr_time > 1:
+                    print("[DEBUG] DVL Position: ", self.dvl.position)
+                    curr_time = time.time()
+
                 if not self.dvl.is_valid:
                     # print("[WARN] DVL data not valid, skipping")
                     # time.sleep(0.5)
@@ -375,7 +380,6 @@ class RobotControl:
                 self.dvl.data_available = False
 
                 # Find the y-axis error (recall that the y-axis is the forward-backwards dimension)
-                print("[DEBUG] DVL position: ", self.dvl.position)
                 y = self.dvl.position[1]
                 error = distance - y
 
@@ -392,9 +396,7 @@ class RobotControl:
                 print(f"[DEBUG] error={error}, forward_output={forward_output}")
 
                 # Move forward using the PWM calculations in the movement function
-                curr_time = time.time()
                 self.movement(forward=forward_output)
-                print("[DEBUG] Time to run movement: ", time.time() - curr_time)
 
     def lateral_dvl(self, throttle, distance):
         """
