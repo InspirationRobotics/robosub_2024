@@ -11,12 +11,17 @@ arm.arm()
 
 curr = time.time()
 
-while time.time() - curr < 0.01:
+print("[DEBUG] Moving forward")
+
+while time.time() - curr < 4:
     rc.movement(forward=2)
+
 
 curr = time.time()
 
-while time.time() - curr < 0.01:
+print("[DEBUG] Moving backward")
+
+while time.time() - curr < 4:
     rc.movement(forward=-2)
 
 disarm.disarm()
