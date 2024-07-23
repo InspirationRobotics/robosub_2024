@@ -365,6 +365,8 @@ class DVL:
 if __name__ == '__main__':
     # Make a new dvl instance
     dvl1 = DVL()
+    while dvl1.current_time == None:
+        time.sleep(0.01)
     prev_time = dvl1.current_time
     while True:
         if dvl1.current_time - prev_time > 1:
