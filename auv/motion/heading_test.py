@@ -15,7 +15,7 @@ arm.arm()
 time.sleep(5)
 
 rc.get_callback_compass()
-rc.set_heading(0)
+rc.set_heading(-135)
 
 time.sleep(2.0)
 
