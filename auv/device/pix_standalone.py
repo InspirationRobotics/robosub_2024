@@ -380,7 +380,7 @@ class AUV(RosHandler):
                 except Exception as e:
                     print("Thrusters publish failed")
                     print(e)
-            # time.sleep(0.1)
+            time.sleep(0.1)
 
     def get_sensors(self):
         """Get sensor data (IMU, Compass, Arming, Mode), and publish sensor data (IMU, compass)"""
@@ -410,7 +410,7 @@ class AUV(RosHandler):
                 except Exception as e:
                     print("sensor failed")
                     print(e)
-                # time.sleep(0.1)
+                time.sleep(0.1)
 
     def update_parameters_from_topic(self, data):
         """To update parameters (status of arming, mode) based on received data from ROS topics"""

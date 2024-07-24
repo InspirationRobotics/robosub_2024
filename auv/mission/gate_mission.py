@@ -5,6 +5,7 @@ Mission file for the Gate class. Essentially takes the output from gate_cv and s
 import json
 
 import rospy
+import time
 from std_msgs.msg import String
 
 from ..device import cv_handler # For running mission-specific CV scripts
@@ -58,6 +59,7 @@ class GateMission:
         print("[INFO] Beginning Gate Run Function")
         while not rospy.is_shutdown():
             print("[INFO] ROSPY run")
+            time.sleep(0.1)
             if not self.received:
                 continue
 
