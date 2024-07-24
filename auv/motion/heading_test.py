@@ -15,8 +15,8 @@ arm.arm()
 time.sleep(5)
 
 first_time  = time.time()
-while time.time() - first_time < 4.0:
-    rc.movement(yaw = -2)
+while time.time() - first_time < 10.0:
+    rc.movement(yaw = -1)
 
 time.sleep(2.0)
 
