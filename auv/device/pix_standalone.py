@@ -363,6 +363,7 @@ class AUV(RosHandler):
         """To publish thruster data"""
         # If ROS is not shut down and do_publish_thrusters is True
         while not rospy.is_shutdown() and self.do_publish_thrusters:
+            time.sleep(0.1)
             if self.connected:
                 try:
                     channels = self.channels
@@ -380,12 +381,12 @@ class AUV(RosHandler):
                 except Exception as e:
                     print("Thrusters publish failed")
                     print(e)
-            time.sleep(0.1)
-
+            
     def get_sensors(self):
         """Get sensor data (IMU, Compass, Arming, Mode), and publish sensor data (IMU, compass)"""
         # If ROS is not shut down and do_get_sensors is True
         while not rospy.is_shutdown() and self.do_get_sensors:
+            time.sleep(0.1)
             if self.connected:
                 try:
                     # Get the data from compass, IMU, arm status, mode
@@ -410,7 +411,7 @@ class AUV(RosHandler):
                 except Exception as e:
                     print("sensor failed")
                     print(e)
-                time.sleep(0.1)
+            
 
     def update_parameters_from_topic(self, data):
         """To update parameters (status of arming, mode) based on received data from ROS topics"""
