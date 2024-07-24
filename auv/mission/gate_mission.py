@@ -11,6 +11,7 @@ from std_msgs.msg import String
 from ..device import cv_handler # For running mission-specific CV scripts
 from ..motion import robot_control # For running the motors on the sub
 from .. utils import arm, disarm
+from . import style_mission
 
 class GateMission:
     cv_files = ["gate_cv"] # CV file to run
@@ -87,11 +88,24 @@ class GateMission:
                 break
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
-                print(forward, lateral, yaw) 
-            
+                print(forward, lateral, yaw)
             print(f"[DEBUG]: Time elapsed is {time.time() - curr_time}")
 
         print("[INFO] gate mission run")
+    
+    def style_movement(self):
+        # run style - compass heading functions will ensure
+        # she is at her initial heading
+        style = style_mission.StyleMission()
+        style.run()
+        style.cleanup()
+
+        # Go forward for 5 secs
+        initial_time = time.time()
+        while time.time() - initial_time < 5:
+            self.robot_control.movement(forward=2)
+
+
 
     def cleanup(self):
         """
@@ -130,6 +144,6 @@ if __name__ == "__main__":
     arm.arm()
 
     # Run the mission
-    mission.run()
+    mission.style_movement()
     mission.cleanup()
     disarm.disarm()
