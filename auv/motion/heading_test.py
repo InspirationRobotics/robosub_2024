@@ -14,9 +14,8 @@ arm.arm()
 
 time.sleep(5)
 
-first_time  = time.time()
-while time.time() - first_time < 10.0:
-    rc.movement(yaw = -1)
+rc.get_callback_compass()
+rc.set_heading(90)
 
 time.sleep(2.0)
 
