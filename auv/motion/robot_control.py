@@ -366,6 +366,7 @@ class RobotControl:
             prev_time = None
             # Navigate to the target point
             while not rospy.is_shutdown():
+                time.sleep(0.25)
                 if time.time() - curr_time > 1:
                     print(f"[DEBUG] DVL Position: {self.dvl.position} at time {self.dvl.current_time}")
                     curr_time = time.time()
@@ -374,13 +375,14 @@ class RobotControl:
                     # print("[WARN] DVL data not valid, skipping")
                     # time.sleep(0.5)
                     continue
-                # print("[DEBUG] Validation check passed")
+                #print("[DEBUG] Validation check passed")
                 # Ensure position data is updated/avaliable
                 if not self.dvl.data_available:
                     continue
                 self.dvl.data_available = False
                 print("[DEBUG] Availability check passed")
-                
+                print("[DEBUG] Time check passed")
+
                 # Find the y-axis error (recall that the y-axis is the forward-backwards dimension)
                 y = self.dvl.position[1]
                 print("[DEBUG] DVL position found")
