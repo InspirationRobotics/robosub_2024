@@ -60,6 +60,7 @@ class GateMission:
         while not rospy.is_shutdown():
             # print("[INFO] ROSPY run")
             time.sleep(0.1)
+            curr_time = time.time()
             if not self.received:
                 continue
 
@@ -87,6 +88,8 @@ class GateMission:
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
                 print(forward, lateral, yaw) 
+            
+            print(f"[DEBUG]: Time elapsed is {time.time() - curr_time}")
 
         print("[INFO] gate mission run")
 
