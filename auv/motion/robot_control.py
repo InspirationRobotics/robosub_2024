@@ -216,6 +216,11 @@ class RobotControl:
             time.sleep(0.1)
 
         print(f"[INFO] Finished setting heading to {target}")
+    
+    def get_heading(self) -> int:
+        """Returns a compass heading. This may be helpful if you need
+        to save a heading to re-orient the sub later"""
+        return self.compass
 
     def setHeadingOld(self, target: int):
         """
