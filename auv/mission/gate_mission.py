@@ -59,8 +59,8 @@ class GateMission:
         print("[INFO] Beginning Gate Run Function")
         while not rospy.is_shutdown():
             # print("[INFO] ROSPY run")
-            time.sleep(0.1)
             curr_time = time.time()
+            time.sleep(0.1)
             if not self.received:
                 continue
 
