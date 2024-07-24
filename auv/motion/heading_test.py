@@ -14,8 +14,10 @@ arm.arm()
 
 time.sleep(5)
 
-rc.forward_dvl(throttle=1, distance=2)
+first_time  = time.time()
+while time.time() - first_time < 4.0:
+    rc.movement(yaw = -2)
 
-time.sleep(5)
+time.sleep(2.0)
 
 disarm.disarm()
