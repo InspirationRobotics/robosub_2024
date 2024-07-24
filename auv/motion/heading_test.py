@@ -16,6 +16,6 @@ time.sleep(5)
 
 rc.forward_dvl(throttle=1, distance=2)
 
-time.sleep(1)
+time.sleep(5)
 
 disarm.disarm()
