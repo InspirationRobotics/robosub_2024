@@ -374,10 +374,9 @@ if __name__ == '__main__':
     prev_time = dvl1.current_time
     while True:
         # print("[DEBUG: Ran a check on DVL timing]")
-        time_var = time.time()
         if dvl1.current_time - prev_time > 1:
-            print(f"[DEBUG]: Time difference is {time.time() - time_var}")
+            # print(f"[DEBUG]: Time difference is {time.time() - time_var}")
             print(dvl1.position)
             prev_time = dvl1.current_time
-        print(f"[DEBUG]: Time difference is {time.time() - time_var}")
+        # print(f"[DEBUG]: Time difference is {time.time() - time_var}")
         # print(dvl1.error)
