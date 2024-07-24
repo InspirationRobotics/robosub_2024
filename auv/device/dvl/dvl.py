@@ -373,7 +373,7 @@ if __name__ == '__main__':
         time.sleep(0.01)
     prev_time = dvl1.current_time
     while True:
-        integer_var = 1
+        time.sleep(1.0)
         # print("[DEBUG: Ran a check on DVL timing]")
         # print(dvl1.position)
         # prev_time = dvl1.current_time
