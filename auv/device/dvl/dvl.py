@@ -185,7 +185,7 @@ class DVL:
             data["valid"] = BS[4] == "A"
         except:
             data = None
-        # print("[DEBUG] Data: ", data)
+        print("[DEBUG] Data in read_onyx: ", data)
         return data
 
     def process_packet_compass(self, packet):
@@ -266,6 +266,10 @@ class DVL:
         if not self.is_valid:
             # print("[WARN] DVL velocity not valid, skipping")
             return False
+        
+        print("[DEBUG] Running the process packet method")
+        print(f"[DEBUG]: Current time is {self.current_time}")
+        print(f"[DEBUG]: Previous time is {self.prev_time}")
 
         self.prev_time = self.current_time
 
@@ -365,11 +369,11 @@ class DVL:
 if __name__ == '__main__':
     # Make a new dvl instance
     dvl1 = DVL()
-    while dvl1.current_time == None:
-        time.sleep(0.01)
-    prev_time = dvl1.current_time
-    while True:
-        if dvl1.current_time - prev_time > 1:
-            print(dvl1.position)
-            prev_time = dvl1.current_time
-        # print(dvl1.error)
+    # while dvl1.current_time == None:
+    #     time.sleep(0.01)
+    # prev_time = dvl1.current_time
+    # while True:
+    #     if dvl1.current_time - prev_time > 1:
+    #         print(dvl1.position)
+    #         prev_time = dvl1.current_time
+    #     # print(dvl1.error)
