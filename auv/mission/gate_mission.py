@@ -10,7 +10,7 @@ from std_msgs.msg import String
 
 from ..device import cv_handler # For running mission-specific CV scripts
 from ..motion import robot_control # For running the motors on the sub
-from .. utils import disarm
+from .. utils import arm, disarm
 
 class GateMission:
     cv_files = ["gate_cv"] # CV file to run
@@ -124,6 +124,10 @@ if __name__ == "__main__":
     # Create a mission object with arguments
     mission = GateMission(**config)
 
+    arm.arm()
+
     # Run the mission
     mission.run()
     mission.cleanup()
+    disarm.disarm()
+    
