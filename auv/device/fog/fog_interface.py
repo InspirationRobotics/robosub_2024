@@ -252,9 +252,9 @@ if __name__ == "__main__":
     fog.start_read()
 
     startTime = time.time()
-    while time.time() - startTime < 30:
+    while time.time() - startTime < 1200:
         print(fog.parsed_data["angle_deg"] if "angle_deg" in fog.parsed_data.keys() else "No data")
-        time.sleep(0.1)
+        time.sleep(0.25)
 
     fog.close()
 
