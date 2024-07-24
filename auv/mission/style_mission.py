@@ -66,6 +66,6 @@ if __name__ == "__main__":
     mission = StyleMission()
 
     # Run the mission
-    mission.run()
+    mission.run(90)
     time.sleep(2)
     mission.cleanup()
