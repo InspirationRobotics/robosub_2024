@@ -53,12 +53,12 @@ class CV:
 
         # If detection is to the left of the center of the frame.
         if detection_midpoint < midpoint_frame - self.tolerance: 
-            yaw = -2
+            yaw = -1
         # If detection is to the right of the center of the frame.
         elif detection_midpoint > midpoint_frame + self.tolerance:
-            yaw = 2
+            yaw = 1
         else:
-            yaw = 2
+            yaw = 1
 
         return yaw
     
@@ -67,10 +67,10 @@ class CV:
         midpoint_frame = self.shape[0]/2
         # If detection is to the left of the center of the frame.
         if detection_x < midpoint_frame - self.tolerance: 
-            lateral = -2
+            lateral = -1
         # If detection is to the right of the center of the frame.
         elif detection_x > midpoint_frame + self.tolerance:
-            lateral = 2
+            lateral = 1
         else:
             lateral = 0
 
@@ -106,7 +106,7 @@ class CV:
         # Once aligned, end.
 
         if len(detections) == 0:
-            yaw = 2
+            yaw = 1
         elif len(detections) == 1:
             detection = detections[0]
             yaw = self.yaw_smart(detection)
@@ -134,10 +134,10 @@ class CV:
             confidence = 0
             if (detection.xmax - detection.xmin) * (detection.ymax - detection.ymin) < 400:
                 print("[INFO] Moving forward.")
-                forward = 2.5
+                forward = 1.5
             elif (detection.xmax - detection.xmin) * (detection.ymax - detection.ymin) > 650:
                 print("[INFO] Moving backward.")
-                forward = -2.5
+                forward = -1.5
             else:
                 self.state == "strafe" # Strafe anyway
             for detection in detections:
