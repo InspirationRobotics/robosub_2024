@@ -28,10 +28,11 @@ class StyleMission:
 
         print("[INFO] style_mission init")
 
-    def run(self, heading):
+    def run(self):
 
         print("[INFO] Style mission run")
         
+        compass_heading = self.robot_control.get_heading()
         rotations = 2
         startTime = time.time()
         while time.time()-startTime<rotations*12:
@@ -42,7 +43,7 @@ class StyleMission:
             self.robot_control.movement(yaw=0)
             time.sleep(0.05)
 
-        self.robot_control.setHeadingOld(heading)
+        self.robot_control.setHeadingOld(compass_heading)
 
     def cleanup(self):
         """
@@ -66,6 +67,6 @@ if __name__ == "__main__":
     mission = StyleMission()
 
     # Run the mission
-    mission.run(90)
+    mission.run()
     time.sleep(2)
     mission.cleanup()
