@@ -58,7 +58,7 @@ class GateMission:
         """
         print("[INFO] Beginning Gate Run Function")
         while not rospy.is_shutdown():
-            print("[INFO] ROSPY run")
+            # print("[INFO] ROSPY run")
             time.sleep(0.1)
             if not self.received:
                 continue
@@ -130,4 +130,3 @@ if __name__ == "__main__":
     mission.run()
     mission.cleanup()
     disarm.disarm()
-    
