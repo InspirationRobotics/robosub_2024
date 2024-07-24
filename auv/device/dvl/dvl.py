@@ -372,8 +372,6 @@ if __name__ == '__main__':
     # while dvl1.current_time == None:
     #     time.sleep(0.01)
     # prev_time = dvl1.current_time
-    # while True:
-    #     if dvl1.current_time - prev_time > 1:
-    #         print(dvl1.position)
-    #         prev_time = dvl1.current_time
-    #     # print(dvl1.error)
+    while True:
+        print(dvl1.position)
+        time.sleep(1)
