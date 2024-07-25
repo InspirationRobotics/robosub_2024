@@ -113,15 +113,15 @@ class CV:
                 if detection.confidence > 0.6 and target in detection.label:
                     target_x = x_midpoint
                     self.target = detection.label
-                    self.state == "strafe"
+                    self.state = "strafe"
                 elif detection.confidence > 0.6 and target not in detection.label:
                     other_x = x_midpoint
                     other_label = detection.label
                 else:
                     print(f"[WARN] Detections have low confidence, going for the highest confidence label.")
-                    self.state == "target_determination"
+                    self.state = "target_determination"
 
-            if target_x == None and other_x is not None:
+            if target_x == None and other_x == None:
                 print("[INFO] Switching targets because original set target is not confirmed.")
                 target_x = other_x
                 self.target = other_label
