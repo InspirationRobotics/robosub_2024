@@ -28,7 +28,7 @@ class GateMission:
         self.next_data = {}  # Dictionary to store the newest data from the CV handler; this data will be merged with self.data.
         self.received = False
 
-        self.robot_control = robot_control.RobotControl()
+        self.robot_control = robot_control.RobotControl(enable_dvl=False)
         self.cv_handler = cv_handler.CVHandler(**self.config)
 
         # Initialize the CV handlers; dummys are used to input a video file instead of the camera stream as data for the CV script to run on
