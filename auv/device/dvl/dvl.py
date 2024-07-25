@@ -267,9 +267,9 @@ class DVL:
             # print("[WARN] DVL velocity not valid, skipping")
             return False
         
-        print("[DEBUG] Running the process packet method")
-        print(f"[DEBUG]: Current time is {self.current_time}")
-        print(f"[DEBUG]: Previous time is {self.prev_time}")
+        # print("[DEBUG] Running the process packet method")
+        # print(f"[DEBUG]: Current time is {self.current_time}")
+        # print(f"[DEBUG]: Previous time is {self.prev_time}")
 
         self.prev_time = self.current_time
 
