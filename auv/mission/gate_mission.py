@@ -86,7 +86,7 @@ class GateMission:
                 break
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
-                # print(forward, lateral, yaw)
+                print(forward, lateral, yaw)
             
         print("[INFO] gate mission run")
     
