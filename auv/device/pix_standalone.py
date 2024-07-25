@@ -403,12 +403,12 @@ class AUV(RosHandler):
                         self.armRequest = armRequest.data
                         while auv.armed != self.armRequest:
                             self.arm(self.armRequest)
-                            time.sleep(2)
+                            time.sleep(0.1)
                     if modeRequest != None:
                         self.modeRequest = modeRequest.data
                         while self.mode != self.modeRequest:
                             self.change_mode(self.modeRequest)
-                            time.sleep(0.5)
+                            time.sleep(0.1)
                     # Publish data from sensors(IMU, compass)
                     self.publish_sensors()
                 # Handle exceptions
