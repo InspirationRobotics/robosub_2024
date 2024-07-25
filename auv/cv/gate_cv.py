@@ -121,7 +121,7 @@ class CV:
                     print(f"[WARN] Detections have low confidence, going for the highest confidence label.")
                     self.state = "target_determination"
 
-            if target_x == None and other_x == None:
+            if target_x == None and other_x != None:
                 print("[INFO] Switching targets because original set target is not confirmed.")
                 target_x = other_x
                 self.target = other_label
