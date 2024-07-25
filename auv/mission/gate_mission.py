@@ -144,6 +144,6 @@ if __name__ == "__main__":
     arm.arm()
 
     # Run the mission
-    mission.style_movement()
+    mission.run()
     mission.cleanup()
     disarm.disarm()
