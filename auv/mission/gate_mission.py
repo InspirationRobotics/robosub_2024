@@ -33,7 +33,7 @@ class GateMission:
 
         # Initialize the CV handlers; dummys are used to input a video file instead of the camera stream as data for the CV script to run on
         for file_name in self.cv_files:
-            self.cv_handler.start_cv(file_name, self.callback)
+            self.cv_handler.start_cv(file_name, self.dummy_callback)
 
         self.cv_handler.set_target("gate_cv", target)
         print("[INFO] Gate Mission Init")
@@ -51,6 +51,9 @@ class GateMission:
         self.received = True
 
         print(f"[DEBUG] Received data from {file_name}")
+    
+    def dummy_callback(self, msg):
+        print(f"[INFO] received: {msg.data}")
 
     def run(self):
         """
