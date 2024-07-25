@@ -125,7 +125,7 @@ class CV:
                 print("[INFO] Switching targets because original set target is not confirmed.")
                 target_x = other_x
                 self.target = other_label
-                self.state == "strafe"
+                self.state = "strafe"
 
         if self.state == "target_determination":
             confidence = 0
