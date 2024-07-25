@@ -107,10 +107,7 @@ class CV:
 
         if len(detections) == 0:
             yaw = 1
-        elif len(detections) == 1:
-            detection = detections[0]
-            yaw = self.yaw_smart(detection)
-        elif len(detections) == 2:
+        elif len(detections) >= 1:
             for detection in detections:
                 x_midpoint = (detection.xmin + detection.xmax)/2 
                 if detection.confidence > 0.6 and target in detection.label:
