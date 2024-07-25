@@ -28,7 +28,7 @@ class GateMission:
         self.next_data = {}  # Dictionary to store the newest data from the CV handler; this data will be merged with self.data.
         self.received = False
 
-        self.robot_control = robot_control.RobotControl(enable_dvl=False)
+        self.robot_control = robot_control.RobotControl()
         self.cv_handler = cv_handler.CVHandler(**self.config)
 
         # Initialize the CV handlers; dummys are used to input a video file instead of the camera stream as data for the CV script to run on
@@ -90,22 +90,19 @@ class GateMission:
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
                 print(forward, lateral, yaw)
+        self.style_movement()
             
         print("[INFO] gate mission run")
     
     def style_movement(self):
+        # Go forward for 10 secs
+        self.robot_control.forward_dvl(throttle=2, distance=5)
+
         # run style - compass heading functions will ensure
         # she is at her initial heading
         style = style_mission.StyleMission()
         style.run()
         style.cleanup()
-
-        # Go forward for 5 secs
-        initial_time = time.time()
-        while time.time() - initial_time < 5:
-            self.robot_control.movement(forward=2)
-
-
 
     def cleanup(self):
         """
