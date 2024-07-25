@@ -60,8 +60,6 @@ class GateMission:
         print("[INFO] Beginning Gate Run Function")
         while not rospy.is_shutdown():
             # print("[INFO] ROSPY run")
-            curr_time = time.time()
-            time.sleep(0.1)
             if not self.received:
                 continue
 
@@ -89,8 +87,7 @@ class GateMission:
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
                 # print(forward, lateral, yaw)
-            print(f"[DEBUG]: Time elapsed is {time.time() - curr_time}")
-
+            
         print("[INFO] gate mission run")
     
     def style_movement(self):
