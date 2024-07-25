@@ -107,6 +107,7 @@ class CV:
 
         if len(detections) == 0:
             yaw = 1
+            self.state = None
         elif len(detections) >= 1:
             for detection in detections:
                 x_midpoint = (detection.xmin + detection.xmax)/2 
