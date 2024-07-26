@@ -76,7 +76,7 @@ class CV:
 
         return lateral
 
-    def run(self, frame, target="Blue", detections=None):
+    def run(self, frame, target="Blue", detections=None, force_target=True):
         """
         Run the CV script.
 
@@ -123,10 +123,14 @@ class CV:
                     self.state = "target_determination"
 
             if target_x == None and other_x != None:
-                print("[INFO] Switching targets because original set target is not confirmed.")
-                target_x = other_x
-                self.target = other_label
-                self.state = "strafe"
+                if force_target:
+                    print("[INFO] Continuing search for target")
+                    yaw = 1
+                else:
+                    print("[INFO] Switching targets because original set target is not confirmed.")
+                    target_x = other_x
+                    self.target = other_label
+                    self.state = "strafe"
 
         if self.state == "target_determination":
             confidence = 0
