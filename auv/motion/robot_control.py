@@ -398,7 +398,7 @@ class RobotControl:
                 # Move forward using the PWM calculations in the movement function
                 self.movement(forward=forward_output)
 
-    def lateral_dvl(self, throttle, distance, pid=True):
+    def lateral_dvl(self, distance, pid=True, throttle=None):
         """
         Move laterally using the DVL -- this contains the exact same method as forward_dvl except the x, not y-axis is used.
         This is a blocking function.
