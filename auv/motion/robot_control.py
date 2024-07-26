@@ -349,7 +349,7 @@ class RobotControl:
                 print(f"[DEBUG] err_x={err_x}, err_y={err_y}, output_x={output_x}, output_y={output_y}")
                 self.movement(lateral=output_x, forward=output_y)
 
-    def forward_dvl(self, throttle, distance, pid=True):
+    def forward_dvl(self, distance, pid=True, throttle=None):
         """
         Move forward using the DVL.
         This is a blocking function.
