@@ -84,9 +84,9 @@ class CV:
         if self.detected == True:
             x_coordinate = (detection.get("xmin") + detection.get("xmax"))/2
             if x_coordinate < self.midpoint - self.tolerance:
-                yaw = -0.25
+                yaw = -1
             elif x_coordinate < self.midpoint + self.tolerance:
-                yaw = 0.25
+                yaw = 1
             else:
                 yaw = 0
 
