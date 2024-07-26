@@ -103,11 +103,11 @@ class BuoyMission:
             lateral_dist = 1
 
         compass_heading = self.robot_control.get_heading()
-        self.robot_control.lateral_dvl(throttle=2, distance = lateral_dist)
-        self.robot_control.forward_dvl(throttle=2, distance=2)
-        self.robot_control.lateral_dvl(throttle=2, distance=(-2*lateral_dist))
-        self.robot_control.forward_dvl(throttle=2, distance = -2)
-        self.robot_control.lateral_dvl(throttle=2, distance=lateral_dist)
+        self.robot_control.lateral_dvl(throttle=1, distance = lateral_dist)
+        self.robot_control.forward_dvl(throttle=1, distance=2)
+        self.robot_control.lateral_dvl(throttle=1, distance=(-2*lateral_dist))
+        self.robot_control.forward_dvl(throttle=1, distance = -2)
+        self.robot_control.lateral_dvl(throttle=1, distance=lateral_dist)
         self.robot_control.set_heading(compass_heading + 180)
 
 
