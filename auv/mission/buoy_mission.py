@@ -91,97 +91,26 @@ class BuoyMission:
         if self.positioned == True:
             self.circumnavigate()
     
-    def sleep(self):
-        """Allows AUV to dissipate momentum then reset
-        the time used to move in a particular direction"""
-        rospy.sleep(2.0)
-        self.first_time = time.time()
 
     def circumnavigate(self):
         """Circumnavigates the buoy based on the gate mission choice. 
         Aims to make a square around the buoy"""
         print("Starting circumnavigation")
-        time.sleep(2)
-        self.first_time = time.time()
-        # yaw_time = 2.2 # Tune this value -- the amount of time it takes at power 1 or -1 to go 90 degrees
-        # forward_time = 10 # Tune this value -- the amount of time it takes to go forward at power 1
-        # lateral_time = 8 # Tune this value -- the amount of time it takes to go lateral at power 1
+        
         if self.target == "Red":
-            movement_list = [-2, 2.5, 2] # lateral, forward, yaw
+            lateral_dist = -1.5
         elif self.target == "Blue":
-            movement_list = [2, 2.5, -2] # lateral, forward, yaw
+            lateral_dist = 1.5
+
+        compass_heading = self.robot_control.get_heading()
+        self.robot_control.lateral_dvl(throttle=2, distance = lateral_dist)
+        self.robot_control.forward_dvl(throttle=2, distance=3)
+        self.robot_control.lateral_dvl(throttle=2, distance=(-2*lateral_dist))
+        self.robot_control.forward_dvl(throttle=2, distance = -3)
+        self.robot_control.lateral_dvl(throttle=2, distance=lateral_dist)
+        self.robot_control.set_heading(compass_heading + 180)
 
 
-        # Move laterally
-        self.sleep()
-        while time.time() - self.first_time < 4.0:
-            self.robot_control.movement(lateral = movement_list[0])
-        self.sleep()
-        # Rotate 180 degrees
-        while time.time() - self.first_time < 2.5:
-            self.robot_control.movement(yaw = movement_list[2])
-        self.sleep()
-
-        # Move forward a little
-        while time.time() - self.first_time < 10.0:
-            self.robot_control.movement(forward = movement_list[1])
-        self.sleep()
-        # Strafe to finally align with the gate
-        while time.time() - self.first_time < 0.8:
-            self.robot_control.movement(lateral = movement_list[0])
-
-        # # Move forward past the buoy
-        # while time.time() - self.first_time < 4.0:
-        #     self.robot_control.movement(forward = movement_list[1])
-        # self.sleep()
-        # # Move laterally to realign with the gate
-        # while time.time() - self.first_time < 4.0:
-        #     self.robot_control.movement(lateral = -movement_list[0])
-        
-        # # First 90 degrees
-        # while time.time() - self.first_time < 1.2:
-        #     self.robot_control.movement(yaw = -movement_list[2])
-        # self.sleep()
-        # # 1st forward
-        # while time.time() - self.first_time < 2.7:
-        #     self.robot_control.movement(forward = movement_list[1])
-        # # 2nd yaw
-        # self.sleep()
-        # while time.time() - self.first_time < 2.4:
-        #     self.robot_control.movement(yaw = -movement_list[2])
-        # self.sleep()
-
-
-        # # 2nd forward
-        # while time.time() - self.first_time < 3:
-        #     self.robot_control.movement(forward = movement_list[1])
-        # self.sleep()
-        # # Yaw to move towards the gate
-        # while time.time() - self.first_time < 0.05:
-        #     self.robot_control.movement(yaw = -movement_list[2])
-        # self.sleep()
-        
-        # while time.time() - self.first_time < 0.5:
-        #     self.robot_control.movement(yaw = -movement_list[2])
-        # self.sleep()
-        # # First move laterally, then move around the buoy
-        # while time.time() - self.first_time < 2:
-        #     self.robot_control.movement(lateral = movement_list[0])
-        # self.sleep()
-        # for i in range(4):
-        #     while time.time() - self.first_time < 2.5:
-        #         self.robot_control.movement(forward = movement_list[1])
-        #     self.sleep()
-        #     # More than 1.0 to counteract slight left skew of forward movement
-        #     while time.time() - self.first_time < 1.2:
-        #         self.robot_control.movement(yaw = movement_list[2])
-        #     self.sleep()
-        # while time.time() - self.first_time < 0.75:
-        #     self.robot_control.movement(lateral = -movement_list[0]/2)
-        # self.sleep()
-        # while time.time() - self.first_time < 3:
-        #     self.robot_control.movement(yaw = -movement_list[2])
-        # self.sleep()
 
     def cleanup(self):
         """
@@ -220,6 +149,6 @@ if __name__ == "__main__":
     # Run the mission
     arm.arm()
     time.sleep(5)
-    mission.run()
+    mission.circumnavigate()
     mission.cleanup()
     disarm.disarm()
