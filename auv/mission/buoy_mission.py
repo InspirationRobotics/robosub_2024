@@ -58,6 +58,7 @@ class BuoyMission:
         """
 
         while not rospy.is_shutdown():
+            time.sleep(0.01)
             if not self.received:
                 continue
 
