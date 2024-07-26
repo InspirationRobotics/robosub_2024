@@ -206,7 +206,7 @@ class RobotControl:
             # Normalize error to the range -1 to 1 for the PID controller
             output = self.PIDs["yaw"](-error / 180)
 
-            print(f"[DEBUG] Heading error: {error}, output: {output} {self.compass} {target}")
+            # print(f"[DEBUG] Heading error: {error}, output: {output} {self.compass} {target}")
 
             if abs(error) <= 5:
                 print("[INFO] Heading reached")
