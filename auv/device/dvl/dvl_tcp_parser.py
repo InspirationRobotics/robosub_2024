@@ -135,6 +135,7 @@ def arguments_parser():
     parser.add_argument(
         "message_type",
         choices = [ "velocity", "dead_reckoning" ],
+        default = "velocity",
         help = "Type of DVL message to handle")
     parser.add_argument(
         "-i",
