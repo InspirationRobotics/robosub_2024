@@ -80,7 +80,7 @@ class RobotControl:
 
         self.PIDs = {
             "yaw": PID(
-                self.config.get("YAW_PID_P", 10),
+                self.config.get("YAW_PID_P", 12),
                 self.config.get("YAW_PID_I", 0.01),
                 self.config.get("YAW_PID_D", 0.0),
                 setpoint=0,
