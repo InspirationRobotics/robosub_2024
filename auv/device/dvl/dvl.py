@@ -121,7 +121,6 @@ class DVL:
                 self.graey_data["vz"] = float(line["vz"])
                 self.graey_data["error"] = float(line["fom"])
                 self.graey_data["valid"] = line["velocity_valid"]
-                print(self.graey_data)
                 return self.graey_data
         except:
             print("I threw an exception!")
