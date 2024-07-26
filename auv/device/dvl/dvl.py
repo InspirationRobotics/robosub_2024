@@ -121,6 +121,7 @@ class DVL:
                 self.graey_data["vz"] = float(line["vz"])
                 self.graey_data["error"] = float(line["fom"])
                 self.graey_data["valid"] = line["velocity_valid"]
+                print(self.graey_data)
                 return self.graey_data
         except:
             print("I threw an exception!")
@@ -375,6 +376,6 @@ if __name__ == '__main__':
     while True:
         time.sleep(1.0)
         # print("[DEBUG: Ran a check on DVL timing]")
-        # print(dvl1.position)
+        print(dvl1.position)
         # prev_time = dvl1.current_time
         # print(dvl1.error)
