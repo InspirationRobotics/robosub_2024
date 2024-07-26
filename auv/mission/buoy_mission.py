@@ -13,7 +13,7 @@ from ..utils import arm, disarm
 
 class BuoyMission:
     
-    def __init__(self, target="Red", **config):
+    def __init__(self, target="Blue", **config):
         """
         Initialize the mission class; here should be all of the things needed in the run function. 
 
