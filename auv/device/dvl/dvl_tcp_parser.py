@@ -134,7 +134,7 @@ def arguments_parser():
         description = "Extract data from DVL TCP stream")
     parser.add_argument(
         "-m",
-        "--message",
+        "--message_type",
         default = "velocity",
         help = "Type of DVL message to handle")
     parser.add_argument(
