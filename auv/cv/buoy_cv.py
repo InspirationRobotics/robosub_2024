@@ -38,9 +38,6 @@ class CV:
         # Test variables.
         self.detection_area = None
 
-        self.finished_yaw = False
-        self.finished_forward = False
-
     def detect_buoy(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         # print("Timestamp for hsv variable: ", time.time() - self.prev_time)
