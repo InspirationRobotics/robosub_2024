@@ -99,6 +99,8 @@ class CV:
                 forward = -0.7
             else:
                 forward = 0
+                if yaw == 0:
+                    self.end = True
             
             print(f"[INFO] Frame area : {self.frame_area}")
             print(f"[INFO] Buoy area : {buoy_area}")
@@ -120,15 +122,6 @@ class CV:
             visualized_frame = None
 
         forward, lateral, yaw = self.movement_calculation(data_from_detection)
-
-        if not self.finished_yaw:
-            print("[INFO] Yaw has not finished")
-
-        if not self.finished_forward:
-            print("[INFO] Forward has not finished")
-
-        if self.finished_forward and self.finished_yaw:
-            self.end = True
 
         end = self.end
 
