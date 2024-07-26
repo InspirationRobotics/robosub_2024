@@ -98,15 +98,15 @@ class BuoyMission:
         print("Starting circumnavigation")
         
         if self.target == "Red":
-            lateral_dist = -1.5
+            lateral_dist = -1
         elif self.target == "Blue":
-            lateral_dist = 1.5
+            lateral_dist = 1
 
         compass_heading = self.robot_control.get_heading()
         self.robot_control.lateral_dvl(throttle=2, distance = lateral_dist)
-        self.robot_control.forward_dvl(throttle=2, distance=3)
+        self.robot_control.forward_dvl(throttle=2, distance=2)
         self.robot_control.lateral_dvl(throttle=2, distance=(-2*lateral_dist))
-        self.robot_control.forward_dvl(throttle=2, distance = -3)
+        self.robot_control.forward_dvl(throttle=2, distance = -2)
         self.robot_control.lateral_dvl(throttle=2, distance=lateral_dist)
         self.robot_control.set_heading(compass_heading + 180)
 
@@ -149,6 +149,6 @@ if __name__ == "__main__":
     # Run the mission
     arm.arm()
     time.sleep(5)
-    mission.run()
+    mission.circumnavigate()
     mission.cleanup()
     disarm.disarm()
