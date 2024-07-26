@@ -72,12 +72,14 @@ class CV:
             if buoy_area < 250:
                 self.detected = False
                 self.step = None
+                yaw = 1
             else:
                 self.detected = True
                 self.step = 1
         else:
             self.detected = False
             self.step = None
+            yaw = 1
 
         if self.detected == True:
             x_coordinate = (detection.get("xmin") + detection.get("xmax"))/2
