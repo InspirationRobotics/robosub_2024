@@ -42,6 +42,7 @@ class CV:
         self.tolerance = 20 # Pixels
 
         self.target = None
+        self.force_target = True
 
         print("[INFO] Gate CV init")
     
@@ -62,7 +63,7 @@ class CV:
     def detection_area(self, detection):
         return ((detection.xmax - detection.xmin) * (detection.ymax - detection.ymin))
 
-    def run(self, frame, target="Blue", detections=None, force_target=True):
+    def run(self, frame, target="Blue", detections=None):
         """
         Run the CV script.
 
@@ -110,7 +111,7 @@ class CV:
                     self.state = "approach"
 
             if target_x == None and other_x != None:
-                if force_target:
+                if self.force_target:
                     print("[INFO] Continuing search for target")
                     yaw = 1
                 else:
