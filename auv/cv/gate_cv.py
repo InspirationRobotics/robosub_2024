@@ -44,23 +44,6 @@ class CV:
         self.target = None
 
         print("[INFO] Gate CV init")
-
-    def yaw_smart(self, detection):
-        """Determine yaw either clockwise or counterclockwise if there is one detection on the screen, based on where the detection is on the screen."""
-
-        detection_midpoint = (detection.xmin + detection.xmax)/2
-        midpoint_frame = self.shape[0]/2
-
-        # If detection is to the left of the center of the frame.
-        if detection_midpoint < midpoint_frame - self.tolerance: 
-            yaw = -1
-        # If detection is to the right of the center of the frame.
-        elif detection_midpoint > midpoint_frame + self.tolerance:
-            yaw = 1
-        else:
-            yaw = 1
-
-        return yaw
     
     def strafe_smart(self, detection_x):
         """Strafe to align with the correct side of the gate based on target x_coordinate."""
