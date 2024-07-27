@@ -75,6 +75,9 @@ class CV:
             lateral = 0
 
         return lateral
+    
+    def detection_area(self, detection):
+        return ((detection.xmax - detection.xmin) * (detection.ymax - detection.ymin))
 
     def run(self, frame, target="Blue", detections=None, force_target=True):
         """
@@ -121,7 +124,7 @@ class CV:
                     other_label = detection.label
                 elif detection.confidence >= 0.5:
                     print(f"[WARN] Detections have low confidence, going for the highest confidence label.")
-                    self.state = "target_determination"
+                    self.state = "approach"
 
             if target_x == None and other_x != None:
                 if force_target:
@@ -133,12 +136,23 @@ class CV:
                     self.target = other_label
                     self.state = "strafe"
 
-        if self.state == "target_determination":
+        if self.state == "strafe":
+            yaw = 0 # Just in case not already 0
+            lateral = self.strafe_smart(target_x)
+            if lateral == 0:
+                self.area = self.detection_area(detection)
+                if self.area < 400 or self.area > 650:
+                    self.state = "approach"
+                else:
+                    self.aligned = True
+        
+        if self.state == "approach":
             confidence = 0
-            if (detection.xmax - detection.xmin) * (detection.ymax - detection.ymin) < 400:
+            self.area = self.detection_area(detection)
+            if self.area < 400:
                 print("[INFO] Moving forward.")
                 forward = 1.5
-            elif (detection.xmax - detection.xmin) * (detection.ymax - detection.ymin) > 650:
+            elif self.area > 650:
                 print("[INFO] Moving backward.")
                 forward = -1.5
             else:
@@ -149,11 +163,6 @@ class CV:
                     confidence = detection.confidence
                     self.target = detection.label
 
-        if self.state == "strafe":
-            yaw = 0 # Just in case not already 0
-            lateral = self.strafe_smart(target_x)
-            if lateral == 0:
-                self.aligned = True
 
         if self.aligned == True:
             self.end = True
