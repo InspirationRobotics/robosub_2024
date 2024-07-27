@@ -7,44 +7,42 @@ Graey will complete the Rough Seas, Enter the Pacific, Path, and Hydrothermal Ve
 import rospy
 import time
 
-from auv.mission import buoy_mission
+from auv.mission import gate_mission, buoy_mission, style_mission
 from auv.motion import robot_control
 from auv.utils import arm, disarm, deviceHelper
 
-rospy.init_node("prequal_mission", anonymous = True)
+rospy.init_node("Onyx", anonymous = True)
 
-marker_mission = buoy_mission.BuoyMission()
 rc = robot_control.RobotControl()
 
-movement_list = [-2, 2.5, 1] # lateral, forward, yaw
-
-
+target = "Red"
+gate_heading = rc.get_heading()
 
 arm.arm()
-time.sleep(5)
 
-first_time = time.time()
+time.sleep(10)
 
-# move forward for 8 secs
+# Rotate towards the heading of the gate, move 2 meters forward
+rc.set_heading(gate_heading)
+rc.forward_dvl(2)
+
+# Run the gate mission
+gate = gate_mission.GateMission(target)
+gate.run()
+gate.cleanup()
+
+print("[INFO] Gate mission terminate")
+
+# Run the buoy mission
+buoy = buoy_mission.BuoyMission(target)
+buoy.run()
+buoy.cleanup()
+
+print("[INFO] Buoy mission terminate")
 
 
-while time.time() - first_time < 22:
-    rc.movement(forward = movement_list[1])
+print("[INFO] Mission run terminate")
 
-time.sleep(2)
-
-
-# Run circumnavigate
-
-marker_mission.circumnavigate()
-
-# Move forward for 8 secs
-
-first_time = time.time()
-
-while time.time() - first_time < 10:
-    rc.movement(forward = movement_list[1])
-
-time.sleep(1)
+time.sleep(1.0)
 
 disarm.disarm()
