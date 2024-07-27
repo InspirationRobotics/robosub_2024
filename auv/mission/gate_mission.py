@@ -97,9 +97,6 @@ class GateMission:
         print("[INFO] gate mission run")
     
     def style_movement(self):
-        # Go forward for 10 secs
-        self.robot_control.forward_dvl(throttle=2, distance=5)
-
         # run style - compass heading functions will ensure
         # she is at her initial heading
         style = style_mission.StyleMission()
