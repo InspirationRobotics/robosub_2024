@@ -132,12 +132,12 @@ class CV:
         if self.state == "approach":
             confidence = 0
             self.area = self.detection_area(detection)
-            if self.area < 1000:
+            if self.area < 5000:
                 print("[INFO] Moving forward.")
-                forward = 1.5
-            elif self.area > 1500:
+                forward = 1
+            elif self.area > 7500:
                 print("[INFO] Moving backward.")
-                forward = -1.5
+                forward = -1
             else:
                 self.state == "strafe" # Strafe anyway
             for detection in detections:
