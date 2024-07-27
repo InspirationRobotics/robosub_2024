@@ -91,19 +91,20 @@ class GateMission:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
                 print(forward, lateral, yaw)
         
-        # self.robot_control.forward_dvl(throttle=2, distance =4)
+        self.robot_control.forward_dvl(distance = 2)
+        self.style_movement()
             
         print("[INFO] gate mission run")
     
-    # def style_movement(self):
-    #     # Go forward for 10 secs
-    #     self.robot_control.forward_dvl(throttle=2, distance=5)
+    def style_movement(self):
+        # Go forward for 10 secs
+        self.robot_control.forward_dvl(throttle=2, distance=5)
 
-    #     # run style - compass heading functions will ensure
-    #     # she is at her initial heading
-    #     style = style_mission.StyleMission()
-    #     style.run()
-    #     style.cleanup()
+        # run style - compass heading functions will ensure
+        # she is at her initial heading
+        style = style_mission.StyleMission()
+        style.run()
+        style.cleanup()
 
     def cleanup(self):
         """

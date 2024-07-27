@@ -15,6 +15,7 @@ arm.arm()
 time.sleep(5)
 
 heading = rc.get_heading()
+print(f"[DEBUG]: Heading is {heading}")
 rc.set_heading(heading + 180)
 
 time.sleep(2.0)
