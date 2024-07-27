@@ -89,7 +89,7 @@ class BuoyMission:
         print("[INFO] Buoy mission run")
         
         if self.positioned == True:
-            #self.circumnavigate()
+            self.circumnavigate()
             pass
     
 
