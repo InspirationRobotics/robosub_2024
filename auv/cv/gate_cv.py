@@ -110,12 +110,13 @@ class CV:
             self.state = None
         elif len(detections) >= 1:
             for detection in detections:
-                x_midpoint = (detection.xmin + detection.xmax)/2 
-                if detection.confidence > 0.6 and target in detection.label:
+                x_midpoint = (detection.xmin + detection.xmax)/2
+                print(f"[DEBUG]: Detection confidence is {detection.confidence}") 
+                if detection.confidence > 0.8 and target in detection.label:
                     target_x = x_midpoint
                     self.target = detection.label
                     self.state = "strafe"
-                elif detection.confidence > 0.6 and target not in detection.label:
+                elif detection.confidence > 0.8 and target not in detection.label:
                     other_x = x_midpoint
                     other_label = detection.label
                 else:
