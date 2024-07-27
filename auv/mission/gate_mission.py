@@ -91,7 +91,7 @@ class GateMission:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
                 print(forward, lateral, yaw)
         
-        self.robot_control.forward_dvl(throttle=2, distance =4)
+        # self.robot_control.forward_dvl(throttle=2, distance =4)
             
         print("[INFO] gate mission run")
     
