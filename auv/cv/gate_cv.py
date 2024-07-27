@@ -67,10 +67,10 @@ class CV:
         midpoint_frame = self.shape[0]/2
         # If detection is to the left of the center of the frame.
         if detection_x < midpoint_frame - self.tolerance: 
-            lateral = -1
+            lateral = -0.5
         # If detection is to the right of the center of the frame.
         elif detection_x > midpoint_frame + self.tolerance:
-            lateral = 1
+            lateral = 0.5
         else:
             lateral = 0
 
