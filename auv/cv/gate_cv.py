@@ -67,10 +67,10 @@ class CV:
         midpoint_frame = self.shape[0]/2
         # If detection is to the left of the center of the frame.
         if detection_x < midpoint_frame - self.tolerance: 
-            lateral = -0.5
+            lateral = -1
         # If detection is to the right of the center of the frame.
         elif detection_x > midpoint_frame + self.tolerance:
-            lateral = 0.5
+            lateral = 1
         else:
             lateral = 0
 
@@ -119,7 +119,7 @@ class CV:
                 elif detection.confidence > 0.8 and target not in detection.label:
                     other_x = x_midpoint
                     other_label = detection.label
-                elif detection.confidence >= 0.6:
+                elif detection.confidence >= 0.5:
                     print(f"[WARN] Detections have low confidence, going for the highest confidence label.")
                     self.state = "target_determination"
 
