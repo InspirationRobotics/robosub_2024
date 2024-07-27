@@ -141,7 +141,7 @@ class CV:
             lateral = self.strafe_smart(target_x)
             if lateral == 0:
                 self.area = self.detection_area(detection)
-                if self.area < 400 or self.area > 650:
+                if self.area < 1000 or self.area > 1500:
                     self.state = "approach"
                 else:
                     self.aligned = True
@@ -149,10 +149,10 @@ class CV:
         if self.state == "approach":
             confidence = 0
             self.area = self.detection_area(detection)
-            if self.area < 400:
+            if self.area < 1000:
                 print("[INFO] Moving forward.")
                 forward = 1.5
-            elif self.area > 650:
+            elif self.area > 1500:
                 print("[INFO] Moving backward.")
                 forward = -1.5
             else:
