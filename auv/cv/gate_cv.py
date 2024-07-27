@@ -119,7 +119,7 @@ class CV:
                 elif detection.confidence > 0.8 and target not in detection.label:
                     other_x = x_midpoint
                     other_label = detection.label
-                else:
+                elif detection.confidence >= 0.6:
                     print(f"[WARN] Detections have low confidence, going for the highest confidence label.")
                     self.state = "target_determination"
 
