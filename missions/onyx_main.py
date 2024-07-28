@@ -29,6 +29,7 @@ rc.set_heading(gate_heading)
 gate = gate_mission.GateMission(target)
 gate.run()
 gate.cleanup()
+rc.set_heading(gate_heading)
 
 print("[INFO] Gate mission terminate")
 
