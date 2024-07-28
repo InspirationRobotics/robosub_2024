@@ -186,7 +186,7 @@ class DVL:
             data["valid"] = BS[4] == "A"
         except:
             data = None
-        # print("[DEBUG] Data in read_onyx: ", data)
+        print("[DEBUG] Data in read_onyx: ", data)
         return data
 
     def process_packet_compass(self, packet):
