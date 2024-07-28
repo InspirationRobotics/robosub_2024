@@ -26,4 +26,6 @@ first_time = time.time()
 while time.time() - first_time < 3:
     rc.movement(lateral = -2)
 
+time.sleep(1.0)
+
 disarm.disarm()
