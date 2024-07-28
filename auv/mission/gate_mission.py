@@ -91,7 +91,9 @@ class GateMission:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
                 print(forward, lateral, yaw)
         
-        self.robot_control.forward_dvl(distance = 2)
+        first_time = time.time()
+        while time.time - first_time < 5:
+            self.robot_control.movement(forward = 2)
         self.style_movement()
             
         print("[INFO] gate mission run")

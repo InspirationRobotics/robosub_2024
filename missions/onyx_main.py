@@ -24,7 +24,6 @@ time.sleep(5)
 
 # Rotate towards the heading of the gate, move 2 meters forward
 rc.set_heading(gate_heading)
-rc.forward_dvl(2)
 
 # Run the gate mission
 gate = gate_mission.GateMission(target)
