@@ -44,6 +44,8 @@ class CV:
         self.target = None
         self.force_target = True
 
+        self.approach_end = False
+
         print("[INFO] Gate CV init")
     
     def strafe_smart(self, detection_x):
@@ -92,9 +94,11 @@ class CV:
         # If there are two detections, check confidences and label, then begin strafe.
         # Once aligned, end.
 
-        if len(detections) == 0:
+        if len(detections) == 0 and self.approach_end == False:
             yaw = 1
             self.state = None
+        elif len(detections) == 0 and self.approach_end == True:
+            self.end = True
         elif len(detections) >= 1:
             for detection in detections:
                 x_midpoint = (detection.xmin + detection.xmax)/2
@@ -127,6 +131,7 @@ class CV:
                 self.state = "approach"
         
         if self.state == "approach":
+            self.approach_end = True
             self.area = self.detection_area(detection)
             if self.area < 15000:
                 print("[INFO] Moving forward.")
