@@ -24,6 +24,7 @@ class DVL:
             self.dvlPort = deviceHelper.dataFromConfig("dvl")
             print(self.dvlPort)
             sub = deviceHelper.variables.get("sub")
+            print(f"[DEBUG] Sub is {sub}")
             if sub == "onyx":
                 self.ser = serial.Serial(
                     port=self.dvlPort,
