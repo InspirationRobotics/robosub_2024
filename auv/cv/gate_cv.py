@@ -132,22 +132,13 @@ class CV:
         if self.state == "approach":
             self.approach_end = True
             self.area = self.detection_area(detection)
-            print(f"[DEBUG] self.area is {self.area}")
-            if self.area < 15000:
+            if self.area < 10000:
                 print("[INFO] Moving forward.")
                 forward = 2.0
-            elif self.area < 30000:
-                print("[INFO] Moving forward slower.")
-                forward = 1.0
-            elif self.area > 35000:
-                print("[INFO] Moving backward.")
-                forward = -0.5
             else:
                 self.aligned = True
 
         if self.aligned == True:
             self.end = True
             
-        print(f"[INFO] State : {self.state}")
-        print(f"[INFO] len(detections): {len(detections)}")
         return {"lateral": lateral, "forward": forward, "yaw": yaw, "target": self.target, "end": self.end}, frame
