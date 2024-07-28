@@ -99,17 +99,41 @@ class BuoyMission:
         print("Starting circumnavigation")
         
         if self.target == "Red":
-            lateral_dist = -1
+            lateral_mag = -2
         elif self.target == "Blue":
-            lateral_dist = 1
+            lateral_mag = 2
 
         compass_heading = self.robot_control.get_heading()
-        self.robot_control.lateral_dvl(throttle=1, distance = lateral_dist)
-        self.robot_control.forward_dvl(throttle=1, distance=2)
-        self.robot_control.lateral_dvl(throttle=1, distance=(-2*lateral_dist))
-        self.robot_control.forward_dvl(throttle=1, distance = -2)
-        self.robot_control.lateral_dvl(throttle=1, distance=lateral_dist)
-        self.robot_control.set_heading(compass_heading + 180)
+        
+        first_time = time.time()
+        while time.time() - first_time < 3:
+            self.robot_control.movement(lateral=lateral_mag)
+        self.robot_control.movement(compass_heading)
+        first_time = time.time()
+        while time.time() - first_time < 5:
+            self.robot_control.movement(forward=2)
+        first_time = time.time()
+        while time.time() - first_time < 6:
+            self.robot_control.movement(lateral=-lateral_mag)
+        self.robot_control.movement(compass_heading)
+        first_time = time.time()
+        while time.time() - first_time < 5:
+            self.robot_control.movement(forward=-2)
+        first_time = time.time()
+        while time.time() - first_time < 3:
+            self.robot_control.movement(lateral=lateral_mag)
+        self.robot_control.movement(compass_heading)
+        time.sleep(1)
+
+
+
+        # DVL is unavailable for Onyx, this worked very well on Graey
+        # self.robot_control.lateral_dvl(throttle=1, distance = lateral_dist)
+        # self.robot_control.forward_dvl(throttle=1, distance=2)
+        # self.robot_control.lateral_dvl(throttle=1, distance=(-2*lateral_dist))
+        # self.robot_control.forward_dvl(throttle=1, distance = -2)
+        # self.robot_control.lateral_dvl(throttle=1, distance=lateral_dist)
+        # self.robot_control.set_heading(compass_heading + 180)
 
 
 
