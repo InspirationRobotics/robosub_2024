@@ -39,7 +39,7 @@ class CV:
 
         self.state = None
         self.aligned = False
-        self.tolerance = 20 # Pixels
+        self.tolerance = 60 # Pixels
 
         self.target = None
         self.force_target = True
@@ -51,10 +51,10 @@ class CV:
         midpoint_frame = self.shape[0]/2
         # If detection is to the left of the center of the frame.
         if detection_x < midpoint_frame - self.tolerance: 
-            lateral = -1
+            lateral = -0.5
         # If detection is to the right of the center of the frame.
         elif detection_x > midpoint_frame + self.tolerance:
-            lateral = 1
+            lateral = 0.5
         else:
             lateral = 0
 
@@ -131,10 +131,10 @@ class CV:
             self.area = self.detection_area(detection)
             if self.area < 15000:
                 print("[INFO] Moving forward.")
-                forward = 1
+                forward = 2.0
             elif self.area < 30000:
                 print("[INFO] Moving forward slower.")
-                forward = 0.5
+                forward = 1.0
             elif self.area > 35000:
                 print("[INFO] Moving backward.")
                 forward = -0.5
