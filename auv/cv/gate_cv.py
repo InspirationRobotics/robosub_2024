@@ -51,10 +51,10 @@ class CV:
         midpoint_frame = self.shape[0]/2
         # If detection is to the left of the center of the frame.
         if detection_x < midpoint_frame - self.tolerance: 
-            lateral = -0.5
+            lateral = -1.0
         # If detection is to the right of the center of the frame.
         elif detection_x > midpoint_frame + self.tolerance:
-            lateral = 0.5
+            lateral = 1.0
         else:
             lateral = 0
 
@@ -63,7 +63,7 @@ class CV:
     def detection_area(self, detection):
         return ((detection.xmax - detection.xmin) * (detection.ymax - detection.ymin))
 
-    def run(self, frame, target="Blue", detections=None):
+    def run(self, frame, target="Red", detections=None):
         """
         Run the CV script.
 
@@ -107,7 +107,6 @@ class CV:
                     other_x = x_midpoint
                     other_label = detection.label
                 elif detection.confidence >= 0.5:
-                    print(f"[WARN] Detections have low confidence, going for the highest confidence label.")
                     self.state = "approach"
 
             if target_x == None and other_x != None:
