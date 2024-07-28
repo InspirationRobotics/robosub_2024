@@ -92,7 +92,7 @@ class GateMission:
                 print(forward, lateral, yaw)
         
         first_time = time.time()
-        while time.time - first_time < 5:
+        while time.time() - first_time < 5:
             self.robot_control.movement(forward = 2)
         self.style_movement()
             

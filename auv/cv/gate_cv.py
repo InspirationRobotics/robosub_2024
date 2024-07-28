@@ -98,7 +98,7 @@ class CV:
         elif len(detections) >= 1:
             for detection in detections:
                 x_midpoint = (detection.xmin + detection.xmax)/2
-                print(f"[DEBUG]: Detection confidence is {detection.confidence}") 
+                # print(f"[DEBUG]: Detection confidence is {detection.confidence}") 
                 if detection.confidence > 0.8 and target in detection.label:
                     target_x = x_midpoint
                     self.target = detection.label
@@ -112,10 +112,10 @@ class CV:
 
             if target_x == None and other_x != None:
                 if self.force_target:
-                    print("[INFO] Continuing search for target")
+                    # print("[INFO] Continuing search for target")
                     yaw = 1
                 else:
-                    print("[INFO] Switching targets because original set target is not confirmed.")
+                    # print("[INFO] Switching targets because original set target is not confirmed.")
                     target_x = other_x
                     self.target = other_label
                     self.state = "strafe"
@@ -125,28 +125,21 @@ class CV:
             lateral = self.strafe_smart(target_x)
             if lateral == 0:
                 self.area = self.detection_area(detection)
-                if self.area < 1000 or self.area > 1500:
-                    self.state = "approach"
-                else:
-                    self.aligned = True
+                self.state = "approach"
         
         if self.state == "approach":
-            confidence = 0
             self.area = self.detection_area(detection)
-            if self.area < 5000:
+            if self.area < 15000:
                 print("[INFO] Moving forward.")
                 forward = 1
-            elif self.area > 7500:
+            elif self.area < 30000:
+                print("[INFO] Moving forward slower.")
+                forward = 0.5
+            elif self.area > 35000:
                 print("[INFO] Moving backward.")
-                forward = -1
+                forward = -0.5
             else:
-                self.state == "strafe" # Strafe anyway
-            for detection in detections:
-                if detection.confidence > confidence:
-                    target_x = (detection.xmin + detection.xmax) / 2
-                    confidence = detection.confidence
-                    self.target = detection.label
-
+                self.aligned = True
 
         if self.aligned == True:
             self.end = True
