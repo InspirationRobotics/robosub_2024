@@ -134,7 +134,7 @@ class DVL:
         while not self.ser.in_waiting:
             # take a nap :)
             time.sleep(0.01)
-            print("[DEBUG] Serial is not working!!!")
+            # print("[DEBUG] Serial is not working!!!")
 
         data = {
             "time": 0,  # seconds
