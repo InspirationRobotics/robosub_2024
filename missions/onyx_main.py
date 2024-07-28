@@ -34,9 +34,9 @@ gate.cleanup()
 print("[INFO] Gate mission terminate")
 
 # Run the buoy mission
-buoy = buoy_mission.BuoyMission(target)
-buoy.run()
-buoy.cleanup()
+# buoy = buoy_mission.BuoyMission(target)
+# buoy.run()
+# buoy.cleanup()
 
 print("[INFO] Buoy mission terminate")
 
