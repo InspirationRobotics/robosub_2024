@@ -90,8 +90,6 @@ class GateMission:
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
                 print(forward, lateral, yaw)
-        
-        self.robot_control.set_heading()
         first_time = time.time()
         while time.time() - first_time < 10:
             self.robot_control.movement(forward = 2)
