@@ -104,6 +104,10 @@ class BuoyMission:
             lateral_mag = 2
 
         compass_heading = self.robot_control.get_heading()
+
+        # Circumnavigate using dead reckoning only. This works at a
+        # significant distance from the buoy and doesn't get stuck to walls
+        # (though wall collisions may affect the course)
         
         first_time = time.time()
         while time.time() - first_time < 3:
