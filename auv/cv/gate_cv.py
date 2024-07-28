@@ -99,6 +99,7 @@ class CV:
             self.state = None
         elif len(detections) == 0 and self.approach_end == True:
             self.end = True
+            self.state = None
         elif len(detections) >= 1:
             for detection in detections:
                 x_midpoint = (detection.xmin + detection.xmax)/2
