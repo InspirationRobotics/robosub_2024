@@ -14,7 +14,7 @@
     "battery_indicator": false,
     "depth_pid_params": [
         150,
-        40,
+        20,
         1
     ],
     "depth_pid_offset": 1480
