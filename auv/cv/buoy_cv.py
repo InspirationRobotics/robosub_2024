@@ -100,11 +100,12 @@ class CV:
             # TODO: Depth function codes
 
             if detection.get("ymin") > self.y_midpoint:
-                # Go down - need to play around with depth functions
+                # Go down by 0.1 m - need to 
+                # play around with depth functions
                 # in water testing before coding this
                 pass
             elif detection.get("ymax") < self.y_midpoint:
-                # Go up
+                # Go up by 0.1 m
                 pass
             
             # Approach to a set distance from buoy
