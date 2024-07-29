@@ -36,7 +36,6 @@ class CV:
         self.start_time = None
         self.lateral_time_search = 3 # Seconds
         self.last_lateral = 0
-        self.prev_detected = False
 
     def run(self, frame, target, detections):
         lateral = 0
@@ -143,14 +142,11 @@ class CV:
         
 
         #motion code
-        if self.detected == False and self.prev_detected == False:
+        if self.detected == False:
             self.lateral_search = True
 
         if self.detected == True:
-            self.prev_detected = True
             self.lateral_search = False
-        elif self.prev_detected == True:
-            self.end = True
 
         print(f"Detection Status: {self.detected}")
         print(f"Search status: {self.lateral_search}")
