@@ -161,6 +161,7 @@ class CV:
         """
         # Back and forth lateral pattern
         if self.lateral_search:
+            forward = 0.2
             if self.start_time is None:
                 self.start_time = time.time()
                 self.last_lateral = 1  # Initial direction
@@ -196,14 +197,14 @@ class CV:
             else:
                 self.oriented = False
                 if slope > 0:
-                    yaw = -1
+                    yaw = -0.25
                 elif slope < 0:
-                    yaw = 1
+                    yaw = 0.25
                 else:
                     pass
 
             if self.oriented:
-                x_threshold = 20 # Pixels
+                x_threshold = 50 # Pixels
                 center_x = self.shape[0]/2
                 center_line_x = (start_left[0] + end_right[0])/2
 
