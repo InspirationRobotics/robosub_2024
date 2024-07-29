@@ -60,7 +60,6 @@ class PathMission:
         """
 
         # Move the sub up (to 0.6 m)
-        self.robot_control.set_depth(0.6)
 
         while not rospy.is_shutdown():
             try:
