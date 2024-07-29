@@ -15,7 +15,8 @@ class CV:
     def __init__(self, **config):
         self.aligned = False
         self.shape = (640, 480)
-        self.midpoint = self.shape[0] / 2
+        self.x_midpoint = self.shape[0] / 2
+        self.y_midpoint = self.shape[1] / 2
         self.frame_area = self.shape[0] * self.shape[1]
         self.tolerance = 25 # Pixels
 
@@ -83,13 +84,30 @@ class CV:
             yaw = 1
 
         if self.detected == True:
+            # Get x midpoint of buoy bounding box
             x_coordinate = (detection.get("xmin") + detection.get("xmax"))/2
-            if x_coordinate < self.midpoint - self.tolerance:
+
+            # Yaw to center-align AUV and buoy
+            if x_coordinate < self.x_midpoint - self.tolerance:
                 yaw = -0.25
-            elif x_coordinate > self.midpoint + self.tolerance:
+            elif x_coordinate > self.x_midpoint + self.tolerance:
                 yaw = 0.25
             else:
                 yaw = 0
+
+            # Adjust depth to be equal to buoy - ensures y minimum in bottom half
+            # of image and y maximum in top half of image
+            # TODO: Depth function codes
+
+            if detection.get("ymin") > self.y_midpoint:
+                # Go down - need to play around with depth functions
+                # in water testing before coding this
+                pass
+            elif detection.get("ymax") < self.y_midpoint:
+                # Go up
+                pass
+            
+            # Approach to a set distance from buoy
 
             if buoy_area < 15000: # number of pixels in buoy's bounding box
                 forward = 1.0

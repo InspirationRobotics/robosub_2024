@@ -60,15 +60,11 @@ class CV:
         # join masks
         mask = mask0 + mask1
 
-        # You must use a graeyscale image to use cv2.threshold
-        # This will not work!!! The threshold should output
-        # an image where the detections are in white and the
-        # rest in black. See this for details:
-        # https://docs.opencv.org/4.x/da/d97/tutorial_threshold_inRange.html
-
         ret, thresh = cv2.threshold(mask, 127, 255, 0)
+        
         # Erosions and dilations
-        # erosions are applied to reduce the size of foreground objects
+        # erosions are applied to reduce the size of foreground objects,
+        # dilations increase their size
 
         # Make a 3x3 array of ones
         kernel = np.ones((3, 3), np.uint8)
