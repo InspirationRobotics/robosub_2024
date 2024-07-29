@@ -31,15 +31,10 @@ gate.run()
 gate.cleanup()
 rc.set_heading(gate_heading)
 
-print("[INFO] Gate mission terminate")
-
 # Run the buoy mission
 buoy = buoy_mission.BuoyMission(target)
 buoy.run()
 buoy.cleanup()
-
-print("[INFO] Buoy mission terminate")
-
 
 print("[INFO] Mission run terminate")
 

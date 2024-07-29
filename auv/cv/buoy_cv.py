@@ -38,6 +38,8 @@ class CV:
         # Test variables.
         self.detection_area = None
 
+        print("[INFO] Buoy CV init")
+
     def detect_buoy(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         # print("Timestamp for hsv variable: ", time.time() - self.prev_time)
@@ -55,10 +57,11 @@ class CV:
                 return {"status": True, "xmin": x, "xmax": x + w, "ymin": y, "ymax": y + h}, frame
         # print("Timestamp for return: ", time.time() - self.prev_time)
         return {"status": False, "xmin": None, "xmax": None, "ymin": None, "ymax": None}, frame
-        
     
     def movement_calculation(self, detection):
-        """TODO: Split into search and approach portions"""
+        """Calculates the movement that the sub should use based on the detection -- detection is a dictionary containing the 
+        bounding box coordinates (everything that is returned by detect_buoy)"""
+
         forward = 0
         lateral = 0
         yaw = 0
@@ -97,7 +100,6 @@ class CV:
                 if yaw == 0:
                     self.end = True
             
-            print(f"[INFO] Frame area : {self.frame_area}")
             print(f"[INFO] Buoy area : {buoy_area}")
 
         return forward, lateral, yaw

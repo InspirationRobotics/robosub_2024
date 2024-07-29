@@ -86,9 +86,10 @@ class BuoyMission:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
                 print(forward, lateral, yaw) 
             
-        print("[INFO] Buoy mission run")
+        print("[INFO] Buoy mission finished running")
         
         if self.positioned == True:
+            print("[INFO] Beginning Buoy circumnavigation")
             self.circumnavigate()
             pass
     
@@ -128,8 +129,6 @@ class BuoyMission:
             self.robot_control.movement(lateral=lateral_mag)
         self.robot_control.movement(compass_heading)
         time.sleep(1)
-
-
 
         # DVL is unavailable for Onyx, this worked very well on Graey
         # self.robot_control.lateral_dvl(throttle=1, distance = lateral_dist)

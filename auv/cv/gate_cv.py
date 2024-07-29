@@ -134,7 +134,6 @@ class CV:
             self.approach_end = True
             self.area = self.detection_area(detection)
             if self.area < 10000:
-                print("[INFO] Moving forward.")
                 forward = 2.0
             else:
                 self.aligned = True
