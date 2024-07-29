@@ -14,7 +14,7 @@ print("[INFO] Setting depth to 0.4 meters")
 
 time.sleep(20.0)
 
-rc.set_relative_depth(0.2)
+rc.set_relative_depth(0.1)
 print("[INFO] Changing depth by +0.2 meters")
 
 time.sleep(20.0)
