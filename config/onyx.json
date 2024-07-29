@@ -13,9 +13,9 @@
     "teensy_port": "platform-3610000.xhci-usb-0:2.2.4:1.0",
     "battery_indicator": false,
     "depth_pid_params": [
-        250,
+        150,
         40,
-        10
+        1
     ],
     "depth_pid_offset": 1480
 }
