@@ -144,7 +144,7 @@ class CV:
             self.lateral_search = True
 
         if self.detected == True:
-            self.lateral_search == False
+            self.lateral_search = False
 
 
         """
