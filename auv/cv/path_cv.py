@@ -17,7 +17,7 @@ class CV:
     """
     Path CV class. DO NOT change the name of the class, as this will mess up all of the backend files to run the CV scripts.
     """
-    camera = "/auv/camera//videoUSBRaw0"
+    camera = "/auv/camera/videoUSBRaw0"
 
     def __init__(self, **config):
         self.aligned = False
