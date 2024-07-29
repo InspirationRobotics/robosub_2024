@@ -68,7 +68,7 @@ class CV:
         dilated = cv2.dilate(eroded, kernel, iterations=3) 
 
         dst = cv2.equalizeHist(dilated)
-        cv2.imshow("equalized", dst)
+        # cv2.imshow("equalized", dst)
 
         cnts, hierarchy = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -83,7 +83,7 @@ class CV:
             box = cv2.boxPoints(rect)
             box = np.int0(box)
 
-            cv2.drawContours(orig_frame, [box], 0, (0, 0, 255), 2)
+            # cv2.drawContours(orig_frame, [box], 0, (0, 0, 255), 2)
             
             # initializing the points of the rectangle
             box0 = (box[0])
@@ -110,13 +110,13 @@ class CV:
 
             #drawing the largest line
             if v_distance > h_distance:
-                cv2.line(frame, v_start_left, v_end_right, (0, 255, 0), 2)
+                # cv2.line(frame, v_start_left, v_end_right, (0, 255, 0), 2)
                 x1, y1 = v_start_left
                 x2, y2 = v_end_right
                 start_left = v_start_left
                 end_right = v_end_right
             else:
-                cv2.line(frame, h_start_left, h_end_right, (0, 255, 0), 2)
+                # cv2.line(frame, h_start_left, h_end_right, (0, 255, 0), 2)
                 x1, y1 = h_start_left
                 x2, y2 = h_end_right
                 start_left = h_start_left
