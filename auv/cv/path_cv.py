@@ -45,7 +45,6 @@ class CV:
         scale = 1
 
         # Minimize false detects by eliminating contours less than a percentage of the image
-        area_threshold = 0.01
         croppedPixels = 150
         width = frame.shape[0]
         height = frame.shape[1] - croppedPixels
@@ -121,6 +120,8 @@ class CV:
                 x2, y2 = h_end_right
                 start_left = h_start_left
                 end_right = h_end_right
+            
+            line_distance = math.sqrt((abs(y2 - y1))^2 + (abs(x2 - x1))^2)
 
             #calculating the slope
             if x2 - x1 != 0:
@@ -130,8 +131,11 @@ class CV:
                 slope = 10000
                 print("Vertical line: infinite slope")
             
+        elif line_distance > 100:
+            self.detected = True
         else:
-            self.detected = False
+            self.detected == False
+        
 
         #motion code
         if self.detected == False:
