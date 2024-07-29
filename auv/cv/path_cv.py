@@ -18,7 +18,7 @@ class CV:
     Path CV class. DO NOT change the name of the class, as this will mess up all of the backend files to run the CV scripts.
     """
 
-    def __init__(self, config):
+    def __init__(self, **config):
         self.aligned = False
         self.shape = (640, 480)
         self.detected = False
@@ -36,7 +36,7 @@ class CV:
         self.lateral_time_search = 3 # Seconds
         self.last_lateral = 0
 
-    def run(self, orig_frame):
+    def run(self, frame, target, detections):
         lateral = 0
         forward = 0
         yaw = 0
@@ -47,12 +47,12 @@ class CV:
         # Minimize false detects by eliminating contours less than a percentage of the image
         area_threshold = 0.01
         croppedPixels = 150
-        width = orig_frame.shape[0]
-        height = orig_frame.shape[1] - croppedPixels
+        width = frame.shape[0]
+        height = frame.shape[1] - croppedPixels
         dim = (int(scale * height), int(scale * width))
 
-        orig_frame = cv2.resize(orig_frame, dim, interpolation=cv2.INTER_AREA)
-        frame = cv2.GaussianBlur(orig_frame, (5, 5), 0)
+        frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
+        frame = cv2.GaussianBlur(frame, (5, 5), 0)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         mask0 = cv2.inRange(hsv, (0, 100, 50), (20, 255, 255))
@@ -110,13 +110,13 @@ class CV:
 
             #drawing the largest line
             if v_distance > h_distance:
-                cv2.line(orig_frame, v_start_left, v_end_right, (0, 255, 0), 2)
+                cv2.line(frame, v_start_left, v_end_right, (0, 255, 0), 2)
                 x1, y1 = v_start_left
                 x2, y2 = v_end_right
                 start_left = v_start_left
                 end_right = v_end_right
             else:
-                cv2.line(orig_frame, h_start_left, h_end_right, (0, 255, 0), 2)
+                cv2.line(frame, h_start_left, h_end_right, (0, 255, 0), 2)
                 x1, y1 = h_start_left
                 x2, y2 = h_end_right
                 start_left = h_start_left
@@ -224,4 +224,4 @@ class CV:
                 self.end = True
             
             # Continuously return motion commands, the state of the mission, and the visualized frame.
-        return {"lateral": lateral, "forward": forward, "yaw" : yaw, "end": end}, orig_frame
+        return {"lateral": lateral, "forward": forward, "yaw" : yaw, "end": end}, frame
