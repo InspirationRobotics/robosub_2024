@@ -122,6 +122,10 @@ class CV:
                 end_right = h_end_right
             
             line_distance = math.sqrt((abs(y2 - y1))^2 + (abs(x2 - x1))^2)
+            if line_distance > 100:
+                self.detected = True
+            elif line_distance < 100:
+                self.detected = False
 
             #calculating the slope
             if x2 - x1 != 0:
@@ -131,10 +135,8 @@ class CV:
                 slope = 10000
                 print("Vertical line: infinite slope")
             
-        elif line_distance > 100:
-            self.detected = True
         else:
-            self.detected == False
+            self.detected = False
         
 
         #motion code
