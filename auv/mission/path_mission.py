@@ -98,6 +98,9 @@ class PathMission:
                 self.robot_control.movement()
                 break
 
+        compass_heading = self.robot_control.get_heading()
+        print(f"[DEBUG] The heading is {compass_heading}")
+        self.robot_control.forward_dvl(distance=2)
         print("Path mission finished")
 
     def cleanup(self):
