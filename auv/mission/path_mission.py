@@ -34,6 +34,8 @@ class PathMission:
         self.robot_control = robot_control.RobotControl()
         self.cv_handler = cv_handler.CVHandler(**self.config)
 
+        self.path_compass_heading = None
+
         # Initialize the CV handler
         for file_name in self.cv_files:
             self.cv_handler.start_cv(file_name, self.callback)
@@ -99,8 +101,8 @@ class PathMission:
                 self.robot_control.movement()
                 break
 
-        compass_heading = self.robot_control.get_heading()
-        print(f"[DEBUG] The heading is {compass_heading}")
+        self.path_compass_heading = self.robot_control.get_heading()
+        print(f"[DEBUG] The heading is {self.path_compass_heading}")
         self.robot_control.forward_dvl(distance=2)
         print("Path mission finished")
 
