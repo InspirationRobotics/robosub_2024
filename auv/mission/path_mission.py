@@ -10,7 +10,7 @@ from std_msgs.msg import String
 
 from ..device import cv_handler # For running mission-specific CV scripts
 from ..motion import robot_control # For controlling the motion of the sub
-from ..utils import disarm
+from ..utils import arm, disarm
 
 
 class PathMission:
@@ -135,8 +135,15 @@ if __name__ == "__main__":
     # Create a mission object with arguments
     mission = PathMission(**config)
 
+    # Arm the sub
+    arm.arm()
+
+
     # Run the mission
     mission.run()
 
     # Cleanup
     mission.cleanup()
+
+    # Disarm the sub
+    disarm.disarm()
