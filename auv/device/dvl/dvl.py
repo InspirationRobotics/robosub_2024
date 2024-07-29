@@ -46,7 +46,6 @@ class DVL:
 
             elif sub == "graey":
                 # autostart = False
-                print("[WARNING] DVL disabled, not implemented")
                 self.read = self.read_graey
                 self.dvl_rot = math.radians(0)
             else:
@@ -188,7 +187,7 @@ class DVL:
         except:
             print("I failed")
             data = None
-        print("[DEBUG] Data in read_onyx: ", data)
+        # print("[DEBUG] Data in read_onyx: ", data)
         return data
 
     def process_packet_compass(self, packet):
