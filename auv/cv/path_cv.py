@@ -133,7 +133,7 @@ class CV:
                 end_right = h_end_right
             
             line_distance = math.sqrt((abs(y2 - y1))^2 + (abs(x2 - x1))^2)
-            print(f"Line distance: {line_distance}")
+            # print(f"Line distance: {line_distance}")
             if line_distance > 10:
                 self.detected = True
             elif line_distance < 10:
@@ -158,8 +158,8 @@ class CV:
         if self.detected == True:
             self.lateral_search = False
 
-        print(f"Detection Status: {self.detected}")
-        print(f"Search status: {self.lateral_search}")
+        # print(f"Detection Status: {self.detected}")
+        # print(f"Search status: {self.lateral_search}")
         """
         First find the object.
 
@@ -195,20 +195,6 @@ class CV:
                 lateral = self.last_lateral
                 self.lateral_time_search += 1
             
-                 
-        # else: 
-        #     # switch direction after the interval 
-        #     if self.last_lateral == 1:
-        #             lateral = -1
-        #     elif self.last_lateral == -1:
-        #             lateral = 1
-        #         # Reset the start time for the next interval
-        #     self.start_time = time.time()
-        #         # Increment the interval time
-        #     self.lateral_time_search += 1
-        #     # Update last lateral
-        #     self.last_lateral = lateral
-        
         if self.detected:
             threshold_slope = 10
             if abs(slope) > threshold_slope:
