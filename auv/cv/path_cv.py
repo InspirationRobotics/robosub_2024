@@ -46,11 +46,13 @@ class CV:
         scale = 1
 
         # Minimize false detects by eliminating contours less than a percentage of the image
-        croppedPixels = 150
         width = frame.shape[0]
-        height = frame.shape[1] - croppedPixels
+        height = frame.shape[1]
         dim = (int(scale * height), int(scale * width))
 
+        # cv2.resize takes the image as (height, width) rather than
+        # (width, height). See https://www.geeksforgeeks.org/image-resizing-using-opencv-python/
+        # and use an ad blocker please
         frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
         frame = cv2.GaussianBlur(frame, (5, 5), 0)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -60,9 +62,17 @@ class CV:
         # join masks
         mask = mask0 + mask1
 
+        # You must use a graeyscale image to use cv2.threshold
+        # This will not work!!! The threshold should output
+        # an image where the detections are in white and the
+        # rest in black. See this for details:
+        # https://docs.opencv.org/4.x/da/d97/tutorial_threshold_inRange.html
+
         ret, thresh = cv2.threshold(mask, 127, 255, 0)
         # Erosions and dilations
         # erosions are applied to reduce the size of foreground objects
+
+        # Make a 3x3 array of ones
         kernel = np.ones((3, 3), np.uint8)
         eroded = cv2.erode(thresh, kernel, iterations=0)	
         dilated = cv2.dilate(eroded, kernel, iterations=3) 
