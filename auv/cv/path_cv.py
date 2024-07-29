@@ -205,9 +205,9 @@ class CV:
             else:
                 self.oriented = False
                 if slope > 0:
-                    yaw = -0.25
+                    yaw = -0.75
                 elif slope < 0:
-                    yaw = 0.25
+                    yaw = 0.75
                 else:
                     pass
 
