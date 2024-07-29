@@ -120,7 +120,7 @@ class CV:
 
             if depth_param and (time.time() - self.depth_time > 10):
                 self.depth_time = time.time()
-                print(f"[DEBUG] ymin is {detection.get("ymin")} and ymax is {detection.get("ymax")}")
+                print(f"[DEBUG] ymin is {detection.get('ymin')} and ymax is {detection.get('ymax')}")
                 vertical = depth_param
 
             print(f"[INFO] Buoy area : {buoy_area}")
