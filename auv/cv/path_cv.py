@@ -213,10 +213,10 @@ class CV:
                     lateral = 0
                 elif center_line_x - center_x > x_threshold:
                     self.aligned = False
-                    lateral = 1 # Move right
+                    lateral = 0.5 # Move right
                 elif center_line_x - center_x < - x_threshold:
                     self.aligned = False
-                    lateral = -1 # Move left
+                    lateral = -0.5 # Move left
 
             if self.aligned and self.oriented:
                 lateral = 0
