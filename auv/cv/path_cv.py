@@ -30,8 +30,6 @@ class CV:
         # Test variables.
         self.oriented = False
         self.aligned = False
-
-        self.following_path = False
         
         self.lateral_search = False
         self.start_time = None
@@ -136,14 +134,12 @@ class CV:
             self.detected = False
 
         #motion code
-        if self.detected == False and self.following_path == False:
+        if self.detected == False:
             self.lateral_search = True
 
         if self.detected == True:
             self.lateral_search == False
 
-        if self.detected == False and self.following_path == True:
-            self.end = True
 
         """
         First find the object.
@@ -225,7 +221,7 @@ class CV:
                 lateral = 0
                 yaw = 0
                 forward = 1
-                self.following_path = True
+                self.end = True
             
             # Continuously return motion commands, the state of the mission, and the visualized frame.
         return {"lateral": lateral, "forward": forward, "yaw" : yaw, "end": end}, orig_frame
