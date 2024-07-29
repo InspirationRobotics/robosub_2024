@@ -52,7 +52,7 @@ class PathMission:
         self.next_data[file_name] = data
         self.received = True
 
-        print(f"Received data from {file_name}")
+        # print(f"Received data from {file_name}")
 
     def run(self):
         """
@@ -62,6 +62,7 @@ class PathMission:
         # Move the sub up (to 0.6 m)
 
         while not rospy.is_shutdown():
+            time.sleep(0.05)
             try:
                 if not self.received:
                     continue
