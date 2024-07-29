@@ -90,12 +90,8 @@ class CV:
             else:
                 yaw = 0
 
-            if buoy_area < 10000:
+            if buoy_area < 15000: # number of pixels in buoy's bounding box
                 forward = 1.0
-            elif buoy_area < 15000: # number of pixels in buoy's bounding box
-                forward = 0.5
-            elif buoy_area > 20000:
-                forward = -0.7
             else:
                 forward = 0
                 if yaw == 0:
