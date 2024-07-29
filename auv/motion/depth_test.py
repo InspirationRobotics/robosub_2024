@@ -14,11 +14,11 @@ time.sleep(3.0)
 rc.set_depth(0.4)
 print("[INFO] Setting depth to 0.4 meters")
 
-time.sleep(5.0)
+time.sleep(7.0)
 
 rc.set_relative_depth(0.2)
 print("[INFO] Changing depth by +0.2 meters")
 
-time.sleep(3.0)
+time.sleep(7.0)
 
 disarm.disarm()
