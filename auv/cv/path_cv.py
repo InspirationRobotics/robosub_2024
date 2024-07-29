@@ -148,6 +148,8 @@ class CV:
         if self.detected == True:
             self.prev_detected = True
             self.lateral_search = False
+        elif self.prev_detected == True:
+            self.end = True
 
         print(f"Detection Status: {self.detected}")
         print(f"Search status: {self.lateral_search}")
