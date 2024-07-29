@@ -93,17 +93,17 @@ class CV:
 
             # Adjust depth to be equal to buoy - ensures y minimum in bottom half
             # of image and y maximum in top half of image
-            # TODO: Depth function codes
+            # See here: https://pyimagesearch.com/2021/01/20/opencv-getting-and-setting-pixels/
 
             # ymax is bottom right corner, ymin is top left corner
             if detection.get("ymin") > self.y_midpoint + self.tolerance:
-                # Go up by 0.1 m - need to 
+                # Go down by 0.05 m - need to 
                 # play around with depth functions
                 # in water testing before coding this
-                depth_param = 0.1
+                depth_param = 0.05
             elif detection.get("ymax") < self.y_midpoint - self.tolerance:
-                # Go down by 0.1 m
-                depth_param = -0.1
+                # Go up by 0.05 m
+                depth_param = -0.05
             else:
                 depth_param = 0
             
