@@ -124,9 +124,9 @@ class CV:
             
             line_distance = math.sqrt((abs(y2 - y1))^2 + (abs(x2 - x1))^2)
             print(f"Line distance: {line_distance}")
-            if line_distance > 50:
+            if line_distance > 10:
                 self.detected = True
-            elif line_distance < 50:
+            elif line_distance < 10:
                 self.detected = False
 
             #calculating the slope
@@ -207,9 +207,9 @@ class CV:
             else:
                 self.oriented = False
                 if slope > 0:
-                    yaw = -0.25
+                    yaw = -0.75
                 elif slope < 0:
-                    yaw = 0.25
+                    yaw = 0.75
                 else:
                     pass
 
