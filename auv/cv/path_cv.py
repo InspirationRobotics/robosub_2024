@@ -122,9 +122,10 @@ class CV:
                 end_right = h_end_right
             
             line_distance = math.sqrt((abs(y2 - y1))^2 + (abs(x2 - x1))^2)
-            if line_distance > 100:
+            print(f"Line distance: {line_distance}")
+            if line_distance > 50:
                 self.detected = True
-            elif line_distance < 100:
+            elif line_distance < 50:
                 self.detected = False
 
             #calculating the slope
@@ -146,7 +147,8 @@ class CV:
         if self.detected == True:
             self.lateral_search = False
 
-
+        print(f"Detection Status: {self.detected}")
+        print(f"Search status: {self.lateral_search}")
         """
         First find the object.
 
@@ -231,4 +233,5 @@ class CV:
                 self.end = True
             
             # Continuously return motion commands, the state of the mission, and the visualized frame.
+
         return {"lateral": lateral, "forward": forward, "yaw" : yaw, "end": end}, frame
