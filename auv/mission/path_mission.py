@@ -83,8 +83,6 @@ class PathMission:
                     self.robot_control.movement()
                     break
 
-                print("starting movement")
-
                 # Get the lateral and forward values from the CV handler output (if they exist)
                 yaw = self.data["path_cv"].get("yaw", 0)
                 forward = self.data["path_cv"].get("forward", 0)

@@ -225,38 +225,3 @@ class CV:
             
             # Continuously return motion commands, the state of the mission, and the visualized frame.
         return {"lateral": lateral, "forward": forward, "yaw" : yaw, "end": end}, orig_frame
-
-if __name__ == "__main__":
-    video_root_path = "/home/kc/Desktop/Team Inspiration/RoboSub 2024/Training Data/"
-    mission_name = "Follow the Path/"
-    video_name = "Follow the Path Video 2.mp4"
-    video_path = os.path.join(video_root_path, mission_name, video_name)
-    print(f"Video path: {video_path}")
-
-    cv = CV("Blue")
-
-    if not os.path.exists(video_path):
-        print(f"[ERROR] Video file not found {video_path}")
-    else:
-        cap = cv2.VideoCapture(video_path)
-        if not cap.isOpened():
-            print(f"[ERROR] Unable to open video file: {video_path}")
-        else:
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    print("[INFO] End of file.")
-                    break
-
-                motion_values, viz_frame = cv.run(frame)
-
-                if viz_frame is not None:
-                    cv2.imshow("frame", viz_frame)
-                else:
-                    print("[ERROR] Unable to display frame.")
-                
-                print(f"Motion values: {motion_values}")
-                time.sleep(0.05)
-
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    break
