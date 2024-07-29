@@ -32,7 +32,7 @@ class CV:
         self.search_yaw = 1
         self.yaw_mag = 0.3
         self.pass_count = 0
-        self.prev_time = time.time()
+        self.depth_time = time.time()
 
         # Test variables.
         self.detection_area = None
@@ -41,20 +41,14 @@ class CV:
 
     def detect_buoy(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        # print("Timestamp for hsv variable: ", time.time() - self.prev_time)
         mask = cv2.inRange(hsv, np.array([0, 120, 70]), np.array([10, 255, 255])) + \
                cv2.inRange(hsv, np.array([170, 120, 70]), np.array([180, 255, 255]))
-        # print("Timestamp for mask variable: ", time.time() - self.prev_time)
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        # print("Timestamp for contours variable: ", time.time() - self.prev_time)
         if contours:
             largest_contour = max(contours, key=cv2.contourArea)
-            # print("Timestamp for largest_contour variable: ", time.time() - self.prev_time)
             if cv2.contourArea(largest_contour) > 0:
                 x, y, w, h = cv2.boundingRect(largest_contour)
-                # print("Timestamp for return: ", time.time() - self.prev_time)
                 return {"status": True, "xmin": x, "xmax": x + w, "ymin": y, "ymax": y + h}, frame
-        # print("Timestamp for return: ", time.time() - self.prev_time)
         return {"status": False, "xmin": None, "xmax": None, "ymin": None, "ymax": None}, frame
     
     def movement_calculation(self, detection):
@@ -100,13 +94,15 @@ class CV:
             # TODO: Depth function codes
 
             if detection.get("ymin") > self.y_midpoint:
-                # Go down by 0.1 m - need to 
+                # Go up by 0.1 m - need to 
                 # play around with depth functions
                 # in water testing before coding this
-                pass
+                depth_param = -0.1
             elif detection.get("ymax") < self.y_midpoint:
-                # Go up by 0.1 m
-                pass
+                # Go down by 0.1 m
+                depth_param = 0.1
+            else:
+                depth_param = 0
             
             # Approach to a set distance from buoy
 
@@ -117,16 +113,23 @@ class CV:
                 if yaw == 0:
                     self.end = True
             
+            # Adjust vertical only if there is a depth parameter
+            # and it has been at least 10 seconds since the last
+            # adjustment
+
+            if depth_param and (time.time() - self.depth_time > 10):
+                    self.depth_time = time.time()
+                    vertical = depth_param
+
             print(f"[INFO] Buoy area : {buoy_area}")
 
-        return forward, lateral, yaw
+        return forward, lateral, yaw, vertical
 
 
     def run(self, raw_frame, target, detections):
         """Run the CV logic."""
         visualized_frame = None
 
-        self.prev_time = time.time()
         data_from_detection, frame = self.detect_buoy(raw_frame)
 
          
@@ -135,8 +138,8 @@ class CV:
         else:
             visualized_frame = None
 
-        forward, lateral, yaw = self.movement_calculation(data_from_detection)
+        forward, lateral, yaw, vertical = self.movement_calculation(data_from_detection)
 
         end = self.end
 
-        return {"lateral" : lateral, "forward" : forward, "yaw" : yaw, "end" : end}, visualized_frame
+        return {"lateral" : lateral, "forward" : forward, "yaw" : yaw, "vertical": vertical, "end" : end}, visualized_frame

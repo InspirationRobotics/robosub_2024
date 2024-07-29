@@ -76,6 +76,7 @@ class BuoyMission:
             lateral = self.data["buoy_cv"].get("lateral", None)
             forward = self.data["buoy_cv"].get("forward", None)
             yaw = self.data["buoy_cv"].get("yaw", None)
+            vertical = self.data["buoy_cv"].get("vertical", None)
             end = self.data["buoy_cv"].get("end", None)
 
             if end:
@@ -83,7 +84,7 @@ class BuoyMission:
                 self.positioned = True
                 break
             else:
-                self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
+                self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw, vertical = vertical)
                 print(forward, lateral, yaw) 
             
         print("[INFO] Buoy mission finished running")
