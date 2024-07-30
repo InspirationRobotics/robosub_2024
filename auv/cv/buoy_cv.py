@@ -96,14 +96,14 @@ class CV:
             # TODO: Depth function codes
 
             # ymax is bottom right corner, ymin is top left corner
-            if detection.get("ymax") > self.y_midpoint + self.tolerance:
+            if detection.get("ymin") > self.y_midpoint + self.tolerance:
                 # Go up by 0.1 m - need to 
                 # play around with depth functions
                 # in water testing before coding this
-                depth_param = -0.1
-            elif detection.get("ymin") < self.y_midpoint - self.tolerance:
-                # Go down by 0.1 m
                 depth_param = 0.1
+            elif detection.get("ymax") < self.y_midpoint - self.tolerance:
+                # Go down by 0.1 m
+                depth_param = -0.1
             else:
                 depth_param = 0
             
