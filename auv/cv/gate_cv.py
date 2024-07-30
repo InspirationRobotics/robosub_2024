@@ -52,7 +52,7 @@ class CV:
  
     def strafe_smart(self, detection_x):
         """Strafe to align with the correct side of the gate based on target x_coordinate."""
-        midpoint_frame = self.shape[0]/2 - 20
+        midpoint_frame = self.shape[0]/2 - 50
         # NOTE: Biasing the strafe slightly to account for right drift during forward movement
 
         # If detection is to the left of the center of the frame.
