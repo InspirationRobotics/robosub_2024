@@ -10,7 +10,7 @@ from std_msgs.msg import String
 
 from ..device import cv_handler # For running mission-specific CV scripts
 from ..motion import robot_control # For controlling the motion of the sub
-from ..utils import disarm
+from ..utils import arm, disarm
 
 
 class PathMission:
@@ -34,6 +34,8 @@ class PathMission:
         self.robot_control = robot_control.RobotControl()
         self.cv_handler = cv_handler.CVHandler(**self.config)
 
+        self.path_compass_heading = None
+
         # Initialize the CV handler
         for file_name in self.cv_files:
             self.cv_handler.start_cv(file_name, self.callback)
@@ -52,7 +54,7 @@ class PathMission:
         self.next_data[file_name] = data
         self.received = True
 
-        print(f"Received data from {file_name}")
+        # print(f"Received data from {file_name}")
 
     def run(self):
         """
@@ -60,9 +62,9 @@ class PathMission:
         """
 
         # Move the sub up (to 0.6 m)
-        self.robot_control.set_depth(0.6)
 
         while not rospy.is_shutdown():
+            time.sleep(0.05)
             try:
                 if not self.received:
                     continue
@@ -84,8 +86,6 @@ class PathMission:
                     self.robot_control.movement()
                     break
 
-                print("starting movement")
-
                 # Get the lateral and forward values from the CV handler output (if they exist)
                 yaw = self.data["path_cv"].get("yaw", 0)
                 forward = self.data["path_cv"].get("forward", 0)
@@ -101,6 +101,9 @@ class PathMission:
                 self.robot_control.movement()
                 break
 
+        self.path_compass_heading = self.robot_control.get_heading()
+        print(f"[DEBUG] The heading is {self.path_compass_heading}")
+        self.robot_control.forward_dvl(distance=2)
         print("Path mission finished")
 
     def cleanup(self):
@@ -138,8 +141,15 @@ if __name__ == "__main__":
     # Create a mission object with arguments
     mission = PathMission(**config)
 
+    # Arm the sub
+    arm.arm()
+
+
     # Run the mission
     mission.run()
 
     # Cleanup
     mission.cleanup()
+
+    # Disarm the sub
+    disarm.disarm()

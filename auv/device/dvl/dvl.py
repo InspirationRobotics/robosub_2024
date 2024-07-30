@@ -24,6 +24,7 @@ class DVL:
             self.dvlPort = deviceHelper.dataFromConfig("dvl")
             print(self.dvlPort)
             sub = deviceHelper.variables.get("sub")
+            print(f"[DEBUG] Sub is {sub}")
             if sub == "onyx":
                 self.ser = serial.Serial(
                     port=self.dvlPort,
@@ -45,7 +46,6 @@ class DVL:
 
             elif sub == "graey":
                 # autostart = False
-                print("[WARNING] DVL disabled, not implemented")
                 self.read = self.read_graey
                 self.dvl_rot = math.radians(0)
             else:
@@ -133,6 +133,7 @@ class DVL:
         while not self.ser.in_waiting:
             # take a nap :)
             time.sleep(0.01)
+            # print("[DEBUG] Serial is not working!!!")
 
         data = {
             "time": 0,  # seconds
@@ -184,6 +185,7 @@ class DVL:
             data["vz"] = int(BS[3]) / 1000
             data["valid"] = BS[4] == "A"
         except:
+            print("I failed")
             data = None
         # print("[DEBUG] Data in read_onyx: ", data)
         return data
@@ -310,6 +312,7 @@ class DVL:
 
     def update(self):
         """Update DVL data (runs in a thread)"""
+        print("[DEBUG] Called update()")
         while self.__running:
             vel_packet = self.read()
             if vel_packet is None:
@@ -322,6 +325,7 @@ class DVL:
 
     def start(self):
         # ensure not running
+        print("[DEBUG] Started successfully")
         if self.__running:
             print("[WARN] DVL already running")
             return
@@ -369,9 +373,9 @@ class DVL:
 if __name__ == '__main__':
     # Make a new dvl instance
     dvl1 = DVL()
-    while dvl1.current_time == None:
-        time.sleep(0.01)
-    prev_time = dvl1.current_time
+    # while dvl1.current_time == None:
+    #     time.sleep(0.01)
+    # prev_time = dvl1.current_time
     while True:
         time.sleep(1.0)
         # print("[DEBUG: Ran a check on DVL timing]")

@@ -76,6 +76,7 @@ class BuoyMission:
             lateral = self.data["buoy_cv"].get("lateral", None)
             forward = self.data["buoy_cv"].get("forward", None)
             yaw = self.data["buoy_cv"].get("yaw", None)
+            vertical = self.data["buoy_cv"].get("vertical", None)
             end = self.data["buoy_cv"].get("end", None)
 
             if end:
@@ -83,12 +84,13 @@ class BuoyMission:
                 self.positioned = True
                 break
             else:
-                self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
+                self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw, vertical = vertical)
                 print(forward, lateral, yaw) 
             
-        print("[INFO] Buoy mission run")
+        print("[INFO] Buoy mission finished running")
         
         if self.positioned == True:
+            print("[INFO] Beginning Buoy circumnavigation")
             self.circumnavigate()
             pass
     
@@ -99,17 +101,43 @@ class BuoyMission:
         print("Starting circumnavigation")
         
         if self.target == "Red":
-            lateral_dist = -1
+            lateral_mag = -2
         elif self.target == "Blue":
-            lateral_dist = 1
+            lateral_mag = 2
 
         compass_heading = self.robot_control.get_heading()
-        self.robot_control.lateral_dvl(throttle=1, distance = lateral_dist)
-        self.robot_control.forward_dvl(throttle=1, distance=2)
-        self.robot_control.lateral_dvl(throttle=1, distance=(-2*lateral_dist))
-        self.robot_control.forward_dvl(throttle=1, distance = -2)
-        self.robot_control.lateral_dvl(throttle=1, distance=lateral_dist)
-        self.robot_control.set_heading(compass_heading + 180)
+
+        # Circumnavigate using dead reckoning only. This works at a
+        # significant distance from the buoy and doesn't get stuck to walls
+        # (though wall collisions may affect the course)
+        
+        first_time = time.time()
+        while time.time() - first_time < 3:
+            self.robot_control.movement(lateral=lateral_mag)
+        self.robot_control.movement(compass_heading)
+        first_time = time.time()
+        while time.time() - first_time < 8:
+            self.robot_control.movement(forward=2.5)
+        first_time = time.time()
+        while time.time() - first_time < 6:
+            self.robot_control.movement(lateral=-lateral_mag)
+        self.robot_control.movement(compass_heading)
+        first_time = time.time()
+        while time.time() - first_time < 8:
+            self.robot_control.movement(forward=-2.5)
+        first_time = time.time()
+        while time.time() - first_time < 3:
+            self.robot_control.movement(lateral=lateral_mag)
+        self.robot_control.movement(compass_heading)
+        time.sleep(1)
+
+        # DVL is unavailable for Onyx, this worked very well on Graey
+        # self.robot_control.lateral_dvl(throttle=1, distance = lateral_dist)
+        # self.robot_control.forward_dvl(throttle=1, distance=2)
+        # self.robot_control.lateral_dvl(throttle=1, distance=(-2*lateral_dist))
+        # self.robot_control.forward_dvl(throttle=1, distance = -2)
+        # self.robot_control.lateral_dvl(throttle=1, distance=lateral_dist)
+        # self.robot_control.set_heading(compass_heading + 180)
 
 
 
@@ -133,6 +161,7 @@ if __name__ == "__main__":
     # You can also import it in a mission file outside of the package
     import time
     from auv.utils import deviceHelper
+    from auv.motion import robot_control
 
     rospy.init_node("buoy_mission", anonymous=True)
 
@@ -146,9 +175,11 @@ if __name__ == "__main__":
 
     # Create a mission object with arguments
     mission = BuoyMission(**config)
+    rc = robot_control.RobotControl()
 
     # Run the mission
     arm.arm()
+    rc.set_depth(0.5)
     time.sleep(5)
     mission.run()
     mission.cleanup()

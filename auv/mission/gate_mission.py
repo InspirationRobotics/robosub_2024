@@ -60,7 +60,7 @@ class GateMission:
         Here should be all the code required to run the mission.
         This could be a loop, a finite state machine, etc.
         """
-        print("[INFO] Beginning Gate Run Function")
+        print("[INFO] Beginning Gate Run")
         while not rospy.is_shutdown():
             # print("[INFO] ROSPY run")
             if not self.received:
@@ -71,7 +71,7 @@ class GateMission:
             for key in self.next_data.keys():
                 if key in self.data.keys():
                     self.data[key].update(self.next_data[key]) # Merge the data
-                    print(key)
+                    # print(key)
                 else:
                     self.data[key] = self.next_data[key] # Update the keys if necessary
             self.received = False
@@ -90,11 +90,16 @@ class GateMission:
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw)
                 print(forward, lateral, yaw)
-        
-        self.robot_control.forward_dvl(distance = 2)
-        self.style_movement()
             
-        print("[INFO] gate mission run")
+        print("[INFO] Gate CV finished running")
+        first_time = time.time()
+
+        print("[INFO] Moving forward past the gate.")
+        while time.time() - first_time < 10:
+            self.robot_control.movement(forward = 2)
+        
+        print("[INFO] Starting style movement.")
+        self.style_movement()
     
     def style_movement(self):
         # run style - compass heading functions will ensure
@@ -113,7 +118,7 @@ class GateMission:
 
         # Idle the robot
         self.robot_control.movement(lateral = 0, forward = 0, yaw = 0)
-        print("[INFO] gate mission terminate")
+        print("[INFO] Gate mission terminating.")
 
 
 if __name__ == "__main__":

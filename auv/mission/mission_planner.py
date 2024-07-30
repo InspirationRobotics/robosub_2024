@@ -13,7 +13,7 @@ import time
 import networkx as nx
 
 from ..utils.deviceHelper import variables
-from ..device.modems import modems_api
+# from ..device.modems import modems_api
 
 
 def import_mission_by_name(mission_name):
@@ -388,7 +388,7 @@ class MissionPlanner:
 
 
 if __name__ == "__main__":
-    # Usage: python3 -m auv.mission.mission_planner -p path_to_mission_plan.yaml -v (optional for visualization)
+    # Usage: python3 -m auv.mission.mission_planner -p missions/plan_template.yaml -v (optional for visualization)
     import argparse
 
     # If running the script directly (for testing purposes), get the keyword arguments (kwargs) for the path to the mission planner .yaml 
