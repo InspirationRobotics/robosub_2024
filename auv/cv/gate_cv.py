@@ -39,7 +39,7 @@ class CV:
 
         self.state = None
         self.aligned = False
-        self.tolerance = 60 # Pixels
+        self.tolerance = 30 # Pixels
 
         self.target = None
         self.force_target = True
@@ -111,8 +111,8 @@ class CV:
                 elif detection.confidence > 0.65 and target not in detection.label:
                     other_x = x_midpoint
                     other_label = detection.label
-                elif detection.confidence >= 0.5:
-                    self.state = "approach"
+                # elif detection.confidence >= 0.5:
+                #     self.state = "approach"
 
             if target_x == None and other_x != None:
                 if self.force_target:
