@@ -58,6 +58,7 @@ class CV:
         forward = 0
         lateral = 0
         yaw = 0
+        vertical = 0
         
         # Detect the buoy
         if detection.get("status") == True:
