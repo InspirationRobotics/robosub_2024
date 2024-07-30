@@ -30,7 +30,6 @@ class CV:
         # Sets yaw magnitude. Due to camera latency, this needs to decrease
         # when the buoy gets off the screen
         self.search_yaw = 1
-        self.yaw_mag = 0.3
         self.pass_count = 0
         self.depth_time = time.time()
 

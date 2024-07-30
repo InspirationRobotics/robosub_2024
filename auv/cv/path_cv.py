@@ -1,6 +1,5 @@
-
 """
-Path CV Test Class.
+Path CV.
 """
 
 # Import what you need from within the package.
