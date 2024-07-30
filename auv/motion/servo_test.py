@@ -1,9 +1,9 @@
 import rospy
 import time
 
-from auv.motion.servo import Servo
+from auv.motion.servo import Dropper
 
-servo = Servo()
+servo = Dropper()
 
 time.sleep(5)
 
