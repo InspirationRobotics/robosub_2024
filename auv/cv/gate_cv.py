@@ -143,7 +143,7 @@ class CV:
         if self.state == "strafe":
             lateral = self.strafe_smart(target_x)
             if lateral == 0:
-                self.state == "approach"
+                self.state = "approach"
             # if lateral == 0:
             #     self.end = True
         
