@@ -44,7 +44,8 @@ class CV:
         mask = cv2.inRange(hsv, np.array([0, 120, 70]), np.array([10, 255, 255])) + \
                cv2.inRange(hsv, np.array([170, 120, 70]), np.array([180, 255, 255]))
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        if contours:
+        print(f"[DEBUG] contours is {contours}")
+        if len(contours) > 0:
             largest_contour = max(contours, key=cv2.contourArea)
             if cv2.contourArea(largest_contour) > 0:
                 x, y, w, h = cv2.boundingRect(largest_contour)
@@ -119,7 +120,7 @@ class CV:
             # and it has been at least 10 seconds since the last
             # adjustment
 
-            if depth_param and (time.time() - self.depth_time > 10):
+            if depth_param and time.time() - self.depth_time > 10:
                 self.depth_time = time.time()
                 print(f"[DEBUG] ymin is {detection.get('ymin')} and ymax is {detection.get('ymax')}")
                 vertical = depth_param
@@ -136,7 +137,7 @@ class CV:
         data_from_detection, frame = self.detect_buoy(raw_frame)
 
          
-        if frame is not None:
+        if frame != None:
             visualized_frame = frame
         else:
             visualized_frame = None
