@@ -44,6 +44,7 @@ class CV:
         mask = cv2.inRange(hsv, np.array([0, 120, 70]), np.array([10, 255, 255])) + \
                cv2.inRange(hsv, np.array([170, 120, 70]), np.array([180, 255, 255]))
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        print(f"[DEBUG] contours is {contours}")
         if contours:
             largest_contour = max(contours, key=cv2.contourArea)
             if cv2.contourArea(largest_contour) > 0:
