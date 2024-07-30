@@ -119,7 +119,7 @@ class CV:
             # and it has been at least 10 seconds since the last
             # adjustment
 
-            if depth_param and (time.time() - self.depth_time > 10):
+            if depth_param and (time.time() - self.depth_time) > 10:
                 self.depth_time = time.time()
                 print(f"[DEBUG] ymin is {detection.get('ymin')} and ymax is {detection.get('ymax')}")
                 vertical = depth_param
