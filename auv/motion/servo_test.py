@@ -1,15 +1,15 @@
 import rospy
 import time
 
-from auv.motion.servo import Servo
+from auv.motion.servo import Dropper
 
-servo = Servo()
+servo = Dropper()
 
 time.sleep(5)
 
 print("[INFO] Dropping ball")
 
-servo.dropper()
+servo.drop()
 
 time.sleep(2)
 
