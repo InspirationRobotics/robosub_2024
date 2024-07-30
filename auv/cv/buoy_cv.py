@@ -136,7 +136,7 @@ class CV:
         data_from_detection, frame = self.detect_buoy(raw_frame)
 
          
-        if frame is not None:
+        if frame != None:
             visualized_frame = frame
         else:
             visualized_frame = None

@@ -175,7 +175,7 @@ class CV:
         # Back and forth lateral pattern
         if self.lateral_search:
             forward = 0.2
-            if self.start_time is None:
+            if self.start_time == None:
                 self.start_time = time.time()
                 self.last_lateral = 1  # Initial direction
             elapsed_time = time.time() - self.start_time
