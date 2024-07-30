@@ -18,7 +18,7 @@ class CV:
         self.x_midpoint = self.shape[0] / 2
         self.y_midpoint = self.shape[1] / 2
         self.frame_area = self.shape[0] * self.shape[1]
-        self.tolerance = 25 # Pixels
+        self.tolerance = 50 # Pixels
 
         self.detected = False
         self.prev_detected = False
@@ -48,6 +48,7 @@ class CV:
             largest_contour = max(contours, key=cv2.contourArea)
             if cv2.contourArea(largest_contour) > 0:
                 x, y, w, h = cv2.boundingRect(largest_contour)
+                # ymin is top left corner of bounding box, ymax is bottom right
                 return {"status": True, "xmin": x, "xmax": x + w, "ymin": y, "ymax": y + h}, frame
         return {"status": False, "xmin": None, "xmax": None, "ymin": None, "ymax": None}, frame
     
@@ -94,12 +95,13 @@ class CV:
             # of image and y maximum in top half of image
             # TODO: Depth function codes
 
-            if detection.get("ymin") > self.y_midpoint:
+            # ymax is bottom right corner, ymin is top left corner
+            if detection.get("ymax") > self.y_midpoint + self.tolerance:
                 # Go up by 0.1 m - need to 
                 # play around with depth functions
                 # in water testing before coding this
                 depth_param = -0.1
-            elif detection.get("ymax") < self.y_midpoint:
+            elif detection.get("ymin") < self.y_midpoint - self.tolerance:
                 # Go down by 0.1 m
                 depth_param = 0.1
             else:
