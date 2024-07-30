@@ -41,13 +41,15 @@ class CV:
         self.aligned = False
         self.tolerance = 30 # Pixels
 
+        self.start_time = None
+        self.last_lateral = 0
+        self.lateral_time_search = 2
+
         self.target = None
         self.force_target = True
 
-        self.approach_end = False
-
         print("[INFO] Gate CV init")
-    
+ 
     def strafe_smart(self, detection_x):
         """Strafe to align with the correct side of the gate based on target x_coordinate."""
         midpoint_frame = self.shape[0]/2
@@ -94,12 +96,8 @@ class CV:
         # If there are two detections, check confidences and label, then begin strafe.
         # Once aligned, end.
 
-        if len(detections) == 0 and self.approach_end == False:
-            yaw = 1
-            self.state = None
-        elif len(detections) == 0 and self.approach_end == True:
-            self.end = True
-            self.state = None
+        if len(detections) == 0:
+            self.state = 'search'
         elif len(detections) >= 1:
             for detection in detections:
                 x_midpoint = (detection.xmin + detection.xmax)/2
@@ -117,15 +115,30 @@ class CV:
             if target_x == None and other_x != None:
                 if self.force_target:
                     # print("[INFO] Continuing search for target")
-                    yaw = 1
+                    self.state = "search"
                 else:
                     # print("[INFO] Switching targets because original set target is not confirmed.")
                     target_x = other_x
                     self.target = other_label
                     self.state = "strafe"
+        
+        if self.state == "search":
+            if self.start_time is None:
+                self.start_time = time.time()
+                self.last_lateral = 1  # Initial direction
+
+            elapsed_time = time.time() - self.start_time
+
+            if elapsed_time < self.lateral_time_search:
+                lateral = self.last_lateral
+            else:
+                # Switch direction and reset timer
+                self.last_lateral = -self.last_lateral
+                self.start_time = time.time()
+                lateral = self.last_lateral
+                self.lateral_time_search += 1
 
         if self.state == "strafe":
-            yaw = 0 # Just in case not already 0
             lateral = self.strafe_smart(target_x)
             if lateral == 0:
                 self.end = True
