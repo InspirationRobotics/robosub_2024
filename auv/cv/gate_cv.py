@@ -125,7 +125,7 @@ class CV:
                     self.state = "strafe"
         
         if self.state == "search":
-            if self.start_time is None:
+            if self.start_time == None:
                 self.start_time = time.time()
                 self.last_lateral = 1  # Initial direction
 
