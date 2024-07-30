@@ -128,17 +128,17 @@ class CV:
             yaw = 0 # Just in case not already 0
             lateral = self.strafe_smart(target_x)
             if lateral == 0:
-                self.state = "approach"
+                self.end = True
         
-        if self.state == "approach":
-            self.approach_end = True
-            self.area = self.detection_area(detection)
-            if self.area < 10000:
-                forward = 2.0
-            else:
-                self.aligned = True
+        # if self.state == "approach":
+        #     self.approach_end = True
+        #     self.area = self.detection_area(detection)
+        #     if self.area < 10000:
+        #         forward = 2.0
+        #     else:
+        #         self.aligned = True
 
-        if self.aligned == True:
-            self.end = True
+        # if self.aligned == True:
+        #     self.end = True
             
         return {"lateral": lateral, "forward": forward, "yaw": yaw, "target": self.target, "end": self.end}, frame
