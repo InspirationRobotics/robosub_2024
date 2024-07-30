@@ -1,7 +1,5 @@
 """
 Buoy CV.
-
-Author: Keith Chen
 """
 
 import cv2

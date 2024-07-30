@@ -1,8 +1,6 @@
 
 """
 Path CV Test Class.
-
-Author: Avika Prasad
 """
 
 # Import what you need from within the package.
