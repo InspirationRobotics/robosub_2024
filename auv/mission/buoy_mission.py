@@ -161,6 +161,7 @@ if __name__ == "__main__":
     # You can also import it in a mission file outside of the package
     import time
     from auv.utils import deviceHelper
+    from auv.motion import robot_control
 
     rospy.init_node("buoy_mission", anonymous=True)
 
@@ -174,9 +175,11 @@ if __name__ == "__main__":
 
     # Create a mission object with arguments
     mission = BuoyMission(**config)
+    rc = robot_control.RobotControl()
 
     # Run the mission
     arm.arm()
+    rc.set_depth(0.5)
     time.sleep(5)
     mission.run()
     mission.cleanup()
