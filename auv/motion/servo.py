@@ -55,12 +55,13 @@ class Polulu:
         if not self.USB.isOpen():
             self.USB.open()
 
-            # Set PWMs to the default state
-            self.set_pwm(*self.torpedo_state[0])
-            self.set_pwm(*self.dropper_state[0])
-            self.set_pwm(*self.gripper_state[0])
         else:
             print("[INFO] Polulu serial is already open")
+        
+        # Set PWMs to the default state
+        self.set_pwm(*self.torpedo_state[0])
+        self.set_pwm(*self.dropper_state[0])
+        self.set_pwm(*self.gripper_state[0])
 
     def set_pwm(self, channel, target):
         """
