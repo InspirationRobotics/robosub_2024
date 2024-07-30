@@ -146,5 +146,3 @@ class CV:
         end = self.end
 
         return {"lateral" : lateral, "forward" : forward, "yaw" : yaw, "vertical": vertical, "end" : end}, visualized_frame
-
-        return {"lateral" : lateral, "forward" : forward, "yaw" : yaw, "vertical": vertical, "end" : end}, visualized_frame
