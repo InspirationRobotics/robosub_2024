@@ -39,18 +39,22 @@ class CV:
 
         self.state = None
         self.aligned = False
-        self.tolerance = 60 # Pixels
+        self.tolerance = 30 # Pixels
+
+        self.start_time = None
+        self.last_lateral = 0
+        self.lateral_time_search = 2
 
         self.target = None
         self.force_target = True
 
-        self.approach_end = False
-
         print("[INFO] Gate CV init")
-    
+ 
     def strafe_smart(self, detection_x):
         """Strafe to align with the correct side of the gate based on target x_coordinate."""
-        midpoint_frame = self.shape[0]/2
+        midpoint_frame = self.shape[0]/2 - 50
+        # NOTE: Biasing the strafe slightly to account for right drift during forward movement
+
         # If detection is to the left of the center of the frame.
         if detection_x < midpoint_frame - self.tolerance: 
             lateral = -1.0
@@ -94,12 +98,8 @@ class CV:
         # If there are two detections, check confidences and label, then begin strafe.
         # Once aligned, end.
 
-        if len(detections) == 0 and self.approach_end == False:
-            yaw = 1
-            self.state = None
-        elif len(detections) == 0 and self.approach_end == True:
-            self.end = True
-            self.state = None
+        if len(detections) == 0:
+            self.state = 'search'
         elif len(detections) >= 1:
             for detection in detections:
                 x_midpoint = (detection.xmin + detection.xmax)/2
@@ -111,34 +111,49 @@ class CV:
                 elif detection.confidence > 0.65 and target not in detection.label:
                     other_x = x_midpoint
                     other_label = detection.label
-                elif detection.confidence >= 0.5:
-                    self.state = "approach"
+                # elif detection.confidence >= 0.5:
+                #     self.state = "approach"
 
             if target_x == None and other_x != None:
                 if self.force_target:
                     # print("[INFO] Continuing search for target")
-                    yaw = 1
+                    self.state = "search"
                 else:
                     # print("[INFO] Switching targets because original set target is not confirmed.")
                     target_x = other_x
                     self.target = other_label
                     self.state = "strafe"
+        
+        if self.state == "search":
+            if self.start_time == None:
+                self.start_time = time.time()
+                self.last_lateral = 1  # Initial direction
+
+            elapsed_time = time.time() - self.start_time
+
+            if elapsed_time < self.lateral_time_search:
+                lateral = self.last_lateral
+            else:
+                # Switch direction and reset timer
+                self.last_lateral = -self.last_lateral
+                self.start_time = time.time()
+                lateral = self.last_lateral
+                self.lateral_time_search += 1
 
         if self.state == "strafe":
-            yaw = 0 # Just in case not already 0
             lateral = self.strafe_smart(target_x)
             if lateral == 0:
-                self.end = True
+                self.state = "approach"
         
-        # if self.state == "approach":
-        #     self.approach_end = True
-        #     self.area = self.detection_area(detection)
-        #     if self.area < 10000:
-        #         forward = 2.0
-        #     else:
-        #         self.aligned = True
+        if self.state == "approach":
+            self.approach_end = True
+            self.area = self.detection_area(detection)
+            if self.area < 10000:
+                forward = 2.0
+            else:
+                self.aligned = True
 
-        # if self.aligned == True:
-        #     self.end = True
+        if self.aligned == True:
+            self.end = True
             
         return {"lateral": lateral, "forward": forward, "yaw": yaw, "target": self.target, "end": self.end}, frame
