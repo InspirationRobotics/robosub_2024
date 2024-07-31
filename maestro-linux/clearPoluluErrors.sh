@@ -12,5 +12,5 @@ do
     byte 0xA1
   } > $DEVICE
   echo "Cleared Errors"
-  sleep 10
+  sleep 1
 done
