@@ -130,8 +130,7 @@ if __name__ == "__main__":
     When running the script directly, get the configuration of the device 
     using a command line argument that is the name of the device
     """
-#    if len(sys.argv) > 1:
-#        print(dataFromConfig(sys.argv[1]))
-#    else:
-#        print(dataFromConfig("pixhawk"))
-    print(dataFromConfig("dvl"))
+    if len(sys.argv) > 1:
+       print(dataFromConfig(sys.argv[1]))
+    else:
+       print(dataFromConfig("pixhawk"))
