@@ -81,7 +81,8 @@ class Polulu:
         cmd = chr(0x84) + chr(channel) + chr(lsb) + chr(msb)
 
         # Encode the command string and write it to the serial connection
-        print(f"Bytes are: {bytes(cmd.encode())}")
+        # Exclude the first part \xc2
+        print(f"Bytes are: {bytes(cmd.encode()[0:-1])}")
         self.USB.write(bytes(cmd.encode()))
 
 
