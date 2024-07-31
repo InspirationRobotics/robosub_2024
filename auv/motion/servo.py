@@ -47,9 +47,9 @@ class Polulu:
 
         # Each tuple represents : (channel number, PWM value)
         # Set the initial states for the servos
-        self.torpedo_state = {0: (2, 2400), 1: (2, 1700), 2: (2, 1300)}
-        self.dropper_state = {0: (1, 1600), 1: (1, 1200), 2: (1, 700)}
-        self.gripper_state = {0: (0, 1500), 1: (0, 1550), 2: (0, 1450)}
+        self.torpedo_state = {'0': (2, 2400), '1': (2, 1700), '2': (2, 1300)}
+        self.dropper_state = {'0': (1, 1600), '1': (1, 1200), '2': (1, 700)}
+        self.gripper_state = {'0': (0, 1500), '1': (0, 1550), '2': (0, 1450)}
 
         # Open the USB serial connection
         if not self.USB.isOpen():
