@@ -82,8 +82,8 @@ class Polulu:
 
         # Encode the command string and write it to the serial connection
         # Exclude the first part \xc2
-        print(f"Bytes are: {bytes(cmd.encode()[0:-1])}")
-        self.USB.write(bytes(cmd.encode()))
+        print(f"Bytes are: {bytes(cmd.encode()[1:])}")
+        self.USB.write(bytes(cmd.encode()[1:]))
 
 
 class Torpedo(Polulu):
