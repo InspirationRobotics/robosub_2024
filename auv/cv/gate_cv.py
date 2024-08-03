@@ -1,8 +1,5 @@
 """
-CV code for the gate mission. 
-
-Should be relatively straightforward: get the detection data from the ML model, then align with the midpoint of the given detection, assuming the 
-confidence of the detection is high enough.
+CV for the gate mission. Finds the gate and aligns with the red or blue side of the gate, moving forward once aligned.
 """
 
 # Import what you need from within the package.

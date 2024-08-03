@@ -1,5 +1,5 @@
 """
-Mission class for the buoy.
+Finds the buoy, navigates to the correct position (optimal distance to circumnavigate), and circumnavigates around the buoy.
 """
 
 import json

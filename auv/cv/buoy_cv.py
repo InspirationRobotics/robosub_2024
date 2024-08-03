@@ -1,5 +1,5 @@
 """
-Buoy CV.
+Buoy CV. Finds the buoy, locks into the buoy, and navigates to the correct position in order to perform circumnavigation.
 """
 
 import cv2

@@ -9,7 +9,7 @@ from std_msgs.msg import String
 
 from ..device import cv_handler # For running mission-specific CV scripts
 from ..motion import robot_control # For running the motors on the sub
-from .. utils import disarm
+from ..utils import disarm
 
 class TemplateMission:
     cv_files = ["template_cv"] # CV file to run

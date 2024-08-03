@@ -1,5 +1,6 @@
 """
-Bin Approach CV. Finds the bin, and approaches the bin until it is either big enough or can no longer see it.
+Bin Approach CV. Finds the bin and approaches the bin until the bin disappears from sight (the idea is that the disappearance suggests that we are on 
+top of the bin).
 """
 
 import time
@@ -38,7 +39,6 @@ class CV:
         self.start_time = None
         self.last_yaw = 0
         self.yaw_time_search = 2
-        
 
         print("[INFO] Bin Approach CV Initialization")
 

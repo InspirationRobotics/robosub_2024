@@ -1,5 +1,5 @@
 """
-Path CV.
+Path CV. Locks into the path, and orients to align with the path direction.
 """
 
 # Import what you need from within the package.

@@ -1,5 +1,5 @@
 """
-Bin CV.
+Bin CV. Locates the correct side of the bin (red or blue), and aligns with the intention to drop the marker into the correct side of the bin.
 """
 
 # Import what you need from within the package.
