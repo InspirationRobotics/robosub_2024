@@ -30,7 +30,7 @@ class CV:
         self.x_midpoint = self.shape[0]/2
         self.y_midpoint = self.shape[1]/2
 
-        self.tolerance = 50 # Pixels
+        self.tolerance = 100 # Pixels
 
         self.prev_detected = False
         self.state = None
@@ -46,10 +46,11 @@ class CV:
     def smart_approach(self, detection_x):
         """Function to properly yaw and move forward"""
         forward = 0
+        # Yaw cannot go below 0.5
         if detection_x < self.x_midpoint - self.tolerance:
-            yaw = -0.75
+            yaw = -0.6
         elif detection_x > self.x_midpoint + self.tolerance:
-            yaw = 0.75
+            yaw = 0.6
         else:
             yaw = 0
             forward = 1
