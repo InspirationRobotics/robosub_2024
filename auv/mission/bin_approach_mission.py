@@ -86,7 +86,8 @@ class BinApproachMission:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw, vertical = vertical)
                 print(forward, lateral, yaw)
 
-            self.robot_control.forward_dvl(2) 
+        # Approximately 0.65m above pool floor
+        self.robot_control.forward_dvl(2) 
 
         print("[INFO] Bin approach mission terminated")
 
