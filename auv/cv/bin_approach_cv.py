@@ -38,6 +38,7 @@ class CV:
         self.start_time = None
         self.last_yaw = 0
         self.yaw_time_search = 2
+        self.end = False
         
 
         print("[INFO] Bin Approach CV Initialization")
