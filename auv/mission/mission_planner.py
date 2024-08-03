@@ -406,7 +406,7 @@ if __name__ == "__main__":
         "--visualize",
         action="store_true",
         help="Visualize the mission plan graph",
-        default=False,
+        default=True,
     )
     args = parser.parse_args()
 
