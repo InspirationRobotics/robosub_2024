@@ -1,6 +1,8 @@
 """
-Bin Approach Mission. The goal is to find the bin, and move to a position where we can use our bottom facing camera and switch to the bin mission
-in order to drop the marker in the correct area.
+Octagon Approach Mission. The goal is to find the Octagon, and then switch to bottom facing camera to align with the center 
+of the platform before surfacing.
+
+NOTE: We could just use DVL to get inside the Octagon range if that works consistently enough.
 """
 
 import json
@@ -12,8 +14,8 @@ from auv.device import cv_handler # For running mission-specific CV scripts
 from auv.motion import robot_control # For running the motors on the sub
 from auv.utils import arm, disarm
 
-class BinApproachMission:
-    cv_files = ["bin_approach_cv"] # CV file to run
+class OctagonApproachMission:
+    cv_files = ["octagon_approach_cv"] # CV file to run
 
     def __init__(self, target=None, **config):
         """
@@ -34,8 +36,8 @@ class BinApproachMission:
         for file_name in self.cv_files:
             self.cv_handler.start_cv(file_name, self.callback)
 
-        self.cv_handler.set_target("bin_approach_cv", target)
-        print("[INFO] Bin Approach Mission Init")
+        self.cv_handler.set_target("octagon_approach_cv", target)
+        print("[INFO] octagon Approach Mission Init")
 
     def callback(self, msg):
         """
@@ -72,11 +74,11 @@ class BinApproachMission:
             self.next_data = {}
 
             # Do something with the data.
-            lateral = self.data["bin_approach_cv"].get("lateral", None)
-            forward = self.data["bin_approach_cv"].get("forward", None)
-            yaw = self.data["bin_approach_cv"].get("yaw", None)
-            vertical = self.data["bin_approach_cv"].get("vertical", None)
-            end = self.data["bin_approach_cv"].get("end", None)
+            lateral = self.data["octagon_approach_cv"].get("lateral", None)
+            forward = self.data["octagon_approach_cv"].get("forward", None)
+            yaw = self.data["octagon_approach_cv"].get("yaw", None)
+            vertical = self.data["octagon_approach_cv"].get("vertical", None)
+            end = self.data["octagon_approach_cv"].get("end", None)
 
             if end:
                 print("[INFO] Ending Octagon Approach CV")
@@ -86,10 +88,19 @@ class BinApproachMission:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw, vertical = vertical)
                 # print(forward, lateral, yaw)
 
-        # Approximately 0.75m above pool floor
         self.robot_control.forward_dvl(2.5) 
 
-        print("[INFO] Bin approach mission terminated")
+        # Surfacing and resubmerging
+        for i in range(2):
+            if i == False:
+                self.robot_control.set_depth(0.0)
+            elif i == True:
+                self.robot_control.set_depth(0.5)
+            start_time = time.time()
+            while time.time() - start_time < 10:
+                pass
+
+        print("[INFO] Octagon approach mission terminated")
 
     def cleanup(self):
         """
@@ -101,7 +112,7 @@ class BinApproachMission:
 
         # Idle the robot
         self.robot_control.movement(lateral = 0, forward = 0, yaw = 0)
-        print("[INFO] Bin approach mission terminate")
+        print("[INFO] Octagon approach mission terminate")
 
 
 if __name__ == "__main__":
@@ -112,7 +123,7 @@ if __name__ == "__main__":
     import time
     from auv.utils import deviceHelper
 
-    rospy.init_node("bin_approach_mission", anonymous=True)
+    rospy.init_node("octagon_approach_mission", anonymous=True)
 
     config = deviceHelper.variables
     config.update(
@@ -123,7 +134,7 @@ if __name__ == "__main__":
     )
 
     # Create a mission object with arguments
-    mission = BinApproachMission(**config)
+    mission = OctagonApproachMission(**config)
 
     # Run the mission
 
