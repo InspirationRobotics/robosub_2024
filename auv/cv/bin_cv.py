@@ -15,7 +15,7 @@ class CV:
     """
 
     # Camera to get the camera stream from.
-    camera = "/auv/camera/videoOAKdRawForward"
+    camera = "/auv/camera/videoOAKdRawBottom"
     model = "bins" 
 
     def __init__(self, **config):
