@@ -1,6 +1,5 @@
 """
-Bin Approach CV. Finds the bin and approaches the bin until the bin disappears from sight (the idea is that the disappearance suggests that we are on 
-top of the bin).
+Bin Approach CV. Finds the bin, and approaches the bin until it is either big enough or can no longer see it.
 """
 
 import time
@@ -39,10 +38,11 @@ class CV:
         self.start_time = None
         self.last_yaw = 0
         self.yaw_time_search = 2
+        
 
         print("[INFO] Bin Approach CV Initialization")
 
-    def smart_yaw(self, detection_x):
+    def smart_approach(self, detection_x):
         """Function to properly yaw and move forward"""
         forward = 0
         if detection_x < self.x_midpoint - self.tolerance:
@@ -95,6 +95,8 @@ class CV:
                     # Might need to do something in an elif or else here
                 
             elif len(detections) > 1:
+                # Target the detection with the highest confidence. The detection targeted
+                # doesn't matter since this is a localization script, not a mission script
                 detection_confidence = 0
                 for detection in detections:
                     if detection.confidence > detection_confidence and detection.confidence > 0.65:
