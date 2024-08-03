@@ -47,9 +47,9 @@ class CV:
         """Function to properly yaw and move forward"""
         forward = 0
         if detection_x < self.x_midpoint - self.tolerance:
-            yaw = -0.5
+            yaw = -1.0
         elif detection_x > self.x_midpoint + self.tolerance:
-            yaw = 0.5
+            yaw = 1.0
         else:
             yaw = 0
             forward = 1
@@ -117,7 +117,7 @@ class CV:
         if self.state == "search":
             if self.start_time == None:
                 self.start_time = time.time()
-                self.last_yaw = 0.5  # Initial direction
+                self.last_yaw = 1.0  # Initial direction
 
             elapsed_time = time.time() - self.start_time
 

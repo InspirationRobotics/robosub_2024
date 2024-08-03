@@ -12,7 +12,7 @@ time.sleep(3.0)
 
 first_time = time.time()
 while time.time() - first_time < 10:
-    rc.movement(yaw = 0.5)
+    rc.movement(yaw = 1.0)
 
 # first_time = time.time()
 # while time.time() - first_time < 3:
