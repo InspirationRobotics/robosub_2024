@@ -84,8 +84,9 @@ class BinApproachMission:
                 break
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw, vertical = vertical)
-                print(forward, lateral, yaw)
+                # print(forward, lateral, yaw)
 
+        self.cleanup()
         # Approximately 0.65m above pool floor
         self.robot_control.forward_dvl(2) 
 
