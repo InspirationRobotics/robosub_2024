@@ -10,7 +10,7 @@ from std_msgs.msg import String
 
 from auv.device import cv_handler # For running mission-specific CV scripts
 from auv.motion import robot_control # For running the motors on the sub
-from auv.utils import disarm
+from auv.utils import arm, disarm
 
 class BinApproachMission:
     cv_files = ["bin_approach_cv"] # CV file to run
@@ -123,5 +123,10 @@ if __name__ == "__main__":
     mission = BinApproachMission(**config)
 
     # Run the mission
+
+    arm.arm()
+
     mission.run()
     mission.cleanup()
+
+    disarm.disarm()
