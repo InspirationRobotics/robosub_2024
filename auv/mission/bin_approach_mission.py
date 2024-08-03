@@ -84,9 +84,11 @@ class BinApproachMission:
                 break
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw, vertical = vertical)
-                print(forward, lateral, yaw) 
+                print(forward, lateral, yaw)
 
-        print("[INFO] Template mission run")
+            self.robot_control.forward_dvl(2) 
+
+        print("[INFO] Bin approach mission terminated")
 
     def cleanup(self):
         """
