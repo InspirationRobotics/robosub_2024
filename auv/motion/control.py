@@ -36,7 +36,7 @@ def control():
     elif var == 'd':
         drop = 1
     elif var == 'u':
-        drop = -1
+        drop = -0.33
     elif var == 'lr':
         lateral = 1.5 # Right
     elif var == 'll':
