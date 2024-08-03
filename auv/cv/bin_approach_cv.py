@@ -131,6 +131,8 @@ class CV:
                 self.yaw_time_search += 1.5
 
         if self.state == "approach":
+            print("[DEBUG] Approaching now!")
+            print(target_x)
             forward, yaw= self.smart_approach(target_x)
             
 
