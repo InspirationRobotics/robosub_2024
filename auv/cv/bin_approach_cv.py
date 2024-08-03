@@ -30,7 +30,7 @@ class CV:
         self.x_midpoint = self.shape[0]/2
         self.y_midpoint = self.shape[1]/2
 
-        self.tolerance = 30 # Pixels
+        self.tolerance = 50 # Pixels
 
         self.prev_detected = False
         self.state = None
@@ -47,9 +47,9 @@ class CV:
         """Function to properly yaw and move forward"""
         forward = 0
         if detection_x < self.x_midpoint - self.tolerance:
-            yaw = -1.0
+            yaw = -0.75
         elif detection_x > self.x_midpoint + self.tolerance:
-            yaw = 1.0
+            yaw = 0.75
         else:
             yaw = 0
             forward = 1
