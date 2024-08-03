@@ -77,6 +77,9 @@ class CV:
         yaw = 0
         vertical = 0
 
+        target_x = None
+        target_y = None
+
         # Find the bin if no detection is found
         # Align with the bin and move forward (through strafe should be fine)
         # If we have lost sight of the bin, then end
