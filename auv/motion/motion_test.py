@@ -11,20 +11,20 @@ arm.arm()
 time.sleep(3.0)
 
 first_time = time.time()
-while time.time() - first_time < 3:
-    rc.movement(forward = 2)
+while time.time() - first_time < 10:
+    rc.movement(yaw = 0.5)
 
-first_time = time.time()
-while time.time() - first_time < 3:
-    rc.movement(forward = -2)
+# first_time = time.time()
+# while time.time() - first_time < 3:
+#     rc.movement(forward = -2)
 
-first_time = time.time()
-while time.time() - first_time < 3:
-    rc.movement(lateral = 2)
+# first_time = time.time()
+# while time.time() - first_time < 3:
+#     rc.movement(lateral = 2)
 
-first_time = time.time()
-while time.time() - first_time < 3:
-    rc.movement(lateral = -2)
+# first_time = time.time()
+# while time.time() - first_time < 3:
+#     rc.movement(lateral = -2)
 
 time.sleep(1.0)
 
