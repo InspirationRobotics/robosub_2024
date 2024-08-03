@@ -111,11 +111,11 @@ class CV:
                         target_y = (detection.ymin + detection.ymax) / 2
                         detection_confidence = detection.confidence
 
-            if target_x is None:
-                self.state = "search"
-            elif target_x is not None and target_y is not None:
-                self.prev_detected = True
-                self.state = "approach"
+        if target_x is None:
+            self.state = "search"
+        elif target_x is not None and target_y is not None:
+            self.prev_detected = True
+            self.state = "approach"
 
         if self.state == "search":
             if self.start_time == None:
@@ -136,7 +136,7 @@ class CV:
         if self.state == "approach":
             print("[DEBUG] Approaching now!")
             print(target_x)
-            forward, yaw= self.smart_approach(target_x)
+            forward, yaw = self.smart_approach(target_x)
             
 
         # Continuously return motion commands, the state of the mission, and the visualized frame.
