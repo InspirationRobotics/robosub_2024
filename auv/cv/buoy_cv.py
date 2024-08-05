@@ -84,9 +84,9 @@ class CV:
 
             # Yaw to center-align AUV and buoy
             if x_coordinate < self.x_midpoint - self.tolerance:
-                yaw = -0.5
+                yaw = -0.65
             elif x_coordinate > self.x_midpoint + self.tolerance:
-                yaw = 0.5
+                yaw = 0.65
             else:
                 yaw = 0
 
