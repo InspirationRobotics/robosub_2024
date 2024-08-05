@@ -4,7 +4,7 @@ from auv.motion import robot_control
 from auv.utils import arm, disarm
 
 
-rospy.init_node("Roll Test", anonymous=True)
+rospy.init_node("roll_test", anonymous=True)
 rc = robot_control.RobotControl(enable_dvl=False)
 
 arm.arm()
