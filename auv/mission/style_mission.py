@@ -53,7 +53,7 @@ class StyleMission:
 
         # idle the robot
         self.robot_control.movement()
-        print("[INFO] Template mission terminate")
+        print("[INFO] Style mission terminate")
 
 
 if __name__ == "__main__":
