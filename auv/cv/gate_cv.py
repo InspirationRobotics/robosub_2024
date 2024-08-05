@@ -36,7 +36,7 @@ class CV:
 
         self.state = None
         self.aligned = False
-        self.tolerance = 30 # Pixels
+        self.tolerance = 50 # Pixels
 
         self.start_time = None
         self.last_lateral = 0
