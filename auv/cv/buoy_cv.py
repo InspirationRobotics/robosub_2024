@@ -66,7 +66,7 @@ class CV:
             buoy_area = abs(detection.get("xmax") - detection.get("xmin")) * abs(detection.get("ymin") - detection.get("ymax"))
 
             # Filter false positives
-            if buoy_area < 250:
+            if buoy_area < 100:
                 self.detected = False
                 self.step = None
                 yaw = 1
