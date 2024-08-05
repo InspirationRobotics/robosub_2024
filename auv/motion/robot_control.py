@@ -237,7 +237,6 @@ class RobotControl:
         # dir variable is the direction -- 1 is clockwise, -1 is counterclockwise
         while not rospy.is_shutdown():
             current = int(self.compass)
-            print(current)
             dir = 1  # cw
             diff = abs(target - current)
             # Switch the direction of the yaw since going the other way will be faster (since there are 360 degrees in a circle)
