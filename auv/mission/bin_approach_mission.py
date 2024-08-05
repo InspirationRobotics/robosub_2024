@@ -58,7 +58,7 @@ class BinApproachMission:
         """
 
         while not rospy.is_shutdown():
-            time.sleep(0.01)
+            time.sleep(0.05)
             if not self.received:
                 continue
 
