@@ -47,9 +47,9 @@ class CV:
         forward = 0
         # Yaw cannot go below 0.5
         if detection_x < self.x_midpoint - self.tolerance:
-            yaw = -0.6
+            yaw = -0.75
         elif detection_x > self.x_midpoint + self.tolerance:
-            yaw = 0.6
+            yaw = 0.75
         else:
             yaw = 0
             forward = 2.0
