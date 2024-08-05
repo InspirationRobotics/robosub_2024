@@ -147,7 +147,10 @@ class CV:
         
         if self.state == "approach":
             self.prev_detected = True
-            self.area = self.detection_area(detection)
+            if detection is not None:
+                self.area = self.detection_area(detection)
+            else:
+                self.area = 1000000
             if self.area < 10000:
                 forward = 2.5
             else:
