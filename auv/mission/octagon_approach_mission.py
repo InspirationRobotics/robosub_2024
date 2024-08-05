@@ -89,7 +89,9 @@ class OctagonApproachMission:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw, vertical = vertical)
                 # print(forward, lateral, yaw)
 
-        self.robot_control.forward_dvl(2.5) 
+        first_time = time.time()
+        while time.time() - first_time < 2.0:
+            self.robot_control.movement(forward=2)
 
         # Surfacing and resubmerging
         for i in range(2):
