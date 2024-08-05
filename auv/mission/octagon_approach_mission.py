@@ -96,7 +96,7 @@ class OctagonApproachMission:
             if i == False:
                 self.robot_control.set_depth(0.0)
             elif i == True:
-                self.robot_control.set_depth(0.5)
+                self.robot_control.set_depth(0.7)
             start_time = time.time()
             while time.time() - start_time < 10:
                 pass
