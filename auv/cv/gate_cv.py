@@ -36,7 +36,7 @@ class CV:
 
         self.state = None
         self.aligned = False
-        self.tolerance = 50 # Pixels
+        self.tolerance = 80 # Pixels
 
         self.start_time = None
         self.last_lateral = 0
@@ -49,15 +49,14 @@ class CV:
  
     def strafe_smart(self, detection_x):
         """Strafe to align with the correct side of the gate based on target x_coordinate."""
-        midpoint_frame = self.shape[0]/2 - 50
-        # NOTE: Biasing the strafe slightly to account for right drift during forward movement
+        midpoint_frame = self.shape[0]/2
 
         # If detection is to the left of the center of the frame.
         if detection_x < midpoint_frame - self.tolerance: 
-            lateral = -1.0
+            lateral = -0.75
         # If detection is to the right of the center of the frame.
         elif detection_x > midpoint_frame + self.tolerance:
-            lateral = 1.0
+            lateral = 0.75
         else:
             lateral = 0
 
@@ -146,7 +145,7 @@ class CV:
             self.approach_end = True
             self.area = self.detection_area(detection)
             if self.area < 10000:
-                forward = 2.0
+                forward = 2.5
             else:
                 self.aligned = True
 
