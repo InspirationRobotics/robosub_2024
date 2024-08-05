@@ -41,6 +41,7 @@ class CV:
         self.start_time = None
         self.last_lateral = 0
         self.lateral_time_search = 2
+        self.prev_detected = False
 
         self.target = None
         self.force_target = True
@@ -94,8 +95,11 @@ class CV:
         # If there are two detections, check confidences and label, then begin strafe.
         # Once aligned, end.
 
-        if len(detections) == 0:
+        if len(detections) == 0 and self.prev_detected == False:
             self.state = 'search'
+        elif len(detections) == 0 and self.prev_detected == True:
+            self.aligned = True
+            self.end = True
         elif len(detections) >= 1:
             for detection in detections:
                 x_midpoint = (detection.xmin + detection.xmax)/2
@@ -142,7 +146,7 @@ class CV:
                 self.state = "approach"
         
         if self.state == "approach":
-            self.approach_end = True
+            self.prev_detected = True
             self.area = self.detection_area(detection)
             if self.area < 10000:
                 forward = 2.5
