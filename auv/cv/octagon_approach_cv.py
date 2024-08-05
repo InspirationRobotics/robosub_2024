@@ -84,6 +84,9 @@ class CV:
         # Align with the bin and move forward (through strafe should be fine)
         # If we have lost sight of the bin, then end
 
+        # So we do not get a NoneType error
+        if detections is None:
+            detections = []
         if len(detections) == 0 and self.prev_detected == False:
             self.state = "search"
         
