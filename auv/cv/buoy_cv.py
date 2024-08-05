@@ -109,7 +109,7 @@ class CV:
             # Approach to a set distance from buoy
 
             if buoy_area < 15000: # number of pixels in buoy's bounding box
-                forward = 1.0
+                forward = 2.5
             else:
                 forward = 0
                 self.end = True
