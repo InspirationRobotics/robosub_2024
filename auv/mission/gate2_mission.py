@@ -37,7 +37,7 @@ class GateMission:
 
         self.cv_handler.set_target("gate_cv2", target)
         curr_time = time.time()
-        while time.time() - curr_time < 7:
+        while time.time() - curr_time < 4:
             self.robot_control.movement(forward = 3)
 
         print("[INFO] Gate Mission Init")
