@@ -36,6 +36,7 @@ class GateMission:
             self.cv_handler.start_cv(file_name, self.callback)
 
         self.cv_handler.set_target("gate_cv", target)
+
         print("[INFO] Gate Mission Init")
 
     def callback(self, msg):
@@ -95,7 +96,7 @@ class GateMission:
         first_time = time.time()
 
         print("[INFO] Moving forward past the gate.")
-        while time.time() - first_time < 10:
+        while time.time() - first_time < 15:
             self.robot_control.movement(forward = 2)
         
         print("[INFO] Starting style movement.")
