@@ -26,10 +26,10 @@ time.sleep(5)
 rc.set_heading(gate_heading)
 
 # Run the gate mission
-gate = gate_mission.GateMission(target)
-gate.run()
-gate.cleanup()
-rc.set_heading(gate_heading)
+# gate = gate_mission.GateMission(target)
+# gate.run()
+# gate.cleanup()
+# rc.set_heading(gate_heading)
 
 # Run the buoy mission
 buoy = buoy_mission.BuoyMission(target)
