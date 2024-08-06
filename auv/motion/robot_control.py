@@ -47,6 +47,7 @@ class RobotControl:
         if enable_dvl:
             self.dvl = dvl.DVL()
             self.dvl.start()
+            self.dvl_counter = 0
         else:
             self.dvl = None
 
@@ -364,13 +365,14 @@ class RobotControl:
 
         print(f"[INFO] Moving forward {distance}m at throttle {throttle}")
 
+        # Reset dvl_counter on each run to prevent unexpected behaviors
+        self.dvl_counter = 0
+
         # Enter a local scope to handle coordinates cleanly
         with self.dvl:
-            curr_time = time.time()
-            prev_time = None
             # Navigate to the target point
             while not rospy.is_shutdown():
-                time.sleep(0.25)
+                time.sleep(0.1)
                 if not self.dvl.is_valid:
                     print("[WARN] DVL data not valid, skipping")
                     time.sleep(0.1)
@@ -384,6 +386,24 @@ class RobotControl:
                 y = self.dvl.position[1]
                 error = distance - y
 
+                # Prevents AUV from getting stuck if it's not changing position (i.e. it's
+                # stuck on a wall). Should check approx once per 3 seconds (30 cycles)
+                
+                self.dvl_counter += 1
+                if not self.dvl_counter % 30:
+                    if self.dvl_counter == 30:
+                        prev_error = error
+                    else:
+                        if abs(error - prev_error) < 0.05:
+                            # override motion commands, move in opposite direction
+                            # for 2 sec if she's moved less than 0.05 meters
+                            curr_time = time.time()
+                            while time.time() - curr_time < 2:
+                                self.movement(forward = -self.prev_output)
+                            break
+                        prev_error = error
+
+
                 # Check if the target has been reached
                 if abs(error) <= 0.1:
                     print("[INFO] Target reached")
@@ -393,6 +413,9 @@ class RobotControl:
                     forward_output = self.PIDs["forward"](-error)
                 else:
                     forward_output = np.clip(error * 4, -throttle, throttle)
+
+                # Save forward output for error checking
+                self.prev_output = forward_output
 
                 # Move forward using the PWM calculations in the movement function
                 self.movement(forward=forward_output)
@@ -411,6 +434,9 @@ class RobotControl:
             return
 
         print(f"[INFO] Moving laterally {distance}m at throttle {throttle}")
+
+        # Reset dvl_counter on each run to prevent unexpected behaviors
+        self.dvl_counter = 0
 
         # Enter a local scope to handle coordinates nicely
         with self.dvl:
@@ -431,6 +457,23 @@ class RobotControl:
                 x = self.dvl.position[0]
                 error = distance - x
 
+                # Prevents AUV from getting stuck if it's not changing position (i.e. it's
+                # stuck on a wall). Should check approx once per 3 seconds (30 cycles)
+                
+                self.dvl_counter += 1
+                if not self.dvl_counter % 30:
+                    if self.dvl_counter == 30:
+                        prev_error = error
+                    else:
+                        if abs(error - prev_error) < 0.05:
+                            # override motion commands, move in opposite direction
+                            # for 2 sec if she's moved less than 0.05 meters
+                            curr_time = time.time()
+                            while time.time() - curr_time < 2:
+                                self.movement(lateral = -self.prev_output)
+                            break
+                        prev_error = error
+
                 # Check if we reached the target
                 if abs(error) <= 0.1:
                     print("[INFO] Target reached")
@@ -441,7 +484,9 @@ class RobotControl:
                     lateral_output = self.PIDs["lateral"](-error)
                 else:
                     lateral_output = np.clip(error * 4, -throttle, throttle)
-                print(f"[DEBUG] error={error}, lateral_output={lateral_output}")
+
+                # Save forward output for error checking
+                self.prev_output = lateral_output
 
                 # Move laterally using PWM values
                 self.movement(lateral=lateral_output)
