@@ -2,8 +2,8 @@ import cv2
 import os
 
 video_root_path = r"C:\Users\netwo\Downloads"
-mission_name = r"Octagon_Competition"
-video_name = r"Octagon Comp Video 0.mp4"
+mission_name = r"Buoy_Competition"
+video_name = r"Buoy Comp Video 16.mp4"
 video_path = os.path.join(video_root_path, mission_name, video_name)
 
 video = cv2.VideoCapture(video_path)
