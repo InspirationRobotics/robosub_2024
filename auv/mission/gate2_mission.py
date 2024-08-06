@@ -99,7 +99,7 @@ class GateMission:
         first_time = time.time()
 
         print("[INFO] Moving forward past the gate.")
-        while time.time() - first_time < 15:
+        while time.time() - first_time < 7:
             self.robot_control.movement(forward = 2)
         
         print("[INFO] Starting style movement.")
