@@ -7,7 +7,7 @@ Onyx will complete the Coin Flip, Gate, and Buoy missions.
 import rospy
 import time
 
-from auv.mission import gate_mission, buoy_mission, octagon_approach_mission
+from auv.mission import gate2_mission, buoy_mission, octagon_approach_mission
 from auv.motion import robot_control
 from auv.utils import arm, disarm, deviceHelper
 
@@ -26,7 +26,7 @@ time.sleep(5)
 rc.set_heading(gate_heading)
 
 # Run the gate mission
-gate = gate_mission.GateMission(target)
+gate = gate2_mission.GateMission(target)
 gate.run()
 gate.cleanup()
 rc.set_heading(gate_heading)
