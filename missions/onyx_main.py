@@ -16,7 +16,7 @@ rospy.init_node("Onyx", anonymous = True)
 rc = robot_control.RobotControl()
 
 target = "Red"
-gate_heading = 76
+gate_heading = 263
 
 arm.arm()
 
@@ -38,9 +38,9 @@ buoy.cleanup()
 
 print("[INFO] Mission run terminate")
 
-octagon = octagon_approach_mission.OctagonApproachMission()
-octagon.run()
-octagon.cleanup()
+# octagon = octagon_approach_mission.OctagonApproachMission()
+# octagon.run()
+# octagon.cleanup()
 
 time.sleep(1.0)
 

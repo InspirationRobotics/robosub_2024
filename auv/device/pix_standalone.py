@@ -87,7 +87,7 @@ class AUV(RosHandler):
         self.depth_pid_offset = config.get("depth_pid_offset", 1500) # Get PID offset from key, if not found set PWM value to default neutral (1500)
         
         # Initialize the depth PID controller
-        self.depth_pid = PID(*self.depth_pid_params, setpoint=0.75) # Go to depth at 0.5 m
+        self.depth_pid = PID(*self.depth_pid_params, setpoint=0.65) # Go to depth at 0.5 m
         self.depth_pid.output_limits = (-self.depth_pid_params[0], self.depth_pid_params[0]) # Output limits of PID controller
 
         # Initialize topics from Pixhawk (through MAVROS)
