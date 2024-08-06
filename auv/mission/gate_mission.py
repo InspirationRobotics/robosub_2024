@@ -36,6 +36,7 @@ class GateMission:
             self.cv_handler.start_cv(file_name, self.callback)
 
         self.cv_handler.set_target("gate_cv", target)
+
         print("[INFO] Gate Mission Init")
 
     def callback(self, msg):
