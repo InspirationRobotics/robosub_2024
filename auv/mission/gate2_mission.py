@@ -14,7 +14,7 @@ from .. utils import arm, disarm
 from . import style_mission
 
 class GateMission:
-    cv_files = ["gate_cv"] # CV file to run
+    cv_files = ["gate2_cv"] # CV file to run
 
     def __init__(self, target="Red", **config):
         """
@@ -82,10 +82,10 @@ class GateMission:
             self.next_data = {}
 
             # Do something with the data.
-            lateral = self.data["gate_cv"].get("lateral", None)
-            forward = self.data["gate_cv"].get("forward", None)
-            yaw = self.data["gate_cv"].get("yaw", None)
-            end = self.data["gate_cv"].get("end", None)
+            lateral = self.data["gate2_cv"].get("lateral", None)
+            forward = self.data["gate2_cv"].get("forward", None)
+            yaw = self.data["gate2_cv"].get("yaw", None)
+            end = self.data["gate2_cv"].get("end", None)
 
             if end:
                 print("Ending")
