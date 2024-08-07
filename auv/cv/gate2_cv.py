@@ -104,7 +104,8 @@ class CV:
             print("[DEBUG] Detection found")
             for detection in detections:
                 x_midpoint = (detection.xmin + detection.xmax)/2
-                # print(f"[DEBUG]: Detection confidence is {detection.confidence}") 
+                print(f"[DEBUG] Detection confidence is {detection.confidence}") 
+                print(f"[DEBUG] Detection label is {detection.label}")
                 if detection.confidence > 0.5 and target in detection.label:
                     print(f"[DEBUG] Detected correct target with correct confidence")
                     self.prev_detected = True
