@@ -101,11 +101,12 @@ class CV:
             self.aligned = True
             self.end = True
         elif len(detections) >= 1:
-            print("Detection success")
+            print("[DEBUG] Detection found")
             for detection in detections:
                 x_midpoint = (detection.xmin + detection.xmax)/2
                 # print(f"[DEBUG]: Detection confidence is {detection.confidence}") 
                 if detection.confidence > 0.5 and target in detection.label:
+                    print(f"[DEBUG] Detected correct target with correct confidence")
                     self.prev_detected = True
                     target_x = x_midpoint
                     self.target = detection.label
@@ -118,7 +119,7 @@ class CV:
 
             if target_x == None and other_x != None:
                 if self.force_target:
-                    # print("[INFO] Continuing search for target")
+                    print("[DEBUG] Continuing search for target")
                     self.state = "search"
                 else:
                     # print("[INFO] Switching targets because original set target is not confirmed.")
