@@ -20,6 +20,8 @@ gate_heading = 220
 
 arm.arm()
 
+rc.depth(0.65)
+
 time.sleep(5)
 
 # Rotate towards the heading of the gate, move 2 meters forward
