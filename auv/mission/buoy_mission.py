@@ -126,7 +126,7 @@ class BuoyMission:
         while time.time() - first_time < 4:
             self.robot_control.movement(forward=-2.5)
         first_time = time.time()
-        while time.time() - first_time < 4:
+        while time.time() - first_time < 8:
             self.robot_control.movement(lateral=lateral_mag)
         self.robot_control.movement(compass_heading)
         time.sleep(1)
