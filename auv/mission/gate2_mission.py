@@ -35,7 +35,7 @@ class GateMission:
         for file_name in self.cv_files:
             self.cv_handler.start_cv(file_name, self.callback)
 
-        self.cv_handler.set_target("gate_cv2", target)
+        self.cv_handler.set_target("gate2_cv", target)
         curr_time = time.time()
         while time.time() - curr_time < 4:
             self.robot_control.movement(forward = 3)
