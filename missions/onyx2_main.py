@@ -29,7 +29,7 @@ rc.set_heading(gate_heading)
 
 # Run the gate mission using just the DVL lol
 
-rc.lateral_dvl(distance=0.7)
+rc.lateral_dvl(distance=-0.7)
 rc.forward_dvl(distance=7)
 
 
