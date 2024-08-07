@@ -41,7 +41,6 @@ class CV:
 
         self.start_time = None
         self.last_yaw = 0
-        self.yaw_time_search = 2
         self.prev_detected = False
 
         self.target = None
@@ -102,14 +101,16 @@ class CV:
             self.aligned = True
             self.end = True
         elif len(detections) >= 1:
+            print("Detection success")
             for detection in detections:
                 x_midpoint = (detection.xmin + detection.xmax)/2
                 # print(f"[DEBUG]: Detection confidence is {detection.confidence}") 
-                if detection.confidence > 0.65 and target in detection.label:
+                if detection.confidence > 0.5 and target in detection.label:
+                    self.prev_detected = True
                     target_x = x_midpoint
                     self.target = detection.label
                     self.state = "strafe"
-                elif detection.confidence > 0.65 and target not in detection.label:
+                elif detection.confidence > 0.5 and target not in detection.label:
                     other_x = x_midpoint
                     other_label = detection.label
                 # elif detection.confidence >= 0.5:
