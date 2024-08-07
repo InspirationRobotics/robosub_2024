@@ -92,7 +92,7 @@ class CV:
             self.state = "search"
         
         if len(detections) == 0 and self.prev_detected == True:
-            if self.prev_time - time.time() < 2:
+            if time.time() - self.prev_time < 2:
                 self.state = None
                 forward = 1
             else:
