@@ -39,6 +39,7 @@ class CV:
         self.last_yaw = 0
         self.yaw_time_search = 2
         self.end = False
+        self.prev_time = time.time()
         
         print("[INFO] Octagon Approach CV Initialization")
 
@@ -91,7 +92,11 @@ class CV:
             self.state = "search"
         
         if len(detections) == 0 and self.prev_detected == True:
-            self.end = True
+            if self.prev_time - time.time() < 2:
+                self.state = None
+                forward = 1
+            else:
+                self.end = True
 
         if len(detections) >= 1:
             if len(detections) == 1:
@@ -131,6 +136,7 @@ class CV:
             print("[DEBUG] Approaching now!")
             print(target_x)
             forward, yaw = self.smart_approach(target_x)
+            self.prev_time = time.time()
             
 
         # Continuously return motion commands, the state of the mission, and the visualized frame.
