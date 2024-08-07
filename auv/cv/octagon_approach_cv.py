@@ -107,7 +107,10 @@ class CV:
             elif len(detections) > 1:
                 # Target the detection with the highest confidence. The detection targeted
                 # doesn't matter since this is a localization script, not a mission script
-                detection_confidence = 0
+
+                # Increased required confidence to 0.65 to account for multiple false positives without
+                # true positive
+                detection_confidence = 0.65
                 for detection in detections:
                     if detection.confidence > detection_confidence and detection.confidence > 0.65:
                         target_x = (detection.xmin + detection.xmax) / 2
