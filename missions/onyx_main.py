@@ -36,12 +36,15 @@ buoy = buoy_mission.BuoyMission(target)
 buoy.run()
 buoy.cleanup()
 
-print("[INFO] Mission run terminate")
 
-# octagon = octagon_approach_mission.OctagonApproachMission()
-# octagon.run()
-# octagon.cleanup()
+
+rc.set_heading(gate_heading)
+octagon = octagon_approach_mission.OctagonApproachMission()
+octagon.run()
+octagon.cleanup()
 
 time.sleep(1.0)
+
+print("[INFO] Mission run terminate")
 
 disarm.disarm()

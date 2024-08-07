@@ -121,20 +121,8 @@ class CV:
             self.state = "approach"
 
         if self.state == "search":
-            if self.start_time == None:
-                self.start_time = time.time()
-                self.last_yaw = 1.0  # Initial direction
-
-            elapsed_time = time.time() - self.start_time
-
-            if elapsed_time < self.yaw_time_search:
-                yaw = self.last_yaw
-            else:
-                # Switch direction and reset timer
-                self.last_yaw = -self.last_yaw
-                self.start_time = time.time()
-                yaw = self.last_yaw
-                self.yaw_time_search += 1.5
+            # Scrap search grid in favor of circular search
+            yaw = 1
 
         if self.state == "approach":
             print("[DEBUG] Approaching now!")

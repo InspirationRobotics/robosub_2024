@@ -40,8 +40,8 @@ class CV:
         self.tolerance = 80 # Pixels
 
         self.start_time = None
-        self.last_lateral = 0
-        self.lateral_time_search = 2
+        self.last_yaw = 0
+        self.yaw_time_search = 2
         self.prev_detected = False
 
         self.target = None
@@ -126,20 +126,8 @@ class CV:
                     self.state = "strafe"
         
         if self.state == "search":
-            if self.start_time == None:
-                self.start_time = time.time()
-                self.last_lateral = 1  # Initial direction
-
-            elapsed_time = time.time() - self.start_time
-
-            if elapsed_time < self.lateral_time_search:
-                lateral = self.last_lateral
-            else:
-                # Switch direction and reset timer
-                self.last_lateral = -self.last_lateral
-                self.start_time = time.time()
-                lateral = self.last_lateral
-                self.lateral_time_search += 1
+            # Scrap the yaw back and forth in favor of a simple clockwise search
+            yaw = 1
 
         if self.state == "strafe":
             lateral = self.strafe_smart(target_x)
