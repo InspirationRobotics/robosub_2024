@@ -20,7 +20,7 @@ gate_heading = 220
 
 arm.arm()
 
-rc.set_depth(0.5)
+rc.set_depth(0.65)
 
 time.sleep(5)
 
@@ -29,8 +29,10 @@ rc.set_heading(gate_heading)
 
 # Run the gate mission using just the DVL lol
 
-rc.lateral_dvl(distance=-0.7)
-rc.forward_dvl(distance=7)
+curr_time = time.time()
+
+while time.time() - curr_time < 19:
+    rc.movement(forward=2)
 
 
 # Run the style mission
@@ -49,7 +51,11 @@ buoy.cleanup()
 rc.set_heading(gate_heading)
 
 # Get to the octagon, our model is short range only
-rc.forward_dvl(distance=10)
+
+curr_time = time.time()
+
+while time.time() - curr_time < 30:
+    rc.movement(forward=2)
 
 
 # Octagon mission

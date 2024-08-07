@@ -20,7 +20,7 @@ gate_heading = 220
 
 arm.arm()
 
-rc.set_depth(0.5)
+rc.set_depth(0.65)
 
 time.sleep(5)
 
