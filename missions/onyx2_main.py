@@ -49,7 +49,7 @@ style.cleanup()
 buoy = buoy_mission.BuoyMission(target)
 buoy.run()
 buoy.cleanup()
-rc.set_heading(285)
+rc.set_heading(240)
 # Get to the octagon, our model is short range only
 
 curr_time = time.time()
