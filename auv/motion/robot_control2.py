@@ -10,7 +10,7 @@ import time
 import mavros_msgs.msg
 import mavros_msgs.srv
 import rospy
-from std_msgs.msg import Float64, Float32MultiArray
+from std_msgs.msg import Float64, Float32MultiArray, String
 
 # Import the PID controller
 from simple_pid import PID
