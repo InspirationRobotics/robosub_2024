@@ -331,7 +331,7 @@ class AUV(RosHandler):
         self.topic_subscriber(self.TOPIC_GET_RC)
         self.topic_subscriber(self.AUV_GET_THRUSTERS, self.thrusterCallback)
         self.topic_subscriber(self.AUV_GET_ARM)
-        self.topic_subscriber(self.AUV_GET_MODE)
+        self.topic_subscriber(self.AUV_GET_MODE, self.change_mode)
         self.topic_subscriber(self.TOPIC_GET_MAVBARO, self.get_baro)
         self.topic_subscriber(self.AUV_GET_DEPTH, self.set_depth)
         self.topic_subscriber(self.AUV_GET_REL_DEPTH, self.set_rel_depth)
@@ -442,7 +442,7 @@ def main():
         print("Connected!")
 
         # Calibrate the depth first
-        auv.change_mode(MODE_ACRO)
+        auv.change_mode("ALT_HOLD")
         auv.calibrate_depth()
         time.sleep(2)
         # arming
