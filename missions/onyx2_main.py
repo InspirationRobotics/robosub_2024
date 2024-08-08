@@ -16,7 +16,9 @@ rospy.init_node("Onyx", anonymous = True)
 rc = robot_control.RobotControl(enable_dvl=False)
 
 target = "Red"
-gate_heading = 244
+gate_heading = 220
+
+time.sleep(30)
 
 arm.arm()
 
@@ -39,7 +41,7 @@ while time.time() - curr_time < 21:
 style = style_mission.StyleMission()
 style.run()
 style.cleanup()
-# rc.set_heading(gate_heading - 70)
+rc.set_heading(gate_heading - 70)
 
 # # curr_time = time.time()
 # # while time.time() - curr_time < 7:
@@ -49,7 +51,7 @@ style.cleanup()
 buoy = buoy_mission.BuoyMission(target)
 buoy.run()
 buoy.cleanup()
-rc.set_heading(gate_heading)
+rc.set_heading(gate_heading + 35)
 # Get to the octagon, our model is short range only
 
 curr_time = time.time()
