@@ -684,6 +684,6 @@ class RobotControl:
 
 if __name__ == "__main__":
     rc = RobotControl()
-    rospy.init_node("mode_test", Anonymous=True)
+    rospy.init_node("mode_test", anonymous=True)
     mode = input("Make your mode here: ")
     rc.set_mode(mode)
