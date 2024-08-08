@@ -123,7 +123,7 @@ class CV:
                 print(f"[DEBUG] ymin is {detection.get('ymin')} and ymax is {detection.get('ymax')}")
                 vertical = depth_param
 
-            print(f"[INFO] Buoy area : {buoy_area}")
+            # print(f"[INFO] Buoy area : {buoy_area}")
 
         return forward, lateral, yaw, vertical
 
