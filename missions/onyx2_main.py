@@ -31,7 +31,7 @@ rc.set_heading(gate_heading)
 
 curr_time = time.time()
 
-while time.time() - curr_time < 19:
+while time.time() - curr_time < 22:
     rc.movement(forward=2)
 
 
@@ -39,13 +39,17 @@ while time.time() - curr_time < 19:
 style = style_mission.StyleMission()
 style.run()
 style.cleanup()
-rc.set_heading(gate_heading)
+rc.set_heading(gate_heading - 45)
+
+curr_time = time.time()
+while time.time() - curr_time < 7:
+    rc.movement(forward=2)
 
 # Run the buoy mission
 buoy = buoy_mission.BuoyMission(target)
 buoy.run()
 buoy.cleanup()
-
+rc.set_heading(285)
 # Get to the octagon, our model is short range only
 
 curr_time = time.time()
