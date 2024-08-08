@@ -39,11 +39,11 @@ while time.time() - curr_time < 22:
 style = style_mission.StyleMission()
 style.run()
 style.cleanup()
-rc.set_heading(gate_heading - 45)
+# rc.set_heading(gate_heading - 45)
 
-curr_time = time.time()
-while time.time() - curr_time < 7:
-    rc.movement(forward=2)
+# # curr_time = time.time()
+# # while time.time() - curr_time < 7:
+#     rc.movement(forward=2)
 
 # Run the buoy mission
 buoy = buoy_mission.BuoyMission(target)
