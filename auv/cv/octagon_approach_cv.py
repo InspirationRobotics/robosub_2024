@@ -39,6 +39,7 @@ class CV:
         self.last_yaw = 0
         self.yaw_time_search = 2
         self.end = False
+        self.prev_time = time.time()
         
         print("[INFO] Octagon Approach CV Initialization")
 
@@ -91,7 +92,11 @@ class CV:
             self.state = "search"
         
         if len(detections) == 0 and self.prev_detected == True:
-            self.end = True
+            if time.time() - self.prev_time < 2:
+                self.state = None
+                forward = 1
+            else:
+                self.end = True
 
         if len(detections) >= 1:
             if len(detections) == 1:
@@ -107,7 +112,10 @@ class CV:
             elif len(detections) > 1:
                 # Target the detection with the highest confidence. The detection targeted
                 # doesn't matter since this is a localization script, not a mission script
-                detection_confidence = 0
+
+                # Increased required confidence to 0.65 to account for multiple false positives without
+                # true positive
+                detection_confidence = 0.65
                 for detection in detections:
                     if detection.confidence > detection_confidence and detection.confidence > 0.65:
                         target_x = (detection.xmin + detection.xmax) / 2
@@ -121,25 +129,14 @@ class CV:
             self.state = "approach"
 
         if self.state == "search":
-            if self.start_time == None:
-                self.start_time = time.time()
-                self.last_yaw = 1.0  # Initial direction
-
-            elapsed_time = time.time() - self.start_time
-
-            if elapsed_time < self.yaw_time_search:
-                yaw = self.last_yaw
-            else:
-                # Switch direction and reset timer
-                self.last_yaw = -self.last_yaw
-                self.start_time = time.time()
-                yaw = self.last_yaw
-                self.yaw_time_search += 1.5
+            # Scrap search grid in favor of circular search
+            yaw = 1
 
         if self.state == "approach":
             print("[DEBUG] Approaching now!")
             print(target_x)
             forward, yaw = self.smart_approach(target_x)
+            self.prev_time = time.time()
             
 
         # Continuously return motion commands, the state of the mission, and the visualized frame.
