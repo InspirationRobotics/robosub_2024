@@ -95,7 +95,7 @@ class CV:
         if len(detections) == 0 and self.prev_detected == True:
             if time.time() - self.prev_time < 2:
                 self.state = None
-                forward = 1
+                forward = 0
             else:
                 self.end = True
 
