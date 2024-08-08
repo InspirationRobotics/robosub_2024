@@ -63,7 +63,7 @@ class RobotControl:
         self.pub_thrusters = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
         self.pub_depth = rospy.Publisher("auv/devices/setDepth", Float64, queue_size=10)
         self.pub_rel_depth = rospy.Publisher("auv/devices/setRelativeDepth", Float64, queue_size=10)
-        self.pub_mode = rospy.Publisher("auv/devices/mode", String, queue_size=10)
+        self.pub_mode = rospy.Publisher("auv/status/mode", String, queue_size=10)
         
         # TODO: reset pix standalone depth Integration param 
 
