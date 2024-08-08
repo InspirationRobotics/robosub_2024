@@ -54,7 +54,7 @@ rc.set_heading(260)
 
 curr_time = time.time()
 
-while time.time() - curr_time < 25:
+while time.time() - curr_time < 20:
     rc.movement(forward=2.5)
 
 # Octagon mission
