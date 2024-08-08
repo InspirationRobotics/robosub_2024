@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import time
 
 # Pin Definitions (BCM numbering)
-input_pins = [29]  # Replace with your specific pins
+input_pins = [19]  # Replace with your specific pins
 
 # Set up the GPIO channel
 GPIO.setmode(GPIO.BOARD)
