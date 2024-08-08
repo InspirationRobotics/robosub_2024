@@ -6,13 +6,13 @@ import time
 
 # Set up the GPIO channel
 GPIO.setmode(GPIO.BCM)
-for pin in range(40) + 1:
-    GPIO.setup(pin, GPIO.IN)
+for pin in range(40):
+    GPIO.setup(pin + 1, GPIO.IN)
 
 try:
     while True:
-        for pin in range(40) + 1:
-            if GPIO.input(pin):
+        for pin in range(40):
+            if GPIO.input(pin + 1):
                 print(f"Pin {pin} is HIGH")
             else:
                 print(f"Pin {pin} is LOW")
