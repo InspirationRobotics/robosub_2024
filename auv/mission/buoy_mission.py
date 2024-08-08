@@ -85,7 +85,7 @@ class BuoyMission:
                 break
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw, vertical = vertical)
-                print(forward, lateral, yaw) 
+                # print(forward, lateral, yaw) 
             
         print("[INFO] Buoy mission finished running")
         
