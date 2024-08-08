@@ -10,8 +10,12 @@ input_pins = [7,
 
 # Set up the GPIO channel
 GPIO.setmode(GPIO.BOARD)
-for pin in input_pins:
-    GPIO.setup(pin, GPIO.IN)
+
+try:
+    for pin in input_pins:
+        GPIO.setup(pin, GPIO.IN)
+except Exception:
+    pass
 
 try:
     while True:
@@ -21,7 +25,8 @@ try:
             else:
                 print(f"Pin {pin} is LOW")
         time.sleep(1)
-
+except Exception:
+    pass
 except KeyboardInterrupt:
     print("Program terminated")
 finally:
