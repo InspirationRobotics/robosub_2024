@@ -26,9 +26,9 @@ GPIO.setmode(GPIO.BOARD)
 
 
 
-GPIO.setup(35, GPIO.IN)
+GPIO.setup(36, GPIO.IN)
 
-if GPIO.input(35):
-    print(f"Pin is high, input {GPIO.input(35)}")
+if GPIO.input(36):
+    print(f"Pin is high, input {GPIO.input(36)}")
 else:
-    print(f"Pin is low, input {GPIO.input(35)}")
+    print(f"Pin is low, input {GPIO.input(36)}")
