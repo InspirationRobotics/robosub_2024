@@ -139,9 +139,9 @@ class RobotControl:
         self.pub_rel_depth.publish(rel_depth)
         print(f"[INFO] Changing Depth relatively by {delta_depth}, current {self.depth}")
     
-    def set_relative_depth(self, mode):
+    def set_mode(self, mode):
         """Change the mode of the sub to specified mode"""
-        mode = Float64()
+        mode = String()
         mode.data = mode
         self.pub_rel_depth.publish(mode)
         print(f"[INFO] Changing mode to {mode}")
@@ -681,3 +681,8 @@ class RobotControl:
 
         print(f"[INFO] Finished setting heading to {target}")
         
+
+if __name__ == "__main__":
+    rc = RobotControl()
+    mode = input("Make your mode here: ")
+    rc.set_mode(mode)
