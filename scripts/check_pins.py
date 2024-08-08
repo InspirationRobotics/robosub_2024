@@ -5,7 +5,7 @@ import time
 # input_pins = [4, 17, 27, 22]  # Replace with your specific pins
 
 # Set up the GPIO channel
-GPIO.setmode(GPIO.BCM)
+GPIO.setmode(GPIO.BOARD)
 # for pin in range(40):
 #     GPIO.setup(pin + 1, GPIO.IN)
 
