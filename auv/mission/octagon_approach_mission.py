@@ -89,9 +89,9 @@ class OctagonApproachMission:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw, vertical = vertical)
                 # print(forward, lateral, yaw)
 
-        first_time = time.time()
-        while time.time() - first_time < 2:
-            self.robot_control.movement(forward=2)
+        # first_time = time.time()
+        # while time.time() - first_time < 2:
+        #     self.robot_control.movement(forward=2)
 
         # Surfacing and resubmerging
         for i in range(2):
@@ -100,7 +100,7 @@ class OctagonApproachMission:
             elif i == True:
                 self.robot_control.set_depth(0.7)
             start_time = time.time()
-            while time.time() - start_time < 10:
+            while time.time() - start_time < 7:
                 pass
 
         print("[INFO] Octagon approach mission terminated")
