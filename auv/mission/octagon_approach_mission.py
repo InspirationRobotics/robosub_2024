@@ -8,6 +8,7 @@ NOTE: We could just use DVL to get inside the Octagon range if that works consis
 import json
 
 import rospy
+import time
 from std_msgs.msg import String
 
 from auv.device import cv_handler # For running mission-specific CV scripts
