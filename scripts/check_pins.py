@@ -6,22 +6,29 @@ import time
 
 # Set up the GPIO channel
 GPIO.setmode(GPIO.BOARD)
-for pin in range(40):
-    GPIO.setup(pin + 1, GPIO.IN)
+# for pin in range(40):
+#     GPIO.setup(pin + 1, GPIO.IN)
 
-try:
-    while True:
-        for pin in range(40):
-            if GPIO.input(pin + 1):
-                print(f"Pin {pin} is HIGH")
-            else:
-                print(f"Pin {pin} is LOW")
-        time.sleep(1)
+# try:
+#     while True:
+#         for pin in range(40):
+#             if GPIO.input(pin + 1):
+#                 print(f"Pin {pin} is HIGH")
+#             else:
+#                 print(f"Pin {pin} is LOW")
+#         time.sleep(1)
 
-except KeyboardInterrupt:
-    print("Program terminated")
-finally:
-    GPIO.cleanup()
+# except KeyboardInterrupt:
+#     print("Program terminated")
+# finally:
+#     GPIO.cleanup()
 
 
 
+
+GPIO.setup(32, GPIO.IN)
+
+if GPIO.input(32):
+    print(f"Pin is high, input {GPIO.input(32)}")
+else:
+    print(f"Pin is low, input {GPIO.input(32)}")
