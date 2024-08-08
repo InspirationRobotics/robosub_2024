@@ -63,6 +63,7 @@ class RobotControl:
         self.pub_thrusters = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
         self.pub_depth = rospy.Publisher("auv/devices/setDepth", Float64, queue_size=10)
         self.pub_rel_depth = rospy.Publisher("auv/devices/setRelativeDepth", Float64, queue_size=10)
+        self.pub_mode = rospy.Publisher("auv/devices/mode", String, queue_size=10)
         
         # TODO: reset pix standalone depth Integration param 
 
@@ -143,7 +144,7 @@ class RobotControl:
         """Change the mode of the sub to specified mode"""
         mode = String()
         mode.data = mode
-        self.pub_rel_depth.publish(mode)
+        self.pub_mode.publish(mode)
         print(f"[INFO] Changing mode to {mode}")
     
 
