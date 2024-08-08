@@ -13,7 +13,7 @@ from auv.utils import arm, disarm, deviceHelper
 
 rospy.init_node("Onyx", anonymous = True)
 
-rc = robot_control.RobotControl()
+rc = robot_control.RobotControl(enable_dvl=False)
 
 target = "Red"
 gate_heading = 220
