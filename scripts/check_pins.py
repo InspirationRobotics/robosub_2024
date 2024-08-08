@@ -1,4 +1,4 @@
-import Jetson.GPIO as GPIO
+import RPi.GPIO as GPIO
 import time
 
 # Pin Definitions (BCM numbering)
@@ -26,9 +26,9 @@ GPIO.setmode(GPIO.BOARD)
 
 
 
-GPIO.setup(34, GPIO.IN)
+GPIO.setup(31, GPIO.IN)
 
-if GPIO.input(34):
-    print(f"Pin is high, input {GPIO.input(34)}")
+if GPIO.input(31):
+    print(f"Pin is high, input {GPIO.input(31)}")
 else:
-    print(f"Pin is low, input {GPIO.input(34)}")
+    print(f"Pin is low, input {GPIO.input(31)}")
