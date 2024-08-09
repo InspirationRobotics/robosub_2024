@@ -496,3 +496,5 @@ if __name__ == "__main__":
     mainTh = threading.Thread(target=main, daemon=True)
     mainTh.start() # Start the thread
     auv.connect("pix_standalone", rate=20)  # Change rate to 10 if issues arise
+    time.sleep(5)
+    auv.change_mode("MODE_ACRO")
