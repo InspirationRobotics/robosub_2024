@@ -7,25 +7,25 @@ from auv.utils import arm, disarm
 rospy.init_node("MotionTest", anonymous=True)
 rc = robot_control.RobotControl(enable_dvl=False)
 
-arm.arm()
-time.sleep(3.0)
+# arm.arm()
+# time.sleep(3.0)
 
 first_time = time.time()
 while time.time() - first_time < 10:
     rc.movement(yaw = 1.0)
 
-# first_time = time.time()
-# while time.time() - first_time < 3:
-#     rc.movement(forward = -2)
+first_time = time.time()
+while time.time() - first_time < 3:
+    rc.movement(forward = -2)
 
-# first_time = time.time()
-# while time.time() - first_time < 3:
-#     rc.movement(lateral = 2)
+first_time = time.time()
+while time.time() - first_time < 3:
+    rc.movement(lateral = 2)
 
-# first_time = time.time()
-# while time.time() - first_time < 3:
-#     rc.movement(lateral = -2)
+first_time = time.time()
+while time.time() - first_time < 3:
+    rc.movement(lateral = -2)
 
 time.sleep(1.0)
 
-disarm.disarm()
+# disarm.disarm()
