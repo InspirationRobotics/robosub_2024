@@ -18,7 +18,7 @@ rc = robot_control.RobotControl(enable_dvl=False)
 target = "Red"
 gate_heading = 220
 
-time.sleep(60)
+# time.sleep(60)
 
 arm.arm()
 
