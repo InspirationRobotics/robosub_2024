@@ -7,7 +7,7 @@ Onyx will complete the Coin Flip, Gate, and Buoy missions.
 import rospy
 import time
 
-from auv.mission import style_mission, buoy_mission, octagon_approach_mission
+from auv.mission import gate2_mission, buoy_mission, octagon_approach_mission
 from auv.motion import robot_control
 from auv.utils import arm, disarm, deviceHelper
 
@@ -29,18 +29,10 @@ time.sleep(5)
 # Rotate towards the heading of the gate, move 2 meters forward
 rc.set_heading(gate_heading)
 
-# Run the gate mission using just the DVL lol
-
-curr_time = time.time()
-
-while time.time() - curr_time < 21:
-    rc.movement(forward=2)
-
-
-# Run the style mission
-style = style_mission.StyleMission()
-style.run()
-style.cleanup()
+# Run the gate mission
+gate = gate2_mission.GateMission()
+gate.run()
+gate.cleanup()
 rc.set_heading(gate_heading - 70)
 
 # # curr_time = time.time()
@@ -52,6 +44,7 @@ buoy = buoy_mission.BuoyMission(target)
 buoy.run()
 buoy.cleanup()
 rc.set_heading(gate_heading + 35)
+
 # Get to the octagon, our model is short range only
 
 curr_time = time.time()
