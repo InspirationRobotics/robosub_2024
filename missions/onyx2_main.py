@@ -18,7 +18,7 @@ rc = robot_control.RobotControl(enable_dvl=False)
 target = "Red"
 gate_heading = 220
 
-# time.sleep(60)
+time.sleep(60)
 
 arm.arm()
 
@@ -54,7 +54,7 @@ buoy.cleanup()
 rc.set_heading(gate_heading + 35)
 # Get to the octagon, our model is short range only
 
-rc.set_depth(0.4)
+rc.set_depth(0.38)
 
 curr_time = time.time()
 
