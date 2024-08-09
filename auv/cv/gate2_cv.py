@@ -20,7 +20,7 @@ class CV:
 
     # Camera to get the camera stream from.
     camera = "/auv/camera/videoOAKdRawForward" 
-    model = "gate_woollett"
+    model = "gate"
 
     def __init__(self, **config):
         """
@@ -44,12 +44,22 @@ class CV:
         self.prev_detected = False
 
         self.target = None
-        self.force_target = True
+        self.force_target = False
+        self.strafed = False
 
         print("[INFO] Gate CV init")
  
     def strafe_smart(self, detection_x):
         """Strafe to align with the correct side of the gate based on target x_coordinate."""
+        if not self.strafed:
+            self.strafed = True
+            self.strafe_time = time.time()
+        
+        if time.time() - self.strafe_time > 5:
+            lateral = 0
+            self.end = True
+            return lateral
+        
         midpoint_frame = self.shape[0]/2
 
         # If detection is to the left of the center of the frame.
