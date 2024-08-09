@@ -35,7 +35,7 @@ class StyleMission:
         compass_heading = self.robot_control.get_heading()
         rotations = 2
         startTime = time.time()
-        while time.time()-startTime<rotations*11:
+        while time.time()-startTime<rotations*11.5:
             self.robot_control.movement(yaw=-1.5)
             time.sleep(0.05)
 
