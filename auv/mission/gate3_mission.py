@@ -35,9 +35,9 @@ class GateMission:
         for file_name in self.cv_files:
             self.cv_handler.start_cv(file_name, self.callback)
 
-        self.cv_handler.set_target("gate2_cv", target)
+        self.cv_handler.set_target("gate3_cv", target)
         curr_time = time.time()
-        while time.time() - curr_time < 4:
+        while time.time() - curr_time < 2:
             self.robot_control.movement(forward = 3)
 
         print("[INFO] Gate Mission Init")
@@ -82,10 +82,10 @@ class GateMission:
             self.next_data = {}
 
             # Do something with the data.
-            lateral = self.data["gate2_cv"].get("lateral", None)
-            forward = self.data["gate2_cv"].get("forward", None)
-            yaw = self.data["gate2_cv"].get("yaw", None)
-            end = self.data["gate2_cv"].get("end", None)
+            lateral = self.data["gate3_cv"].get("lateral", None)
+            forward = self.data["gate3_cv"].get("forward", None)
+            yaw = self.data["gate3_cv"].get("yaw", None)
+            end = self.data["gate3_cv"].get("end", None)
 
             if end:
                 print("Ending")
