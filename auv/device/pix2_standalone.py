@@ -196,7 +196,6 @@ class AUV(RosHandler):
         Returns:
             result.mode_sent (str): The mode that was sent to autopilot to set the new mode
         """
-        mode = str(mode)
         print(f"[DEBUG] Set mode to {mode}")
         # Handle althold specially, setting mode to hold depth and to stabalize to be the new modes
         if mode == MODE_ALTHOLD:
