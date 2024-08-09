@@ -411,6 +411,7 @@ class AUV(RosHandler):
                         self.modeRequest = modeRequest.data
                         while self.mode != self.modeRequest:
                             self.change_mode(self.modeRequest)
+                            print("I changed the mode lol")
                             time.sleep(0.1)
                     # Publish data from sensors(IMU, compass)
                     self.publish_sensors()
