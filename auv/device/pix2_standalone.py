@@ -445,7 +445,7 @@ def main():
         print("Connected!")
 
         # Calibrate the depth first
-        auv.change_mode("ACRO")
+        auv.change_mode("ALT_HOLD")
         auv.calibrate_depth()
         time.sleep(2)
         # arming
@@ -497,4 +497,4 @@ if __name__ == "__main__":
     mainTh.start() # Start the thread
     auv.connect("pix_standalone", rate=20)  # Change rate to 10 if issues arise
     time.sleep(5)
-    auv.change_mode("ACRO")
+    auv.change_mode("ALT_HOLD")
