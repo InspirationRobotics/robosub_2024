@@ -196,6 +196,7 @@ class AUV(RosHandler):
         Returns:
             result.mode_sent (str): The mode that was sent to autopilot to set the new mode
         """
+        mode = str(mode)
         print(f"[DEBUG] Set mode to {mode}")
         # Handle althold specially, setting mode to hold depth and to stabalize to be the new modes
         if mode == MODE_ALTHOLD:
@@ -444,7 +445,7 @@ def main():
         print("Connected!")
 
         # Calibrate the depth first
-        auv.change_mode(MODE_ACRO)
+        auv.change_mode("ACRO")
         auv.calibrate_depth()
         time.sleep(2)
         # arming
@@ -496,4 +497,4 @@ if __name__ == "__main__":
     mainTh.start() # Start the thread
     auv.connect("pix_standalone", rate=20)  # Change rate to 10 if issues arise
     time.sleep(5)
-    auv.change_mode(MODE_ACRO)
+    auv.change_mode("ACRO")
