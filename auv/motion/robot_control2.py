@@ -142,7 +142,7 @@ class RobotControl:
     
     def set_mode(self, mode_input):
         """Change the mode of the sub to specified mode"""
-        mode = String()
+        mode = str()
         mode.data = mode_input
         self.pub_mode.publish(mode)
         print(f"[INFO] Changing mode to {mode}")
