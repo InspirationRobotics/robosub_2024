@@ -444,7 +444,7 @@ def main():
         print("Connected!")
 
         # Calibrate the depth first
-        auv.change_mode("ALT_HOLD")
+        auv.change_mode("ACRO")
         auv.calibrate_depth()
         time.sleep(2)
         # arming
