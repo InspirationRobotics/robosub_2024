@@ -43,8 +43,8 @@ style.run()
 style.cleanup()
 rc.set_heading(gate_heading - 70)
 
-# # curr_time = time.time()
-# # while time.time() - curr_time < 7:
+# curr_time = time.time()
+# while time.time() - curr_time < 5:
 #     rc.movement(forward=2)
 
 # Run the buoy mission
