@@ -7,7 +7,7 @@ from auv.utils import arm, disarm
 rospy.init_node("roll_test", anonymous=True)
 rc = robot_control.RobotControl(enable_dvl=False)
 
-arm.arm()
+# arm.arm()
 # time.sleep(3.0)
 
 first_time = time.time()
