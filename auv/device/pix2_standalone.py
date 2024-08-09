@@ -198,7 +198,7 @@ class AUV(RosHandler):
         """
         if not isinstance(mode, str):
             mode = str(mode)
-            mode = mode[1:-1]
+            mode = mode[7:-1]
         print(f"[DEBUG] Set mode to {mode}")
         # Handle althold specially, setting mode to hold depth and to stabalize to be the new modes
         if mode == MODE_ALTHOLD:
