@@ -8,7 +8,7 @@ rospy.init_node("roll_test", anonymous=True)
 rc = robot_control.RobotControl(enable_dvl=False)
 
 arm.arm()
-time.sleep(3.0)
+# time.sleep(3.0)
 
 first_time = time.time()
 while time.time() - first_time < 10:
@@ -28,4 +28,4 @@ while time.time() - first_time < 10:
 
 time.sleep(1.0)
 
-disarm.disarm()
+# disarm.disarm()
