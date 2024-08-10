@@ -11,19 +11,35 @@ rc = robot_control.RobotControl(enable_dvl=False)
 # time.sleep(3.0)
 
 first_time = time.time()
-while time.time() - first_time < 10:
+while time.time() - first_time < 5:
     rc.movement(yaw = 1.0)
 
 first_time = time.time()
-while time.time() - first_time < 3:
+while time.time() - first_time < 5:
+    rc.movement(yaw = -1.0)
+
+first_time = time.time()
+while time.time() - first_time < 5:
     rc.movement(forward = -2)
 
 first_time = time.time()
-while time.time() - first_time < 3:
+while time.time() - first_time < 5:
+    rc.movement(forward = 2)
+
+rc.set_relative_depth(0.1)
+
+time.sleep(5)
+
+rc.set_relative_depth(-0.1)
+
+time.sleep(5)
+
+first_time = time.time()
+while time.time() - first_time < 5:
     rc.movement(lateral = 2)
 
 first_time = time.time()
-while time.time() - first_time < 3:
+while time.time() - first_time < 5:
     rc.movement(lateral = -2)
 
 time.sleep(1.0)
