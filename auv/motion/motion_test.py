@@ -22,6 +22,7 @@ while time.time() - first_time < 5:
 
 first_time = time.time()
 while time.time() - first_time < 5:
+<<<<<<< HEAD
     rc.movement(forward = 5)
 
 first_time = time.time()
