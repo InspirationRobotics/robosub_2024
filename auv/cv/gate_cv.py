@@ -125,20 +125,7 @@ class CV:
                     self.state = "strafe"
         
         if self.state == "search":
-            if self.start_time == None:
-                self.start_time = time.time()
-                self.last_lateral = 0.75  # Initial direction
-
-            elapsed_time = time.time() - self.start_time
-
-            if elapsed_time < self.lateral_time_search:
-                lateral = self.last_lateral
-            else:
-                # Switch direction and reset timer
-                self.last_lateral = -self.last_lateral
-                self.start_time = time.time()
-                lateral = self.last_lateral
-                self.lateral_time_search += 5
+            yaw = -1
 
         if self.state == "strafe":
             lateral = self.strafe_smart(target_x)
