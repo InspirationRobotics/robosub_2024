@@ -16,9 +16,9 @@ rospy.init_node("Onyx", anonymous = True)
 rc = robot_control.RobotControl(enable_dvl=False)
 
 target = "Red"
-gate_heading = 220
+gate_heading = 246
 
-time.sleep(60)
+# time.sleep(60)
 
 arm.arm()
 

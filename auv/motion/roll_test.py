@@ -1,18 +1,18 @@
 import rospy
 import time
-from auv.motion import robot_control
+from auv.motion import robot_control2
 from auv.utils import arm, disarm
 
 
 rospy.init_node("roll_test", anonymous=True)
-rc = robot_control.RobotControl(enable_dvl=False)
+rc = robot_control2.RobotControl(enable_dvl=False)
 
 arm.arm()
 time.sleep(3.0)
 
 first_time = time.time()
 while time.time() - first_time < 10:
-    rc.movement(pitch = 5)
+    rc.movement(pitch=200)
 
 # first_time = time.time()
 # while time.time() - first_time < 3:
