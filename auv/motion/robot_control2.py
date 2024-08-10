@@ -64,6 +64,7 @@ class RobotControl:
         self.pub_depth = rospy.Publisher("auv/devices/setDepth", Float64, queue_size=10)
         self.pub_rel_depth = rospy.Publisher("auv/devices/setRelativeDepth", Float64, queue_size=10)
         self.pub_mode = rospy.Publisher("auv/status/mode", String, queue_size=10)
+        self.pub_button = rospy.Publisher("/mavros/manual_control/send", mavros_msgs.msg.ManualControl, queue_size=10)
         
         # TODO: reset pix standalone depth Integration param 
 
@@ -146,6 +147,13 @@ class RobotControl:
         mode.data = mode_input
         self.pub_mode.publish(mode)
         print(f"[INFO] Changing mode to {mode}")
+    
+    def button_press(self, button=4):
+        """This simulates a button press on QGroundControl, primarily used to toggle roll/pitch
+        using unsigned 16 bit integer. Lowest bit is button 1, highest bit is button 16"""
+        press = mavros_msgs.msg.ManualControl()
+        press.buttons = button
+        self.pub_button.publish(press)
     
 
     def movement(
@@ -688,3 +696,5 @@ if __name__ == "__main__":
     rospy.init_node("mode_test", anonymous=True)
     mode = input("Make your mode here: ")
     rc.set_mode(mode)
+    button = input("Press a button: ")
+    rc.button_press(button)
