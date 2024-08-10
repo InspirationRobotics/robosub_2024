@@ -1,17 +1,24 @@
 import time
 
-from auv.mission import surfacing_mission
+from auv.mission import octagon_approach_mission
 from auv.utils import arm, disarm, deviceHelper
+from auv.motion import robot_control
 
 import rospy
 rospy.init_node("missions", anonymous=True)
+
+rc = robot_control.RobotControl()
 
 # load sub config
 config = deviceHelper.variables
 arm.arm()
 
+rc.set_depth(0.38)
+
+time.sleep(5.0)
+
 # create the mission object
-surfacingMission = surfacing_mission.SurfacingMission(**config)
+octagonMission = octagon_approach_mission.OctagonApproachMission(**config)
 
 # run the mission
 surfacingMission.run()
@@ -20,5 +27,5 @@ surfacingMission.run()
 surfacingMission.cleanup()
 
 # end
-print("[INFO] Mission ended")
+print("[INFO] Octagon Mission ended")
 disarm.disarm()
