@@ -696,5 +696,5 @@ if __name__ == "__main__":
     rospy.init_node("mode_test", anonymous=True)
     mode = input("Make your mode here: ")
     rc.set_mode(mode)
-    button = input("Press a button: ")
+    button = int(input("Press a button: "))
     rc.button_press(button)
