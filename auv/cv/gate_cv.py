@@ -40,7 +40,7 @@ class CV:
 
         self.start_time = None
         self.last_lateral = 0
-        self.lateral_time_search = 2
+        self.lateral_time_search = 5
         self.prev_detected = False
 
         self.target = None
@@ -127,7 +127,7 @@ class CV:
         if self.state == "search":
             if self.start_time == None:
                 self.start_time = time.time()
-                self.last_lateral = 1  # Initial direction
+                self.last_lateral = 0.75  # Initial direction
 
             elapsed_time = time.time() - self.start_time
 
@@ -138,7 +138,7 @@ class CV:
                 self.last_lateral = -self.last_lateral
                 self.start_time = time.time()
                 lateral = self.last_lateral
-                self.lateral_time_search += 1
+                self.lateral_time_search += 5
 
         if self.state == "strafe":
             lateral = self.strafe_smart(target_x)
