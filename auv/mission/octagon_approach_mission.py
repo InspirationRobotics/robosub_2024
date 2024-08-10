@@ -39,7 +39,7 @@ class OctagonApproachMission:
 
         self.cv_handler.set_target("octagon_approach_cv", target)
         print("[INFO] octagon Approach Mission Init")
-
+        self.robot_control.set_depth(0.38)
     def callback(self, msg):
         """
         Calls back the cv_handler output -- you can have multiple callbacks for multiple CV handlers. Converts the output into JSON format.
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     # You can also import it in a mission file outside of the package
     import time
     from auv.utils import deviceHelper
-
+    from auv.motion import robot_control
     rospy.init_node("octagon_approach_mission", anonymous=True)
 
     config = deviceHelper.variables
