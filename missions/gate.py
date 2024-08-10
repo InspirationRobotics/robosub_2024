@@ -10,6 +10,7 @@ rospy.init_node("GATE_MISSION", anonymous=True)
 rc = robot_control.RobotControl()
 
 config = deviceHelper.variables
+time.sleep(60)
 arm.arm()
 
 rc.set_depth(0.65)
