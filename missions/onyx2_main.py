@@ -26,10 +26,8 @@ rc.set_depth(0.65)
 
 time.sleep(5)
 
-# Rotate towards the heading of the gate, move 2 meters forward
+# Rotate towards the heading of the gate.
 rc.set_heading(gate_heading)
-
-# Run the gate mission using just the DVL lol
 
 curr_time = time.time()
 
@@ -52,8 +50,8 @@ buoy = buoy_mission.BuoyMission(target)
 buoy.run()
 buoy.cleanup()
 rc.set_heading(gate_heading + 35)
-# Get to the octagon, our model is short range only
 
+# Get to the octagon, our model is short range only
 rc.set_depth(0.38)
 
 curr_time = time.time()
