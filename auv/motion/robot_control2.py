@@ -7,10 +7,12 @@ pixhawk flight controller and the software -- that is the job that pixstandalone
 import time
 
 # Import the MAVROS message types that are needed
+import geometry_msgs.msg._twist
 import mavros_msgs.msg
 import mavros_msgs.srv
 import rospy
 from std_msgs.msg import Float64, Float32MultiArray, String
+import geometry_msgs.msg
 
 # Import the PID controller
 from simple_pid import PID
@@ -65,6 +67,7 @@ class RobotControl:
         self.pub_rel_depth = rospy.Publisher("auv/devices/setRelativeDepth", Float64, queue_size=10)
         self.pub_mode = rospy.Publisher("auv/status/mode", String, queue_size=10)
         self.pub_button = rospy.Publisher("/mavros/manual_control/send", mavros_msgs.msg.ManualControl, queue_size=10)
+        self.pub_ang_vel = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel_unstamped", geometry_msgs.msg.Twist, queue_size=10)
         
         # TODO: reset pix standalone depth Integration param 
 
@@ -700,11 +703,18 @@ class RobotControl:
             self.movement(lateral=power)
         print("[INFO] Roll terminated.")
 
+    def roll2(self, roll_vel=1):
+        """This should publish a roll velocity in rad/sec"""
+        roll_cmd = geometry_msgs.msg.Twist()
+        roll_cmd.angular.x = roll_vel
+        self.pub_ang_vel.publish(roll_cmd)
+
 if __name__ == "__main__":
     rc = RobotControl()
     rospy.init_node("mode_test", anonymous=True)
     mode = input("Make your mode here: ")
     rc.set_mode(mode)
-    while True:
-        button = int(input("Press a button: "))
-        rc.button_press(button)
+    button = int(input("Press a button: "))
+    rc.button_press(button)
+    roll_command = input("Make your roll velocity: ")
+    rc.roll2(roll_command)
