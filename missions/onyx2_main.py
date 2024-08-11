@@ -73,7 +73,7 @@ for i in range(3):
     curr_time = time.time()
     
     while time.time() - curr_time < 20:
-        rc.movement(lateral=2.5)
+        rc.movement(lateral=-2.5)
 
 
 # Octagon mission
