@@ -28,7 +28,7 @@ except:
 
 arm.arm()
 
-rc.set_depth(0.75) # Set the depth to 0.75 m
+rc.set_depth(0.5) # Set the depth to 0.75 m
 
 time.sleep(90)
 

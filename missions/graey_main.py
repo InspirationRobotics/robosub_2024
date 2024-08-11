@@ -10,7 +10,7 @@ import time
 from auv.mission import style_mission, buoy_mission, octagon_approach_mission, coms
 from auv.motion import robot_control
 from auv.utils import arm, disarm, deviceHelper
-from auv.device.modems import modems_api
+# from auv.device.modems import modems_api
 
 rospy.init_node("Graey", anonymous = True)
 
@@ -70,13 +70,13 @@ while time.time() - curr_time < 21:
 # Coms mission, experimental
 
 
-try:
-    modem = modems_api.Modem()
-    modem.send_msg("graey handshake") # Send a modem message
-    fail_modem = False
-except:
-    fail_modem = True
-    print("Failed to start modem, starting directly")
+#try:
+#    modem = modems_api.Modem()
+#    modem.send_msg("graey handshake") # Send a modem message
+#    fail_modem = False
+#except:
+#    fail_modem = True
+#    print("Failed to start modem, starting directly")
 
 
 print("[INFO] Mission run terminate")
