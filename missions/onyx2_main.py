@@ -80,4 +80,3 @@ except:
 
 print("[INFO] Mission run terminate")
 
-disarm.disarm()

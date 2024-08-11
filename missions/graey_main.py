@@ -1,49 +1,83 @@
 """
-To create a sequential order of missions for Graey to follow.
+To create a sequential order of missions for Onyx to follow. This is the official mission script.
 
-Graey will complete the Rough Seas, Enter the Pacific, Path, and Hydrothermal Vent missions.
+Onyx will complete the coin flip, go through the "Red" side of the gate, circumnavigate clockwise around the buoy, and then surface in the octagon.
 """
 
 import rospy
 import time
 
-from auv.mission import buoy_mission
+from auv.mission import style_mission, buoy_mission, octagon_approach_mission, coms
 from auv.motion import robot_control
 from auv.utils import arm, disarm, deviceHelper
+from auv.device.modems import modems_api
 
-rospy.init_node("prequal_mission", anonymous = True)
+rospy.init_node("Graey", anonymous = True)
 
-marker_mission = buoy_mission.BuoyMission()
-rc = robot_control.RobotControl()
+rc = robot_control.RobotControl(enable_dvl=False)
 
-movement_list = [-2, 2.5, 2] # lateral, forward, yaw
-first_time = time.time()
+target = "Red"
+gate_heading = 220
 
+time.sleep(60)
 
 arm.arm()
 
+rc.set_depth(0.7)
+
 time.sleep(5)
-first_time = time.time()
 
-# while time.time() - first_time < 2.4:
-#     rc.movement(yaw = movement_list[2])
+# Rotate towards the heading of the gate.
+# rc.set_heading(gate_heading)
+
+curr_time = time.time()
+
+while time.time() - curr_time < 21:
+    rc.movement(forward=2)
 
 
-while time.time() - first_time < 19:
-    rc.movement(forward = movement_list[1])
+# Run the style mission
+# style = style_mission.StyleMission()
+# style.run()
+# style.cleanup()
+# rc.set_heading(gate_heading - 70)
 
-time.sleep(1)
+# # curr_time = time.time()
+# # while time.time() - curr_time < 5:
+# #     rc.movement(forward=2)
 
-marker_mission.circumnavigate()
-# marker_mission.cleanup()
+# # Run the buoy mission
+# buoy = buoy_mission.BuoyMission(target)
+# buoy.run()
+# buoy.cleanup()
+# rc.set_heading(gate_heading + 35)
 
-# Move forward for 8 secs
+# # Get to the octagon, our model is short range only
+# rc.set_depth(0.38)
 
-first_time = time.time()
+# curr_time = time.time()
 
-while time.time() - first_time < 10:
-    rc.movement(forward = movement_list[1])
+# while time.time() - curr_time < 17:
+#     rc.movement(forward=2.5)
 
-time.sleep(1)
+# # Octagon mission
+# octagon = octagon_approach_mission.OctagonApproachMission()
+# octagon.run()
+# octagon.cleanup()
 
-disarm.disarm()
+# time.sleep(1.0)
+
+# Coms mission, experimental
+
+
+try:
+    modem = modems_api.Modem()
+    modem.send_msg("graey handshake") # Send a modem message
+    fail_modem = False
+except:
+    fail_modem = True
+    print("Failed to start modem, starting directly")
+
+
+print("[INFO] Mission run terminate")
+
