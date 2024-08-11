@@ -1,7 +1,7 @@
 """
-To create a sequential order of missions for Onyx to follow.
+To create a sequential order of missions for Onyx to follow. This is the official mission script.
 
-Onyx will complete the Coin Flip, Gate, and Buoy missions.
+Onyx will complete the coin flip, go through the "Red" side of the gate, circumnavigate clockwise around the buoy, and then surface in the octagon.
 """
 
 import rospy
