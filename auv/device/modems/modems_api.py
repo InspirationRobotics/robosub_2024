@@ -3,6 +3,7 @@ Creates modem (intersub communication) functionality.
 """
 
 import time
+import Jetson.GPIO as GPIO
 import serial
 import threading
 from ...utils.deviceHelper import dataFromConfig, variables # Configuration of the various devices attached to a sub (either Graey or Onyx)
@@ -20,10 +21,10 @@ class LED:
         Initialize the LED class; establishes the Jetson pin to light up when receiving (32) and sending (31) messages.
         """
         try:
-            import Jetson.GPIO as GPIO
+            import RPi.GPIO as GPIO
             self.enabled = True
         except ImportError:
-            print("Jetson.GPIO not found, disabling LED")
+            print("RPi.GPIO not found, disabling LED")
             self.enabled = False
 
         self.t_pin = 31
