@@ -62,7 +62,7 @@ rc.set_heading(gate_heading + 35)
 
 curr_time = time.time()
 
-while time.time() - curr_time < 20:
+while time.time() - curr_time < 15:
     rc.movement(forward=2.5)
 
 
