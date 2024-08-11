@@ -689,7 +689,16 @@ class RobotControl:
             time.sleep(0.1)
 
         print(f"[INFO] Finished setting heading to {target}")
-        
+    
+    def roll(self, power=3, set_time=5):
+        """Roll with specified time and power, with toggle continuously being pressed"""
+        start_time = time.time()
+        button_number = 256 # Most likely?
+        print("[INFO] Starting roll.")
+        while time.time() - start_time < set_time:
+            self.button_press(button_number)
+            self.movement(lateral=power)
+        print("[INFO] Roll terminated.")
 
 if __name__ == "__main__":
     rc = RobotControl()
