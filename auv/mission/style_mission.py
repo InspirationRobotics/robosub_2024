@@ -1,6 +1,6 @@
 """
 STYLE MISSION:
-Turns 720 degrees and then returns to the initial heading
+Turns 720 degrees.
 """
 
 import time
@@ -43,7 +43,7 @@ class StyleMission:
             self.robot_control.movement(yaw=0)
             time.sleep(0.05)
 
-        self.robot_control.setHeadingOld(compass_heading)
+        # self.robot_control.setHeadingOld(compass_heading)
 
     def cleanup(self):
         """
