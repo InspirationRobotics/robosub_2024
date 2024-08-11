@@ -6,6 +6,7 @@ import time
 import serial
 import threading
 from ...utils.deviceHelper import dataFromConfig, variables # Configuration of the various devices attached to a sub (either Graey or Onyx)
+from auv.mission.style_mission import StyleMission
 
 port = dataFromConfig("modem") # Get the modem port ID from the JSON config file of the sub
 
@@ -51,6 +52,10 @@ class LED:
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.r_pin, GPIO.OUT)
         GPIO.output(self.r_pin, GPIO.HIGH)
+        # Do sync yaw
+        yaw_cmd = StyleMission()
+        yaw_cmd.run()
+        yaw_cmd.cleanup()
         time.sleep(0.1)
         self.clean()
 
