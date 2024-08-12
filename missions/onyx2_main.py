@@ -67,13 +67,11 @@ curr_time = time.time()
 while time.time() - curr_time < 15:
     rc.movement(forward=2.5)
 
-# rc.set_heading(gate_heading + 25)
+rc.set_heading(gate_heading + 25)
 curr_time = time.time()
 
 while time.time() - curr_time < 50:
     rc.movement(lateral=-2.5)
-
-
 
 # Octagon mission
 octagon = octagon_approach_mission.OctagonApproachMission()
