@@ -33,7 +33,7 @@ rc.set_heading(gate_heading)
 
 curr_time = time.time()
 
-while time.time() - curr_time < 27:
+while time.time() - curr_time < 25:
     rc.movement(forward=2)
 
 
@@ -57,6 +57,8 @@ rc.set_heading(gate_heading - 70)
 buoy = buoy_mission.BuoyMission(target)
 buoy.run()
 buoy.cleanup()
+
+rc.set_depth(0.45)
 rc.set_heading(gate_heading + 35)
 # Get to the octagon, our model is short range only
 
@@ -70,7 +72,6 @@ curr_time = time.time()
 
 while time.time() - curr_time < 50:
     rc.movement(lateral=-2.5)
-
 
 # Octagon mission
 octagon = octagon_approach_mission.OctagonApproachMission()
