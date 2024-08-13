@@ -261,7 +261,7 @@ class Modem:
 
         # Call the _on_send_msg_logging function with the correct arguments, to log the sent message
         for callback in self.send_callbacks:
-            callback(dest_addr, msg, ack, None)
+            callback(dest_addr, msg, ack)
 
         return t
 
