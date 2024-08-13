@@ -3,7 +3,7 @@ Creates modem (intersub communication) functionality.
 """
 
 import time
-import Jetson.GPIO as GPIO
+import RPi.GPIO as GPIO
 import serial
 import threading
 from ...utils.deviceHelper import dataFromConfig, variables # Configuration of the various devices attached to a sub (either Graey or Onyx)
@@ -353,7 +353,7 @@ class Modem:
         """
         msg_type = packet[:2] # Get the type of the message
 
-        if msg_type not in self.recv_callbacks.keys():
+        if msg_type not in self.parse_msg.keys():
             return
 
         # Parse the message by message type
@@ -482,7 +482,7 @@ class Modem:
         ack = None
         distance = packet[7:12] * 1500 * 3.125e-5 # Calculate the distance by extracting the number defined by positions 7-12 and multiplying by constants
 
-        return msg, src_addr, ack, distance
+        return src_addr, msg, ack, distance
 
     def parse_TO(self, packet: str):
         """
@@ -515,6 +515,14 @@ class Modem:
                 f.write(f"[{time.time()}][RECV][src:{src_addr}][ACK:{ack}]\n")
             else:
                 f.write(f"[{time.time()}][RECV][src:{src_addr}][ack:{ack}][dist:{distance}] {msg}\n")
+
+        with open("underwater_coms_recv.log", "a+") as f:
+            if distance is not None and msg is not None:
+                f.write(f"[{time.time()}][RECV][src:{src_addr}][ack:{ack}][dist:{distance}] {msg}\n")
+            if distance is not None:
+                f.write(f"[{time.time()}][RECV][src:{src_addr}][dist:{distance}]\n")
+            elif msg is None:
+                f.write(f"[{time.time()}][RECV][src:{src_addr}][ACK:{ack}]\n")
 
     def on_receive_msg(self, src_addr: str, msg: str, ack: int, distance: int):
         """
