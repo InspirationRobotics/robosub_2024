@@ -122,7 +122,7 @@ class Modem:
         # A simple way to ensure message is received through acknowledgment messages
         self.ACK = 0
         self.blocked = False
-        self.in_transit = []  # [message, time_sent, ack-expected, modemaddr, priority]
+        self.in_transit = []  # [message, time_sent, time_last_sent, ack-expected, modemaddr, priority]
         self.ack_received = [] # To hold the received acknowledgment numbers 
 
         # Variables specific to this particular type of modem
@@ -219,7 +219,7 @@ class Modem:
             # ack message
             msg = f"@{ack}"
         else:
-            # Create a normal messsage with and acknowledgment message
+            # Create a normal message with and acknowledgment message
             # If there is no acknowledgment message, generate a new one
             if ack is None:
                 self.ACK += 1
@@ -341,8 +341,8 @@ class Modem:
                 time.sleep(0.5)
             time.sleep(0.5)
 
-            # Remove timed-out (to_remove) messages and received acknowledgment messages (self.ack_received)
-            self.in_transit = [packet for it, packet in enumerate(self.in_transit) if it not in to_remove and packet[3] not in self.ack_received]
+            # Remove timed-out (to_remove) messages and received acknowledgmen[packet for it, packet in enumerate(self.in_transit) if it not in to_remt messages (self.ack_received)
+            self.in_transit = [packet for (it, packet) in enumerate(self.in_transit) if it not in to_remove and packet[3] not in self.ack_received]
 
     def _dispatch(self, packet):
         """
@@ -508,21 +508,16 @@ class Modem:
         """
 
         # Open the log file and write the message into the file
-        with open("underwater_coms_recv.log", "a+") as f:
-            if distance is not None:
-                f.write(f"[{time.time()}][RECV][src:{src_addr}][dist:{distance}]\n")
-            elif msg is None:
-                f.write(f"[{time.time()}][RECV][src:{src_addr}][ACK:{ack}]\n")
-            else:
-                f.write(f"[{time.time()}][RECV][src:{src_addr}][ack:{ack}][dist:{distance}] {msg}\n")
 
         with open("underwater_coms_recv.log", "a+") as f:
             if distance is not None and msg is not None:
                 f.write(f"[{time.time()}][RECV][src:{src_addr}][ack:{ack}][dist:{distance}] {msg}\n")
-            if distance is not None:
-                f.write(f"[{time.time()}][RECV][src:{src_addr}][dist:{distance}]\n")
-            elif msg is None:
-                f.write(f"[{time.time()}][RECV][src:{src_addr}][ACK:{ack}]\n")
+            elif distance is not None:
+                f.write(f"[{time.time()}][RECV][src:{src_addr}][ack:{ack}][dist:{distance}]\n")
+            elif msg is not None:
+                f.write(f"[{time.time()}][RECV][src:{src_addr}][ack:{ack}] {msg}\n")
+            else:
+                f.write(f"[{time.time()}][RECV][src:{src_addr}][ack:{ack}]\n")
 
     def on_receive_msg(self, src_addr: str, msg: str, ack: int, distance: int):
         """

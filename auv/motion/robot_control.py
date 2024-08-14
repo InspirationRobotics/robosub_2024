@@ -195,6 +195,9 @@ class RobotControl:
         target = (target) % 360
         print(f"[INFO] Setting heading to {target}")
 
+        time_check = time.time()
+        self.prev_error = None
+
         while not rospy.is_shutdown():
             if self.compass is None:
                 print("[WARN] Compass not ready")
@@ -202,6 +205,18 @@ class RobotControl:
                 continue
 
             error = heading_error(self.compass, target)
+
+            # Break the function if the error hasn't changed 
+            # by 3 degrees over 3 secs - prevents the AUV from getting
+            # stuck at an "incorrect" heading like RoboSub 2024
+            if time.time() - time_check > 3:
+                time_check = time.time()
+                if self.prev_error is None:
+                    self.prev_error = error
+                elif abs(error - self.prev_error) < 3:
+                    break
+                else:
+                    self.prev_error = error
 
             # Normalize error to the range -1 to 1 for the PID controller
             output = self.PIDs["yaw"](-error / 180)

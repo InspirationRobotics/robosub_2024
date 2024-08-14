@@ -153,7 +153,8 @@ class RobotControl:
     
     def button_press(self, button=4):
         """This simulates a button press on QGroundControl, primarily used to toggle roll/pitch
-        using unsigned 16 bit integer. Lowest bit is button 1, highest bit is button 16"""
+        using unsigned 16 bit integer. Lowest bit is button 0, second lowest bit is button 1, etc.
+        Be warned that the sub disarms about 3 seconds after any button press"""
         press = mavros_msgs.msg.ManualControl()
         press.buttons = button
         self.pub_button.publish(press)
