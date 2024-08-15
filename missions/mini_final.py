@@ -44,3 +44,5 @@ for i in range(3):
 time.sleep(1.0)
 
 print("[INFO] Mission run terminate")
+
+disarm.disarm()
