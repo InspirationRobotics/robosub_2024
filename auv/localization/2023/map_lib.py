@@ -22,7 +22,7 @@ def init_mapgrid(orientation, center_pose, size, mapgrid):
 
 def norm_ang(a):
     if a > 2 * PI:
-        return a % 360
+        return a % (2 * PI)
 
     if a < 0:
         return (2 * 3.14159) + (a % -(2 * PI))
