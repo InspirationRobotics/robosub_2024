@@ -372,7 +372,7 @@ class Modem:
             self.data_buffer = ""
 
         # Dispatch message to the received messsage callbacks
-        for callback in self.recv_callbacks[msg_type]:
+        for callback in self.recv_callbacks:
             callback(src_addr, msg, ack, distance)
 
     def _receive_loop(self):
