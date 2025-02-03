@@ -1,5 +1,5 @@
 """
-Bin Approach CV. Finds the bin, and approaches the bin until it is either big enough or can no longer see it.
+Bn Approach CV. Finds the bin, and approaches the bin until it is either big enough or can no longer see it.
 """
 
 import time
