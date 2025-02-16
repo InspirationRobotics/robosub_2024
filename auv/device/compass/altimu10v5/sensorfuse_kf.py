@@ -4,16 +4,16 @@ from filterpy.common import Q_discrete_white_noise
 from auv.utils import deviceHelper
 from auv.device.dvl import DVL
 
+#considerations:
+#add functionality for onyx and graey
+#update frequency of dvl vs imu
+
 class SensorFuse:
-    def __init__(self, *, dvl_port = deviceHelper.dataFromConfig("dvl"), dvl_baudrate : int = 115200):
+    def __init__(self):
         self.ekf = self.create_filter()
         self.DVL = DVL()
         self.raw_data = self.DVL.read_onyx
-        # self.IMU =
-    #some random stuff here
-
-
-    # to here
+        # self.IMU = use rospy to get data from pixhawk
 
 # ------------- Extended Kalman Filter ----------------
     def create_filter(self) -> ExtendedKalmanFilter:
@@ -47,4 +47,19 @@ class SensorFuse:
         
         return ekf
 
-
+    #Obtain updated IMU data
+    def update_imu(self):
+        
+        return 
+    
+    #update DVL data
+    def update_dvl(self):
+        
+        return 
+    
+    #perform prediction
+    def update_vel(self):
+        #calculate time delta
+        #vel to acceleration
+        #update filter
+        return
