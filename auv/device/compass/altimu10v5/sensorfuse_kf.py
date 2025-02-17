@@ -15,6 +15,7 @@ class SensorFuse:
         self.ekf = self.create_filter()
         self.DVL = DVL()
         self.imu = {"ax" : 0, "ay": 0, "az": 0}
+        self.last_time = None
 
 # ------------- Extended Kalman Filter ----------------
     def create_filter(self) -> ExtendedKalmanFilter:
@@ -65,12 +66,37 @@ class SensorFuse:
     #update DVL data
     #desired dvl data can be acquired by doing dvl.vel_rot[0, 1 or 2]?
     def update_dvl(self):
-        self.DVL.read_onyx
-        return 
-    
-    #perform prediction
+        # Read DVL data
+        self.DVL.read_onyx()
+        # Assuming DVL.vel_rot is a list or array with [vel_x, vel_y, vel_z]
+        self.dvl_vel = np.array([self.DVL.vel_rot[0], self.DVL.vel_rot[1], self.DVL.vel_rot[2]])
+
     def update_vel(self):
-        #calculate time delta
-        #vel to acceleration
-        #update filter
-        return
+        # Calculate time delta
+        current_time = self.sub.get_current_time()  # Assuming the AUV class has a method to get current time
+        if self.last_time is None:
+            self.last_time = current_time
+            return
+        dt = current_time - self.last_time
+        self.last_time = current_time
+
+        # Update the state transition matrix F with the new dt
+        self.ekf.F = np.array([  [1., 0., 0., dt, 0., 0.],   #dvl_vel_x
+                                  [0., 1., 0., 0., dt, 0.],   #dvl_vel_y
+                                  [0., 0., 1., 0., 0., dt],   #dvl_vel_z
+                                  [0., 0., 0., 1., 0., 0.],   #imu_accel_x
+                                  [0., 0., 0., 0., 1., 0.],   #imu_accel_y
+                                  [0., 0., 0., 0., 0., 1.]])  #imu_accel_z
+
+        # Predict the next state
+        self.ekf.predict()
+
+        # Update the filter with the latest DVL measurements
+        self.ekf.update(self.dvl_vel)
+
+        # Update the state with IMU data
+        self.ekf.x[3:] = np.array([self.imu["ax"], self.imu["ay"], self.imu["az"]])
+
+    def get_estimated_velocity(self):
+        # Return the estimated velocity (x, y, z)
+        return self.ekf.x[:3]
