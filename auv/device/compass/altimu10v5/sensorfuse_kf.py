@@ -33,40 +33,65 @@ class SensorFuse:
         self.dt = 0
         self.last_time = 0
 
+    def f(x, dt):
+        # Non-linear state transistion matrix
+        x_new = np.copy(x)
+        x_new[0] += x[3] * dt  # vel_x update
+        x_new[1] += x[4] * dt  # vel_y update
+        x_new[2] += x[5] * dt  # vel_z update
+        return x_new
+
+    def FJacobina_at(x, dt):
+        return np.array([   [1., 0., 0., dt, 0., 0.],   #dvl_vel_x depends on vx and ax
+                            [0., 1., 0., 0., dt, 0.],   #dvl_vel_y depends on vy and ay
+                            [0., 0., 1., 0., 0., dt],   #dvl_vel_z depends on vz and az
+                            [0., 0., 0., 1., 0., 0.],   #imu_accel_x depends on ax
+                            [0., 0., 0., 0., 1., 0.],   #imu_accel_y depends on ay
+                            [0., 0., 0., 0., 0., 1.]])  #imu_accel_z depends on az
+    
+    def hx(x):
+        # non-linear measurement matrix
+        return np.array([x[0], x[1], x[2]])  # Measuring velocity directly
+
+    def HJacobian_at(x):
+        # Computes the Jacobian matrix H of h(x) with respect to x
+        return np.array([   [1., 0., 0., 0., 0., 0.],   #vel_x
+                            [0., 1., 0., 0., 0., 0.],   #vel_y  
+                            [0., 0., 1., 0., 0., 0.]])  #vel_z
+
 # ------------- Extended Kalman Filter ----------------
     def create_filter(self) -> ExtendedKalmanFilter:
     
         # A Kalman filter with 6 states (dvl_vel_x, dvl_vel_y, dvl_vel_z, imu_accel_x, imu_accel_y, imu_accel_z)
         # and 3 measurements (vel_x, vel_y, vel_z)
         ekf = ExtendedKalmanFilter(dim_x=6, dim_z=3, dim_u=0)
+        
         # Init everything to 0
         #These are the sensor measurements
         ekf.x = np.array([0., 0., 0., 0., 0., 0.])
-        # Create state transition matrix
+
+        # Create non-linear state transition matrix
         #Each row corresponds to a measurement from sensors
         #Each column indicates the dependence of the measurement on a sensor measurement
         #ie. Since Vx depends on vx dvl and ax imu we put 1's in the vx dvl and ax imu cols
         #1's for acceleration are placeholder for dt which you'll see in the predict class
-        ekf.F = np.array([  [1., 0., 0., 1., 0., 0.],   #dvl_vel_x depends on vx and ax
-                            [0., 1., 0., 0., 1., 0.],   #dvl_vel_y depends on vy and ay
-                            [0., 0., 1., 0., 0., 1.],   #dvl_vel_z depends on vz and az
-                            [0., 0., 0., 1., 0., 0.],   #imu_accel_x depends on ax
-                            [0., 0., 0., 0., 1., 0.],   #imu_accel_y depends on ay
-                            [0., 0., 0., 0., 0., 1.]])  #imu_accel_z depends on az
-        # Create the measurement matrix
+        ekf.f = lambda x: f(x, dt)
+        ekf.F = lambda x: FJacobina_at(x, dt)
+        
+        # Create the non-linear measurement matrix
         # Each row corresponds to a predicted val so vx vy vz
         # Each col corresponds to the sensor vals
-        # convert the state into predicted vals so just pulling out the vel values
-        ekf.H = np.array([  [1., 0., 0., 0., 0., 0.],   #vel_x
-                            [0., 1., 0., 0., 0., 0.],   #vel_y  
-                            [0., 0., 1., 0., 0., 0.]])  #vel_z
+        # Convert the predicted state estimate into predicted sensor values so just pulling out the vel values
+        ekf.hx = hx
+        ekf.H = HJacobian_at
         
         # Covariance matrix (P): initial uncertainty in the state
         # Covariance matrix uncertainty will change over time to be more certain
         ekf.P = np.eye(6) * 1000  # High uncertainty at the start
 
-        # Create the process noise matrix
-        # model noise so that the predict model can account for it
+        # Create the process noise covariance matrix
+        # model noise so that the predict model can account for it (can be tuned thru trail and error)
+        # Large Q means trusting actual sensor observations more than predicted measurements
         ekf.Q = np.eye(6) 
 
         # Create the measurement noise matrix
@@ -74,6 +99,8 @@ class SensorFuse:
         ekf.R = np.array([  [0.1, 0., 0.],  # vel_x
                             [0., 0.1, 0.],  # vel_y
                             [0., 0., 0.1]]) # vel_z
+
+       
         
         return ekf
 
@@ -111,12 +138,13 @@ class SensorFuse:
                                   [0., 0., 0., 0., 1., 0.],   #imu_accel_y
                                   [0., 0., 0., 0., 0., 1.]])  #imu_accel_z
 
-        # Predict the next state
-        self.ekf.predict()
 
         # Update the filter with the latest DVL measurements
         #In more detail this updates the parameters (Kalman gain, x, R, etc...) with the new measurements 
-        self.ekf.update(self.dvl_vel)
+        self.ekf.update(self.dvl_vel, HJacobian_at, hx)
+
+        # Predict the next state
+        self.ekf.predict()
 
         # Update the state with IMU data
         self.ekf.x[3:] = np.array([self.imu["ax"], self.imu["ay"], self.imu["az"]])
