@@ -10,7 +10,16 @@ import time
 import mavros_msgs.msg
 import mavros_msgs.srv
 import rospy
+from ..utils.topicService import TopicService
 from std_msgs.msg import Float64, Float32MultiArray
+
+# Importing various message types for ROS
+import geographic_msgs.msg
+import geometry_msgs.msg
+import mavros_msgs.msg
+import mavros_msgs.srv
+import sensor_msgs.msg
+import std_msgs.msg
 
 # Import the PID controller
 from simple_pid import PID
@@ -22,6 +31,7 @@ from ..device.dvl import dvl # DVL class that enables position estimation
 from ..device.fog import fog_interface as fog
 import math
 import numpy as np
+from auv.device.compass.altimu10v5.sensorfuse_kf import SensorFuse
 
 config = deviceHelper.variables # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
 
@@ -63,6 +73,10 @@ class RobotControl:
         self.pub_thrusters = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
         self.pub_depth = rospy.Publisher("auv/devices/setDepth", Float64, queue_size=10)
         self.pub_rel_depth = rospy.Publisher("auv/devices/setRelativeDepth", Float64, queue_size=10)
+
+ 
+        #Initialize KF/EKF for IMU and DVL
+        fused = SensorFuse(self.dvl)
         
         # TODO: reset pix standalone depth Integration param 
 
