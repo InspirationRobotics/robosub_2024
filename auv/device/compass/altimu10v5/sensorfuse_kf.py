@@ -37,6 +37,7 @@ class SensorFuse:
         self.imu = {"ax" : 0, "ay": 0, "az": 0}
         self.dt = 0
         self.last_time = 0
+        
         self.start_imu_listener
 
     def f(x, dt):
@@ -108,7 +109,8 @@ class SensorFuse:
                             [0., 0.1, 0.],  # vel_y
                             [0., 0., 0.1]]) # vel_z
 
-        self.position = [0, 0, 0]
+        #tracks the cumulative position
+        self.position = np.zeros(3)
 
         return ekf
 
@@ -135,7 +137,10 @@ class SensorFuse:
     #desired dvl data can be acquired by doing dvl.vel_rot[0, 1 or 2]?
     def update_dvl(self):
         # Read DVL data
-        self.DVL.read_onyx()
+        if self.DVL.sub_type == "onyx":
+            self.DVL.read_onyx()
+        elif self.DVL.sub_type == "graey":
+            self.DVL.read_graey
         # Assuming DVL.vel_rot is a list or array with [vel_x, vel_y, vel_z]
         self.dvl_vel = np.array([self.DVL.vel_rot[0], self.DVL.vel_rot[1], self.DVL.vel_rot[2]])
 
@@ -170,13 +175,20 @@ class SensorFuse:
         # Update the state with IMU data
         self.ekf.x[3:] = np.array([self.imu["ax"], self.imu["ay"], self.imu["az"]])
 
-        position = dt*self.ekf.x[3:]
+        self.position += dt*self.ekf.x[:3]
 
-        return position
+        return
 
     def get_estimated_velocity(self):
         # Return the estimated velocity (x, y, z)
         return self.ekf.x[:3]
-    
-    def calc_position(self):
-        return np.multiply(self.ekf.x[:3], self.dt)
+
+
+    def get_position_uncertainty(self):
+        """
+        Returns the position uncertainty (standard deviation) from the EKF's covariance matrix.
+        """
+        # The diagonal elements of the covariance matrix represent the variance of the state estimates
+        position_variance = np.diag(self.ekf.P)[:3]  # First 3 elements correspond to position (x, y, z)
+        position_uncertainty = np.sqrt(position_variance)  # Convert variance to standard deviation
+        return position_uncertainty

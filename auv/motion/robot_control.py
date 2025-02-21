@@ -709,6 +709,7 @@ class RobotControl:
 
 #TODO: In the original dvl class, there are lots of checks for valid or updated data. We don't have that yet and 
 # we probably should implement. 
+#TODO: Additionally, covariance matrix and thus uncertainty must be tuned for our system
     def navigate_fused(self, x, y, z, end_heading=None, relative_coord=True, relative_heading=True, update_freq=10):
             """
             To navigate using the EKF to a specific point. This includes 3-D mobility (forward, lateral, depth), not just 1-D (forward or backward). Since this method is complex 
@@ -747,7 +748,7 @@ class RobotControl:
                 # Change position of target coordinates to coordinates relative to the current position of the sub
 
                 x -= self.fused.position[0]
-                y -= self.dvl.position[1]
+                y -= self.fused.position[1]
 
             if relative_heading:
                 # Rotate the vector [x, y] by the current heading (to make the heading relative)
@@ -771,15 +772,24 @@ class RobotControl:
 
                     # Get the x and y error by rotating the vector by finding the difference between the x and y coordinates of the current position and the target position
                     # Does this by rotating the vector [x_error, y_error] by the current heading (the function inv_rotate_vector() is in utils.py)
+                    # Get the x and y error
                     err_x, err_y = inv_rotate_vector(
                         x - self.fused.position[0],
                         y - self.fused.position[1],
                         self.compass,
                     )
 
-                    #TODO: Check if the target coordinates have been reached replace with fused
-                    x_err_th = 0.1 + self.dvl.error[0]
-                    y_err_th = 0.1 + self.dvl.error[1]
+                    # Get the position uncertainty from the EKF
+                    position_uncertainty = self.fused.get_position_uncertainty()
+
+                    # Check if position uncertainty is too high
+                    if np.any(position_uncertainty > .5):
+                        print("[WARNING] Position uncertainty too high, stopping navigation")
+                        break
+
+                    # Check if the target coordinates have been reached
+                    x_err_th = 0.1 + position_uncertainty[0]
+                    y_err_th = 0.1 + position_uncertainty[1]
                     if abs(err_x) <= x_err_th and abs(err_y) <= y_err_th:
                         print("[INFO] Target reached")
                         break
