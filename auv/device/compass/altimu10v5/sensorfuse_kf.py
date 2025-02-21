@@ -55,7 +55,7 @@ class SensorFuse:
         # non-linear measurement matrix
         return np.array([x[0], x[1], x[2]])  # extracting velocity from the state vector
 
-    def HJacobian_at(x):
+    def HJacobian_at():
         # Computes the Jacobian matrix H of h(x) with respect to x
         return np.array([   [1., 0., 0., 0., 0., 0.],   #vel_x
                             [0., 1., 0., 0., 0., 0.],   #vel_y  
@@ -77,14 +77,14 @@ class SensorFuse:
         #Each column indicates the dependence of the measurement on a sensor measurement
         #ie. Since Vx depends on vx dvl and ax imu we put 1's in the vx dvl and ax imu cols
         #1's for acceleration are placeholder for dt which you'll see in the predict class
-        ekf.f = f(x, dt)
-        ekf.F = FJacobian_at(x, dt)
+        ekf.f = f(ekf.x, dt)
+        ekf.F = FJacobian_at(ekf.x, dt)
         
         # Create the non-linear measurement matrix
         # Each row corresponds to a predicted val so vx vy vz
         # Each col corresponds to the sensor vals
         # Convert the predicted state estimate into predicted sensor values so just pulling out the vel values
-        ekf.hx = hx
+        ekf.hx = hx(ekf.x)
         ekf.H = HJacobian_at
         
         # Covariance matrix (P): initial uncertainty in the state
@@ -102,8 +102,6 @@ class SensorFuse:
                             [0., 0.1, 0.],  # vel_y
                             [0., 0., 0.1]]) # vel_z
 
-       
-        
         return ekf
 
 #-----------Note that update functions access raw sensor data------------
@@ -143,7 +141,7 @@ class SensorFuse:
 
         # Update the filter with the latest DVL measurements
         #In more detail this updates the parameters (Kalman gain, x, R, etc...) with the new measurements 
-        self.ekf.update(self.dvl_vel, HJacobian_at, hx)
+        self.ekf.update(self.dvl_vel, HJacobian_at, hx(self.ekf.x))
 
         # Predict the next state
         self.ekf.predict()
