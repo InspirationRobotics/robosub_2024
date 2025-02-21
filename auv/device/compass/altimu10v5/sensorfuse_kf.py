@@ -4,8 +4,11 @@ from filterpy.common import Q_discrete_white_noise
 from auv.utils import deviceHelper
 from auv.device.dvl import DVL
 import time
+
+#Rospy libraries for getting IMU data
 import rospy
-import sensor_msgs.msg
+from sensor_msgs.msg import Imu
+import threading
 
 
 
@@ -23,7 +26,9 @@ class SensorFuse:
     def __init__(self, dvl: DVL):
         #191 Group TODO: Subscribe to Rostopic for IMU
         #figure out slicing for acquiring imu data
-        self.imu_data = rospy.Subscriber("/mavros/imu/data_raw", sensor_msgs.msg.Imu)
+        rospy.Subscriber("/imu/data", Imu, self.imu_callback)
+        self.imu_data = {}
+
         #self.imu = sliced data
 
         #initialize filter, dvl, imu, dt, and last_time
@@ -32,6 +37,7 @@ class SensorFuse:
         self.imu = {"ax" : 0, "ay": 0, "az": 0}
         self.dt = 0
         self.last_time = 0
+        self.start_imu_listener
 
     def f(x, dt):
         # Non-linear state transistion matrix
@@ -77,15 +83,15 @@ class SensorFuse:
         #Each column indicates the dependence of the measurement on a sensor measurement
         #ie. Since Vx depends on vx dvl and ax imu we put 1's in the vx dvl and ax imu cols
         #1's for acceleration are placeholder for dt which you'll see in the predict class
-        ekf.f = f(ekf.x, dt)
-        ekf.F = FJacobian_at(ekf.x, dt)
+        ekf.f = self.f(ekf.x, self.dt)
+        ekf.F = self.FJacobian_at(ekf.x, self.dt)
         
         # Create the non-linear measurement matrix
         # Each row corresponds to a predicted val so vx vy vz
         # Each col corresponds to the sensor vals
         # Convert the predicted state estimate into predicted sensor values so just pulling out the vel values
-        ekf.hx = hx(ekf.x)
-        ekf.H = HJacobian_at
+        ekf.hx = self.hx(ekf.x)
+        ekf.H = self.HJacobian_at()
         
         # Covariance matrix (P): initial uncertainty in the state
         # Covariance matrix uncertainty will change over time to be more certain
@@ -102,16 +108,28 @@ class SensorFuse:
                             [0., 0.1, 0.],  # vel_y
                             [0., 0., 0.1]]) # vel_z
 
+        self.position = [0, 0, 0]
+
         return ekf
 
 #-----------Note that update functions access raw sensor data------------
     #Obtain updated IMU data
-    def update_imu(self, imu):
-        if imu:
-            self.imu["ax"] = imu.linear_acceleration.ax
-            self.imu["ay"] = imu.linear_acceleration.ay
-            self.imu["az"] = imu.linear_acceleration.az
-        return 
+    def imu_callback(self, imu_msg):
+        if imu_msg:
+            self.imu["ax"] = float(imu_msg.linear_acceleration.x)
+            self.imu["ay"] = float(imu_msg.linear_acceleration.y)
+            self.imu["az"] = float(imu_msg.linear_acceleration.z)
+        return
+    
+    def start_imu_listener(self):
+        """Starts the IMU subscriber and runs rospy.spin() in a separate thread."""
+        rospy.init_node('imu_listener', anonymous=True)
+        rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
+        
+        # Run ROS spin in a separate thread so it doesn’t block execution
+        thread = threading.Thread(target=rospy.spin)
+        thread.daemon = True
+        thread.start()
     
     #update DVL data
     #desired dvl data can be acquired by doing dvl.vel_rot[0, 1 or 2]?
@@ -130,6 +148,9 @@ class SensorFuse:
         #set last time to the current time
         self.last_time = current_time
 
+        #update dvl data
+        self.update_dvl
+
         # Update the state transition matrix F with the new dt
         self.ekf.F = np.array([  [1., 0., 0., dt, 0., 0.],   #dvl_vel_x
                                   [0., 1., 0., 0., dt, 0.],   #dvl_vel_y
@@ -141,7 +162,7 @@ class SensorFuse:
 
         # Update the filter with the latest DVL measurements
         #In more detail this updates the parameters (Kalman gain, x, R, etc...) with the new measurements 
-        self.ekf.update(self.dvl_vel, HJacobian_at, hx(self.ekf.x))
+        self.ekf.update(self.dvl_vel, self.H, self.hx(self.ekf.x))
 
         # Predict the next state
         self.ekf.predict()
@@ -156,3 +177,6 @@ class SensorFuse:
     def get_estimated_velocity(self):
         # Return the estimated velocity (x, y, z)
         return self.ekf.x[:3]
+    
+    def calc_position(self):
+        return np.multiply(self.ekf.x[:3], self.dt)

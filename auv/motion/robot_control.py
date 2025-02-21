@@ -76,8 +76,9 @@ class RobotControl:
 
  
         #Initialize KF/EKF for IMU and DVL
-        fused = SensorFuse(self.dvl)
-        
+        #Subscribing to the IMU is done in the sensorfuse class
+        self.fused = SensorFuse(self.dvl)
+
         # TODO: reset pix standalone depth Integration param 
 
         # A set of PIDs (Proportional - Integral - Derivative) to handle the movement of the sub
@@ -701,4 +702,168 @@ class RobotControl:
             time.sleep(0.1)
 
         print(f"[INFO] Finished setting heading to {target}")
-        
+
+
+#ECE 191 Robosub EKF implementation. These are adapted from the above navigate_dvl, forward_dvl, and lateral_dvl
+#essentially this is the same function but we replaced the position calculation with our EKF's 
+
+#TODO: In the original dvl class, there are lots of checks for valid or updated data. We don't have that yet and 
+# we probably should implement. 
+    def navigate_fused(self, x, y, z, end_heading=None, relative_coord=True, relative_heading=True, update_freq=10):
+            """
+            To navigate using the EKF to a specific point. This includes 3-D mobility (forward, lateral, depth), not just 1-D (forward or backward). Since this method is complex 
+            and requires the compass to work perfectly, if we want to move forward and only move forward or backward, use forward_dvl instead. The compass
+            should be calibrated in order to run.
+
+            This is a blocking function
+
+            Args:
+                x (float): distance in meters to move laterally
+                y (float): distance in meters to move forward by
+                z (depth): depth to move to
+
+                **x and y are by default relative to the current position and heading; z on the other hand is absolute
+
+                end_heading (optional, int): the heading to reach at the end of the navigation. It defaults to the heading necessary to reach the target point 
+                from the starting point in a straight line
+
+                relative_coord (bool): flag indicating whether the coordinates are relative or not
+                relative_heading (bool): flag indicating whether the coordinates should be rotated by the relative heading
+                update_freq (int): the frequency at which the PID controllers are updated (in Hz)
+            """
+
+            self.fused.update_filter
+
+            if self.fused.get_estimated_velocity is None:
+                print("[ERROR] EKF not working, cannot navigate")
+                return
+
+            # Reset the PID integrals (this resets Proportional, Integral, and Derivative controllers)
+            for pid in self.PIDs.values():
+                pid.reset()
+
+            if not relative_coord:
+                # Heading 0 is north, so the positive side of the y-axis is going towards the north
+                # Change position of target coordinates to coordinates relative to the current position of the sub
+
+                x -= self.fused.position[0]
+                y -= self.dvl.position[1]
+
+            if relative_heading:
+                # Rotate the vector [x, y] by the current heading (to make the heading relative)
+                x, y = rotate_vector(x, y, self.compass)
+
+            # Get the setpoint (target) heading from the relative coordinates
+            target_heading = get_heading_from_coords(x, y)
+            print(f"[INFO] Navigating to {x}, {y}, {z}, {target_heading}deg current {self.compass}")
+
+            # Rotate to the heading and set the depth of the sub
+            self.set_heading(target_heading)
+            self.set_depth(z)
+
+            # Enter a local scope to handle the coordinates cleanly
+            with self.fused:
+                # Set the depth independently
+                self.set_depth(z)
+
+                # Navigate to the target point 
+                while not rospy.is_shutdown():
+
+                    # Get the x and y error by rotating the vector by finding the difference between the x and y coordinates of the current position and the target position
+                    # Does this by rotating the vector [x_error, y_error] by the current heading (the function inv_rotate_vector() is in utils.py)
+                    err_x, err_y = inv_rotate_vector(
+                        x - self.fused.position[0],
+                        y - self.fused.position[1],
+                        self.compass,
+                    )
+
+                    #TODO: Check if the target coordinates have been reached replace with fused
+                    x_err_th = 0.1 + self.dvl.error[0]
+                    y_err_th = 0.1 + self.dvl.error[1]
+                    if abs(err_x) <= x_err_th and abs(err_y) <= y_err_th:
+                        print("[INFO] Target reached")
+                        break
+
+                    # Calculate PID outputs
+                    output_x = self.PIDs["lateral"](-err_x)
+                    output_y = self.PIDs["forward"](-err_y)
+                    print(f"[DEBUG] err_x={err_x}, err_y={err_y}, output_x={output_x}, output_y={output_y}")
+                    self.movement(lateral=output_x, forward=output_y)
+
+    def forward_fused(self, distance, pid=True, throttle=None):
+            """
+            Move forward using the EKF.
+            This is a blocking function.
+
+            Args:
+                throttle (float): power at which to move forward at
+                distance (float): distance in meters to move forward by
+                pid (boolean): Whether to use PID (True) or numpy.clip() (False)
+            """
+            if self.fused.position is None:
+                print("[ERROR] DVL not available, cannot navigate")
+                return
+
+            print(f"[INFO] Moving forward {distance}m at throttle {throttle}")
+
+            # Enter a local scope to handle coordinates cleanly
+            with self.fused:
+                curr_time = time.time()
+                prev_time = None
+                # Navigate to the target point
+                while not rospy.is_shutdown():
+                    time.sleep(0.25)
+                    # Find the y-axis error (recall that the y-axis is the forward-backwards dimension)
+                    y = self.dvl.position[1]
+                    error = distance - y
+
+                    # Check if the target has been reached
+                    if abs(error) <= 0.1:
+                        print("[INFO] Target reached")
+                        break
+                    # Apply gain to the error and clip by the maximum throttle value(s)
+                    if pid:
+                        forward_output = self.PIDs["forward"](-error)
+                    else:
+                        forward_output = np.clip(error * 4, -throttle, throttle)
+
+                    # Move forward using the PWM calculations in the movement function
+                    self.movement(forward=forward_output)
+
+    def lateral_fused(self, distance, pid=True, throttle=None):
+            """
+            Move laterally using the DVL -- this contains the exact same method as forward_dvl except the x, not y-axis is used.
+            This is a blocking function.
+
+            Args:
+                throttle (float): power to move at
+                distance (float): distance to move laterally (in meters)
+            """
+            if self.fused.position is None:
+                print("[ERROR] DVL not available, cannot navigate")
+                return
+
+            print(f"[INFO] Moving laterally {distance}m at throttle {throttle}")
+
+            # Enter a local scope to handle coordinates nicely
+            with self.fused:
+                # Navigate to the target point
+                while not rospy.is_shutdown():
+                    # Calculate the error between the current and target x-coordinates (recall that the x-axis is the lateral dimension)
+                    x = self.fused.position[0]
+                    error = distance - x
+
+                    # Check if we reached the target
+                    if abs(error) <= 0.1:
+                        print("[INFO] Target reached")
+                        break
+                    
+                    # Apply gain and clip at the maximum throttle value(s)
+                    if pid:
+                        lateral_output = self.PIDs["lateral"](-error)
+                    else:
+                        lateral_output = np.clip(error * 4, -throttle, throttle)
+                    print(f"[DEBUG] error={error}, lateral_output={lateral_output}")
+
+                    # Move laterally using PWM values
+                    self.movement(lateral=lateral_output)
