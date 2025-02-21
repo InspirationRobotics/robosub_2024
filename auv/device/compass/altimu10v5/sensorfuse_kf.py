@@ -35,13 +35,15 @@ class SensorFuse:
 
     def f(x, dt):
         # Non-linear state transistion matrix
+        # predicts the next state based on the current state and time step
         x_new = np.copy(x)
         x_new[0] += x[3] * dt  # vel_x update
         x_new[1] += x[4] * dt  # vel_y update
         x_new[2] += x[5] * dt  # vel_z update
         return x_new
 
-    def FJacobina_at(x, dt):
+    def FJacobian_at(x, dt):
+        # Linearizes f(x) 
         return np.array([   [1., 0., 0., dt, 0., 0.],   #dvl_vel_x depends on vx and ax
                             [0., 1., 0., 0., dt, 0.],   #dvl_vel_y depends on vy and ay
                             [0., 0., 1., 0., 0., dt],   #dvl_vel_z depends on vz and az
@@ -51,7 +53,7 @@ class SensorFuse:
     
     def hx(x):
         # non-linear measurement matrix
-        return np.array([x[0], x[1], x[2]])  # Measuring velocity directly
+        return np.array([x[0], x[1], x[2]])  # extracting velocity from the state vector
 
     def HJacobian_at(x):
         # Computes the Jacobian matrix H of h(x) with respect to x
@@ -75,8 +77,8 @@ class SensorFuse:
         #Each column indicates the dependence of the measurement on a sensor measurement
         #ie. Since Vx depends on vx dvl and ax imu we put 1's in the vx dvl and ax imu cols
         #1's for acceleration are placeholder for dt which you'll see in the predict class
-        ekf.f = lambda x: f(x, dt)
-        ekf.F = lambda x: FJacobina_at(x, dt)
+        ekf.f = f(x, dt)
+        ekf.F = FJacobian_at(x, dt)
         
         # Create the non-linear measurement matrix
         # Each row corresponds to a predicted val so vx vy vz
