@@ -5,9 +5,6 @@ Finds the buoy, navigates to the correct position (optimal distance to circumnav
 import json
 import rospy
 import time
-from datetime import datetime
-import rosbag
-from sensor_msgs.msg import Imu
 
 from std_msgs.msg import String
 from ..device import cv_handler # For running mission-specific CV scripts
@@ -154,44 +151,6 @@ class BuoyMission:
         print("[INFO] Buoy mission terminate")
 
 
-class LoggedBuoyMission:
-    def __init__(self, **config):
-        # Creates the original BuoyMission object with all original functionality
-        self.mission = BuoyMission(**config)
-        
-        # Adds logging functionality
-        timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        self.bag_path = f"/home/inspiration/bags/buoy_mission_{timestamp}.bag"
-        self.bag = rosbag.Bag(self.bag_path, 'w')
-        
-        # Create subscribers for sensor topics with correct message types
-        self.subscribers = [
-            rospy.Subscriber("/auv/devices/compass", std_msgs.msg.Float64, 
-                           self.bag_callback, callback_args="/auv/devices/compass"),
-            rospy.Subscriber("/auv/devices/imu", Imu, 
-                           self.bag_callback, callback_args="/auv/devices/imu"),
-            rospy.Subscriber("/auv/devices/baro", std_msgs.msg.Float32MultiArray, 
-                           self.bag_callback, callback_args="/auv/devices/baro")
-        ]
-
-    def bag_callback(self, msg, topic):
-        """Callback to write any received message to the bag file"""
-        self.bag.write(topic, msg)
-
-    def run(self):
-        try:
-            # Runs the original BuoyMission's run method
-            self.mission.run()
-        finally:
-            # Cleanup subscribers
-            for sub in self.subscribers:
-                sub.unregister()
-            self.bag.close()
-            print(f"[INFO] Data logged to {self.bag_path}")
-            # Runs the original BuoyMission's cleanup
-            self.mission.cleanup()
-
-
 if __name__ == "__main__":
     # This is the code that will be executed if you run this file directly
     # It is here for testing purposes
@@ -212,7 +171,7 @@ if __name__ == "__main__":
     )
 
     # Create a mission object with arguments
-    mission = LoggedBuoyMission(**config)
+    mission = BuoyMission(**config)
     rc = robot_control.RobotControl()
 
     # Run the mission
