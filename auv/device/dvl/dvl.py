@@ -24,10 +24,6 @@ class DVL:
             self.dvlPort = deviceHelper.dataFromConfig("dvl")
             print(self.dvlPort)
             sub = deviceHelper.variables.get("sub")
-
-            #for sensorfuse class
-            self.sub_type = sub
-
             print(f"[DEBUG] Sub is {sub}")
             if sub == "onyx":
                 self.ser = serial.Serial(
@@ -47,6 +43,7 @@ class DVL:
                 self.ser.write(startPing.encode())
                 time.sleep(2)
                 self.read = self.read_onyx
+
             elif sub == "graey":
                 # autostart = False
                 self.read = self.read_graey
