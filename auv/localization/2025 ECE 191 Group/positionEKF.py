@@ -24,6 +24,9 @@ class poseEKF:
             # Initialize ROS node if not using simulated data
             rospy.init_node('pose_ekf', anonymous=True)
 
+            # Initialize publisher for position
+            self.position_pub = rospy.Publisher("/estimated_position", PoseStamped, queue_size=10)
+
             # Initialize camera data storage
             self.camera_position = np.zeros(3)  # [x, y, z]
             self.camera_quaternion = np.array([1.0, 0.0, 0.0, 0.0])  # [qw, qx, qy, qz]
@@ -50,6 +53,29 @@ class poseEKF:
 
         if not self.use_simulated_data:
             self.start_imu_listener()
+
+        def publish_position(self):
+            """
+            Publish the estimated position as a ROS topic.
+            """
+            # Create a PoseStamped message
+            pose_msg = PoseStamped()
+            pose_msg.header.stamp = rospy.Time.now()
+            pose_msg.header.frame_id = "world"  # Set the frame ID
+
+            # Populate the position
+            pose_msg.pose.position.x = self.ekf.x[0]
+            pose_msg.pose.position.y = self.ekf.x[1]
+            pose_msg.pose.position.z = self.ekf.x[2]
+
+            # Populate the orientation (quaternion)
+            pose_msg.pose.orientation.w = self.ekf.x[6]
+            pose_msg.pose.orientation.x = self.ekf.x[7]
+            pose_msg.pose.orientation.y = self.ekf.x[8]
+            pose_msg.pose.orientation.z = self.ekf.x[9]
+
+            # Publish the message
+            self.position_pub.publish(pose_msg)
 
     def camera_callback(self, msg):
         """
@@ -114,11 +140,12 @@ class poseEKF:
         quaternion = x[6:10]
         gyro_bias = x[10:13]
 
-        # Predict position
+        # Predict position using velocity
         position_new = position + velocity * dt
 
-        # Predict velocity (assuming constant velocity model for simplicity)
-        velocity_new = velocity
+        # Predict velocity using acceleration
+        acceleration = self.imu_data["linear_acceleration"] - self.imu["bias_accel"]
+        velocity_new = velocity + acceleration * dt
 
         # Predict quaternion
         omega = self.imu_data["angular_velocity"] - gyro_bias  # Measured angular velocity minus bias
@@ -250,18 +277,21 @@ class poseEKF:
         camera_measurement = np.concatenate([self.camera_position, self.camera_quaternion])
         self.ekf.update(camera_measurement, self.HJacobian_at(), self.hx(self.ekf.x))
 
-        # Update the state with IMU data
-        self.ekf.x[3:6] = np.array([self.imu["ax"], self.imu["ay"], self.imu["az"]])  # Update velocity
-        self.ekf.x[10:13] = self.imu_data["angular_velocity"]  # Update gyro bias
+        # Update the state with DVL velocity
+        self.ekf.x[3:6] = self.dvl_vel  # Update velocity with DVL measurements
 
-        # Update position
-        self.position += dt * self.ekf.x[:3]
+        # Update position using velocity
+        self.ekf.x[:3] += self.ekf.x[3:6] * dt  # Integrate velocity to update position
+
+        if not self.use_simulated_data:
+        # Publish the estimated position
+            self.publish_position()
 
     def get_estimated_velocity(self):
         """
         Return the estimated velocity (x, y, z).
         """
-        return self.ekf.x[:3]
+        return self.ekf.x[3:6]
 
     def get_position_uncertainty(self):
         """
