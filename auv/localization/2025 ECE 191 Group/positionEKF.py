@@ -6,18 +6,15 @@ under compass/altimu10v5.
 '''
 import numpy as np
 from filterpy.kalman import ExtendedKalmanFilter
-from filterpy.common import Q_discrete_white_noise
-from auv.utils import deviceHelper
 from auv.device.dvl import DVL
 import time
 from geometry_msgs.msg import PoseStamped
-import threading
 import rospy
 from sensor_msgs.msg import Imu
 
 
 class PoseEKF:
-    def __init__(self, use_simulated_data=False):
+    def __init__(self, dvl: DVL, use_simulated_data=False):
         self.use_simulated_data = use_simulated_data
 
         if not self.use_simulated_data:
@@ -34,8 +31,7 @@ class PoseEKF:
             rospy.Subscriber("/orb_slam3/camera_pose", PoseStamped, self.camera_callback)
 
             # Initialize IMU data storage
-            self.imu_acceleration = np.zeros(3)  # [ax, ay, az]
-            self.imu_quaternion = np.array([1.0, 0.0, 0.0, 0.0])  # [qw, qx, qy, qz]
+            self.imu = {"ax": 0, "ay": 0, "az": 0, "qw": 1.0, "qx": 0.0, "qy": 0.0, "qz": 0.0}
 
             # Subscribe to IMU topic
             rospy.Subscriber("/imu/data", Imu, self.imu_callback)
@@ -43,13 +39,14 @@ class PoseEKF:
             # Initialize DVL data storage
             self.dvl_velocity = np.zeros(3)  # [vx, vy, vz]
 
-            # Subscribe to DVL topic
-            rospy.Subscriber("/dvl/velocity", Imu, self.dvl_callback)
-
-        # Initialize EKF
-        self.dt = 1.0 / 100  # Time step (100 Hz)
+        # Initialize filter, DVL, IMU, dt, and last_time
+        self.dt = 1.0 / 100  # IMU time step (100 Hz)
         self.ekf = self.create_filter()
+        self.DVL = dvl
         self.last_time = time.time()
+
+        if not self.use_simulated_data:
+            self.start_imu_listener()
 
     def camera_callback(self, msg):
         """
@@ -71,30 +68,31 @@ class PoseEKF:
         Callback for IMU data.
         """
         # Extract linear acceleration
-        self.imu_acceleration = np.array([
-            msg.linear_acceleration.x,
-            msg.linear_acceleration.y,
-            msg.linear_acceleration.z
-        ])
+        self.imu["ax"] = msg.linear_acceleration.x
+        self.imu["ay"] = msg.linear_acceleration.y
+        self.imu["az"] = msg.linear_acceleration.z
 
         # Extract orientation (quaternion)
-        self.imu_quaternion = np.array([
-            msg.orientation.w,
-            msg.orientation.x,
-            msg.orientation.y,
-            msg.orientation.z
-        ])
+        self.imu["qw"] = msg.orientation.w
+        self.imu["qx"] = msg.orientation.x
+        self.imu["qy"] = msg.orientation.y
+        self.imu["qz"] = msg.orientation.z
 
-    def dvl_callback(self, msg):
+    def update_dvl(self):
         """
-        Callback for DVL velocity data.
+        Update DVL data.
         """
-        # Extract velocity
-        self.dvl_velocity = np.array([
-            msg.linear_velocity.x,
-            msg.linear_velocity.y,
-            msg.linear_velocity.z
-        ])
+        if self.use_simulated_data:
+            # Use simulated data
+            self.dvl_velocity = np.array([self.DVL.vel_rot[0], self.DVL.vel_rot[1], self.DVL.vel_rot[2]])
+        else:
+            # Use live data
+            if self.DVL.sub_type == "onyx":
+                self.DVL.read_onyx()
+            elif self.DVL.sub_type == "graey":
+                self.DVL.read_graey()
+            # Assuming DVL.vel_rot is a list or array with [vel_x, vel_y, vel_z]
+            self.dvl_velocity = np.array([self.DVL.vel_rot[0], self.DVL.vel_rot[1], self.DVL.vel_rot[2]])
 
     def create_filter(self) -> ExtendedKalmanFilter:
         """
@@ -136,18 +134,12 @@ class PoseEKF:
         velocity = x[3:6]
         quaternion = x[6:10]
 
-        # Subtract gravity from IMU acceleration (assuming IMU is in body frame)
-        gravity = np.array([0, 0, 9.81])  # Adjust based on your coordinate system
-        acceleration_body = self.imu_acceleration - gravity
-
-        # Transform acceleration to world frame using quaternion
-        acceleration_world = self.quaternion_rotate(quaternion, acceleration_body)
-
-        # Predict velocity using acceleration
-        velocity_new = velocity + acceleration_world * dt
-
         # Predict position using velocity
         position_new = position + velocity * dt
+
+        # Predict velocity using acceleration
+        acceleration_world = self.quaternion_rotate(quaternion, np.array([self.imu["ax"], self.imu["ay"], self.imu["az"]]))
+        velocity_new = velocity + acceleration_world * dt
 
         # Predict quaternion (assume no change in orientation)
         quaternion_new = quaternion
@@ -209,7 +201,7 @@ class PoseEKF:
         Update the EKF with the latest sensor data.
         """
         # Check for valid sensor data
-        if np.any(np.isnan(self.camera_pose)) or np.any(np.isnan(self.dvl_velocity)) or np.any(np.isnan(self.imu_quaternion)):
+        if np.any(np.isnan(self.camera_pose)) or np.any(np.isnan(self.dvl_velocity)) or np.any(np.isnan(self.imu["qw"])):
             rospy.logwarn("Invalid sensor data detected. Skipping update.")
             return
 
@@ -217,6 +209,9 @@ class PoseEKF:
         current_time = time.time()
         dt = current_time - self.last_time
         self.last_time = current_time
+
+        # Update DVL data
+        self.update_dvl()
 
         # Predict the next state
         self.ekf.predict()
@@ -230,12 +225,6 @@ class PoseEKF:
         H_dvl = np.zeros((3, 10))  # Jacobian for DVL velocity measurement
         H_dvl[:3, 3:6] = np.eye(3)  # Map velocity state to DVL measurement
         self.ekf.update(dvl_measurement, H_dvl, lambda x: x[3:6])  # Update velocity
-
-        # Update the filter with IMU orientation measurements
-        imu_orientation_measurement = self.imu_quaternion  # [qw, qx, qy, qz]
-        H_imu = np.zeros((4, 10))  # Jacobian for IMU orientation measurement
-        H_imu[:4, 6:10] = np.eye(4)  # Map quaternion state to IMU measurement
-        self.ekf.update(imu_orientation_measurement, H_imu, lambda x: x[6:10])  # Update orientation
 
         # Publish the estimated pose
         if not self.use_simulated_data:
@@ -263,8 +252,16 @@ class PoseEKF:
         # Publish the message
         self.pose_pub.publish(pose_msg)
 
-    def get_estimated_pose(self):
+    def get_estimated_velocity(self):
         """
-        Return the estimated pose (x, y, z, qw, qx, qy, qz).
+        Return the estimated velocity (x, y, z).
         """
-        return self.ekf.x[[0, 1, 2, 6, 7, 8, 9]]
+        return self.ekf.x[3:6]
+
+    def get_position_uncertainty(self):
+        """
+        Return the position uncertainty (standard deviation) from the EKF's covariance matrix.
+        """
+        position_variance = np.diag(self.ekf.P)[:3]  # First 3 elements correspond to position (x, y, z)
+        position_uncertainty = np.sqrt(position_variance)  # Convert variance to standard deviation
+        return position_uncertainty
