@@ -114,9 +114,9 @@ class SensorFuse:
         # Create the measurement noise matrix
         # uncertainty in the predicted vals (can be tuned)
         ekf.R = np.array([
-            [0.1, 0., 0.],  # vel_x
-            [0., 0.1, 0.],  # vel_y
-            [0., 0., 0.1]   # vel_z
+            [10, 0., 0.],  # vel_x
+            [0., 10, 0.],  # vel_y
+            [0., 0., 10]   # vel_z
         ])
 
         # tracks the cumulative position
