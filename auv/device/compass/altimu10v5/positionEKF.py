@@ -1,22 +1,34 @@
 '''
 This file contains an implementation of an Extended Kalman Filter that will be used to 
-fuse camera info from orbslam3d, velocity from DVL, acceleration from IMU, and 
-quaternions from gyroscope data. Much of the functions can be taken from the sensorfuse_kf.py file
+fuse camera info from orbslam3d, velocity from DVL, and acceleration and quaternions
+from the IMU. Many of the functions were taken from the sensorfuse_kf.py file
 under compass/altimu10v5. 
 '''
 import numpy as np
 from filterpy.kalman import ExtendedKalmanFilter
 from auv.device.dvl import DVL
 import time
-from geometry_msgs.msg import PoseStamped
-import rospy
-from sensor_msgs.msg import Imu
+# from geometry_msgs.msg import PoseStamped
+# import rospy
+# from sensor_msgs.msg import Imu
 
 
 class PoseEKF:
-    def __init__(self, dvl: DVL, use_simulated_data=False):
+    def __init__(self, dvl: DVL, use_simulated_data=False, simulated_data=None):
+
         self.use_simulated_data = use_simulated_data
 
+        self.simulated_data = simulated_data  # Simulated data from SensorSimulator
+
+        # Initialize camera data storage
+        self.camera_pose = np.zeros(7)  # [x, y, z, qw, qx, qy, qz]
+
+        # Initialize DVL data storage
+        self.dvl_velocity = np.zeros(3)  # [vx, vy, vz]
+
+        # Initialize IMU data storage
+        self.imu = {"ax": 0, "ay": 0, "az": 0, "qw": 1.0, "qx": 0.0, "qy": 0.0, "qz": 0.0}
+        
         if not self.use_simulated_data:
             # Initialize ROS node if not using simulated data
             rospy.init_node('pose_ekf', anonymous=True)
@@ -24,20 +36,13 @@ class PoseEKF:
             # Initialize publisher for estimated pose
             self.pose_pub = rospy.Publisher("/estimated_pose", PoseStamped, queue_size=10)
 
-            # Initialize camera data storage
-            self.camera_pose = np.zeros(7)  # [x, y, z, qw, qx, qy, qz]
-
             # Subscribe to ORB-SLAM3 pose topic
             rospy.Subscriber("/orb_slam3/camera_pose", PoseStamped, self.camera_callback)
-
-            # Initialize IMU data storage
-            self.imu = {"ax": 0, "ay": 0, "az": 0, "qw": 1.0, "qx": 0.0, "qy": 0.0, "qz": 0.0}
 
             # Subscribe to IMU topic
             rospy.Subscriber("/imu/data", Imu, self.imu_callback)
 
-            # Initialize DVL data storage
-            self.dvl_velocity = np.zeros(3)  # [vx, vy, vz]
+            self.start_imu_listener()
 
         # Initialize filter, DVL, IMU, dt, and last_time
         self.dt = 1.0 / 100  # IMU time step (100 Hz)
@@ -45,8 +50,7 @@ class PoseEKF:
         self.DVL = dvl
         self.last_time = time.time()
 
-        if not self.use_simulated_data:
-            self.start_imu_listener()
+
 
     def camera_callback(self, msg):
         """
@@ -84,7 +88,33 @@ class PoseEKF:
         """
         if self.use_simulated_data:
             # Use simulated data
-            self.dvl_velocity = np.array([self.DVL.vel_rot[0], self.DVL.vel_rot[1], self.DVL.vel_rot[2]])
+            for imu_data, dvl_data, cam_data in zip(
+                self.simulated_data['imu_data'],
+                self.simulated_data['dvl_data'],
+                self.simulated_data['cam_data']
+            ):
+                # Update IMU
+                self.imu["ax"] = imu_data['linear_acceleration.x']
+                self.imu["ay"] = imu_data['linear_acceleration.y']
+                self.imu["az"] = imu_data['linear_acceleration.z']
+                self.imu["qw"] = imu_data['orientation.w']
+                self.imu["qx"] = imu_data['orientation.x']
+                self.imu["qy"] = imu_data['orientation.y']
+                self.imu["qz"] = imu_data['orientation.z']
+
+                # Update DVL
+                self.dvl_velocity = np.array([dvl_data['vx'], dvl_data['vy'], dvl_data['vz']])
+
+                # Update camera
+                self.camera_pose = np.array([
+                    cam_data['x'], cam_data['y'], cam_data['z'],
+                    cam_data['qw'], cam_data['qx'], cam_data['qy'], cam_data['qz']
+                ])
+
+                # Predict and update EKF
+                self.ekf.predict()
+                self.ekf.update(self.camera_pose, self.measurement_jacobian, self.measurement_model)
+                self.ekf.update(self.dvl_velocity, self.dvl_measurement_jacobian, self.dvl_measurement_model)
         else:
             # Use live data
             if self.DVL.sub_type == "onyx":

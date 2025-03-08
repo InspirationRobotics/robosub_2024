@@ -4,8 +4,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 from datetime import datetime
 import numpy as np
 import pandas as pd
-from auv.utils.SimEKF import SensorSimulator, DataVisualizer
-from sensorfuse_kf import SensorFuse
+from auv.utils.poseEKF_Sim import SensorSimulator, DataVisualizer
+from positionEKF import PoseEKF
 import time
 
 class EKFTester:
@@ -14,13 +14,15 @@ class EKFTester:
         self.simulator = SensorSimulator(
             side_length=5.0,
             imu_rate=100,  # 100 Hz
-            dvl_rate=10    # 10 Hz
+            dvl_rate=10,    # 10 Hz
+            cam_rate=30  #30 Hz
         )
-        self.imu_data, self.dvl_data = self.simulator.generate_square_path()
+        self.imu_data, self.dvl_data, self.camera_data = self.simulator.generate_square_path()
         
         # Convert to DataFrames and sort by time
         self.imu_df = pd.DataFrame(self.imu_data).sort_values('Time')
         self.dvl_df = pd.DataFrame(self.dvl_data).sort_values('time')
+        self.camera_df = pd.DataFrame(self.camera_data).sort_values('time')
         
         # Create mock DVL object with expected interface
         mock_dvl = type('DVL', (), {
@@ -30,7 +32,7 @@ class EKFTester:
         })()
         
         # Initialize EKF with mock DVL and time step
-        self.ekf = SensorFuse(mock_dvl, use_simulated_data=True)
+        self.ekf = PoseEKF(mock_dvl, use_simulated_data=True)
         self.ekf.dt = 1.0/100      # IMU time step (100 Hz)
         
         # Storage for EKF results
@@ -41,24 +43,52 @@ class EKFTester:
         print("Starting simulated live processing...")
         
         # Get start times
-        start_time = min(self.imu_df['Time'].min(), self.dvl_df['time'].min())
-        end_time = max(self.imu_df['Time'].max(), self.dvl_df['time'].max())
+        start_time = min(self.imu_df['Time'].min(), self.dvl_df['time'].min(), self.camera_df['time'].min())
+        end_time = max(self.imu_df['Time'].max(), self.dvl_df['time'].max(), self.camera_df['time'].max())
         
         # Process data in time order
         current_time = start_time
         while current_time <= end_time:
-            # Get IMU data at current time
+            # Get IMU and camera data at current time
             imu_msg = self.imu_df[self.imu_df['Time'] == current_time]
+            camera_msg = self.camera_df[self.camera_df['time'] == current_time]
             if not imu_msg.empty:
                 # Create IMU message in correct format
                 imu_data = {
                     'linear_acceleration': {
                         'x': imu_msg['linear_acceleration.x'].iloc[0],
                         'y': imu_msg['linear_acceleration.y'].iloc[0],
-                        'z': imu_msg['linear_acceleration.z'].iloc[0]
+                        'z': imu_msg['linear_acceleration.z'].iloc[0],
+                    },
+                    'orientation': {
+                        'w': imu_msg['orientation.w'].iloc[0],
+                        'x': imu_msg['orientation.x'].iloc[0],
+                        'y': imu_msg['orientation.y'].iloc[0],
+                        'z': imu_msg['orientation.z'].iloc[0]
                     }
                 }
                 # Update EKF with IMU data
+                self.ekf.imu_callback(imu_data)
+
+            if not camera_msg.empty:
+                # Create camera message in correct format
+                camera_data = { 
+                    'position': {
+                        'x': camera_msg.pose.position.x,
+                        'y': camera_msg.pose.position.y,
+                        'z': camera_msg.pose.position.z
+                    }, 
+                    'orientation': {
+                        'w': camera_msg.pose.orientation.w,
+                        'x': camera_msg.pose.orientation.x,
+                        'y': camera_msg.pose.orientation.y,
+                        'z': camera_msg.pose.orientation.z
+                    }
+
+                }
+                    
+                
+                # Update EKF with camera data
                 self.ekf.imu_callback(imu_data)
             
             # Get DVL data at current time
@@ -79,12 +109,12 @@ class EKFTester:
             # Store EKF results
             self.ekf_results.append({
                 'time': current_time,
-                'x': self.ekf.position[0],
-                'y': self.ekf.position[1],
-                'z': self.ekf.position[2],
-                'vx': self.ekf.ekf.x[0],
-                'vy': self.ekf.ekf.x[1],
-                'vz': self.ekf.ekf.x[2]
+                'x': self.ekf.ekf.x[0],
+                'y': self.ekf.ekf.x[1],
+                'z': self.ekf.ekf.x[2],
+                'vx': self.ekf.ekf.x[3],
+                'vy': self.ekf.ekf.x[4],
+                'vz': self.ekf.ekf.x[5]
             })
             
             # Increment time
@@ -99,12 +129,12 @@ class EKFTester:
         visualizer = DataVisualizer()
         
         # Plot raw simulated data
-        visualizer.load_data(self.imu_df, self.dvl_df, None)
+        visualizer.load_data(self.imu_df, self.dvl_df, self.camera_df)
         raw_output_file = os.path.join(output_dir, 'raw_simulated_data.png')
         visualizer.plot_all(show_ekf=False, output_file=raw_output_file)
         
         # Plot EKF-processed data
-        visualizer.load_data(self.imu_df, self.dvl_df, self.ekf_df)
+        visualizer.load_data(self.imu_df, self.dvl_df, self.camera_df, self.ekf_df)
         ekf_output_file = os.path.join(output_dir, 'ekf_processed_data.png')
         visualizer.plot_all(show_ekf=True, output_file=ekf_output_file)
         
@@ -114,7 +144,7 @@ class EKFTester:
 if __name__ == "__main__":
     # Create a directory for this run
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_dir = os.path.join('/Users/poosh/Desktop/ECE191/test_robosub_2024/auv/device/compass/altimu10v5/EKFComp', timestamp)
+    output_dir = os.path.join('/Users/teshner/Desktop/ECE191/EFKTesting2024Sub/auv/device/compass/altimu10v5/EKFComp', timestamp)
     os.makedirs(output_dir, exist_ok=True)
     
     tester = EKFTester()
