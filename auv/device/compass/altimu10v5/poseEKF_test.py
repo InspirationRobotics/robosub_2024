@@ -15,7 +15,7 @@ class EKFTester:
             side_length=5.0,
             imu_rate=100,  # 100 Hz
             dvl_rate=10,    # 10 Hz
-            cam_rate=30  #30 Hz
+            cam_rate=30     # 30 Hz
         )
         self.imu_data, self.dvl_data, self.camera_data = self.simulator.generate_square_path()
         
@@ -31,8 +31,15 @@ class EKFTester:
             'dt': 1.0/10           # DVL time step (10 Hz)
         })()
         
-        # Initialize EKF with mock DVL and time step
-        self.ekf = PoseEKF(mock_dvl, use_simulated_data=True)
+        # Create simulated_data dictionary
+        simulated_data = {
+            'imu_data': self.imu_data,
+            'dvl_data': self.dvl_data,
+            'cam_data': self.camera_data
+        }
+        
+        # Initialize EKF with mock DVL and simulated data
+        self.ekf = PoseEKF(mock_dvl, use_simulated_data=True, simulated_data=simulated_data)
         self.ekf.dt = 1.0/100      # IMU time step (100 Hz)
         
         # Storage for EKF results
@@ -52,6 +59,7 @@ class EKFTester:
             # Get IMU and camera data at current time
             imu_msg = self.imu_df[self.imu_df['Time'] == current_time]
             camera_msg = self.camera_df[self.camera_df['time'] == current_time]
+            
             if not imu_msg.empty:
                 # Create IMU message in correct format
                 imu_data = {
@@ -72,24 +80,21 @@ class EKFTester:
 
             if not camera_msg.empty:
                 # Create camera message in correct format
-                camera_data = { 
+                camera_data = {
                     'position': {
-                        'x': camera_msg.pose.position.x,
-                        'y': camera_msg.pose.position.y,
-                        'z': camera_msg.pose.position.z
-                    }, 
+                        'x': camera_msg['x'].iloc[0],  # Access 'x' column
+                        'y': camera_msg['y'].iloc[0],  # Access 'y' column
+                        'z': camera_msg['z'].iloc[0]   # Access 'z' column
+                    },
                     'orientation': {
-                        'w': camera_msg.pose.orientation.w,
-                        'x': camera_msg.pose.orientation.x,
-                        'y': camera_msg.pose.orientation.y,
-                        'z': camera_msg.pose.orientation.z
+                        'w': camera_msg['qw'].iloc[0],  # Access 'qw' column
+                        'x': camera_msg['qx'].iloc[0],  # Access 'qx' column
+                        'y': camera_msg['qy'].iloc[0],  # Access 'qy' column
+                        'z': camera_msg['qz'].iloc[0]   # Access 'qz' column
                     }
-
                 }
-                    
-                
                 # Update EKF with camera data
-                self.ekf.imu_callback(imu_data)
+                self.ekf.camera_callback(camera_data)
             
             # Get DVL data at current time
             dvl_msg = self.dvl_df[self.dvl_df['time'] == current_time]
@@ -114,7 +119,11 @@ class EKFTester:
                 'z': self.ekf.ekf.x[2],
                 'vx': self.ekf.ekf.x[3],
                 'vy': self.ekf.ekf.x[4],
-                'vz': self.ekf.ekf.x[5]
+                'vz': self.ekf.ekf.x[5],
+                'qw': self.ekf.ekf.x[6],  # Quaternion component
+                'qx': self.ekf.ekf.x[7],  # Quaternion component
+                'qy': self.ekf.ekf.x[8],  # Quaternion component
+                'qz': self.ekf.ekf.x[9]   # Quaternion component
             })
             
             # Increment time
@@ -144,7 +153,7 @@ class EKFTester:
 if __name__ == "__main__":
     # Create a directory for this run
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_dir = os.path.join('/Users/teshner/Desktop/ECE191/EFKTesting2024Sub/auv/device/compass/altimu10v5/EKFComp', timestamp)
+    output_dir = os.path.join('C:/Users/joshy/OneDrive/Documents/24-25/191/robosub_2024/auv/device/compass/altimu10v5/EKFComp', timestamp)
     os.makedirs(output_dir, exist_ok=True)
     
     tester = EKFTester()

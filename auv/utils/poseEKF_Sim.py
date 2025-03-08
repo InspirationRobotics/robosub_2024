@@ -254,54 +254,58 @@ class DataVisualizer:
         self.fig = None
         self.axes = None
     
-def load_data(self, imu_data=None, dvl_data=None, cam_data=None, ekf_data=None, ground_truth=None):
-    """Load data for visualization"""
-    if isinstance(imu_data, list):
-        self.imu_df = pd.DataFrame(imu_data)
-    else:
-        self.imu_df = imu_data
-        
-    if isinstance(dvl_data, list):
-        self.dvl_df = pd.DataFrame(dvl_data)
-    else:
-        self.dvl_df = dvl_data
-        
-    if isinstance(cam_data, list):
-        self.cam_df = pd.DataFrame(cam_data)
-    else:
-        self.cam_df = cam_data
-        
-    self.ekf_df = ekf_data
+    def load_data(self, imu_data=None, dvl_data=None, cam_data=None, ekf_data=None, ground_truth=None):
+        """Load data for visualization."""
+        if isinstance(imu_data, list):
+            self.imu_df = pd.DataFrame(imu_data)
+        else:
+            self.imu_df = imu_data
+            
+        if isinstance(dvl_data, list):
+            self.dvl_df = pd.DataFrame(dvl_data)
+        else:
+            self.dvl_df = dvl_data
+            
+        if isinstance(cam_data, list):
+            self.cam_df = pd.DataFrame(cam_data)
+        else:
+            self.cam_df = cam_data
+            
+        self.ekf_df = ekf_data  # Assign EKF data
 
-    self.ground_truth = ground_truth  # Added ground truth data for comparison
-    
+        self.ground_truth = ground_truth  # Added ground truth data for comparison
+            
     def plot_all(self, show_ekf=True, output_file='comparison_plot.png'):
-        """Create comprehensive visualization and save to file"""
-        self.fig = plt.figure(figsize=(20, 10))
+        """Create comprehensive visualization and save to file."""
+        self.fig = plt.figure(figsize=(20, 12))  # Increase figure size to accommodate additional subplot
         
         # Create subplots
         self.axes = {
-            'position': plt.subplot(231),
-            'velocity': plt.subplot(232),
-            'acceleration': plt.subplot(233),
-            'angular': plt.subplot(234),
-            'quaternion': plt.subplot(235),  # New quaternion plot
-            'path': plt.subplot(236)
+            'position': plt.subplot(331),  # Position plot
+            'velocity': plt.subplot(332),  # Velocity plot
+            'acceleration': plt.subplot(333),  # Acceleration plot
+            'angular': plt.subplot(334),  # Angular velocity plot
+            'quaternion': plt.subplot(335),  # Quaternion plot
+            'path': plt.subplot(336),  # 2D path plot
+            'error': plt.subplot(337)  # EKF error plot
         }
         
+        # Plot all components
         self._plot_position()
         self._plot_velocity()
         self._plot_acceleration()
         self._plot_angular_velocity()
-        self._plot_quaternion()  # Added quaternion plot
+        self._plot_quaternion()
         self._plot_2d_path()
+        
+        # Plot EKF error if EKF data is available
         if show_ekf and self.ekf_df is not None:
             self._plot_ekf_error()
         
         plt.tight_layout()
         plt.savefig(output_file)
         plt.close()
-    
+        
     def _plot_position(self):
         """Plot position over time"""
         ax = self.axes['position']
@@ -430,7 +434,7 @@ def load_data(self, imu_data=None, dvl_data=None, cam_data=None, ekf_data=None, 
         ax.set_ylim(min(y) - margin, max(y) + margin)
 
     def _plot_quaternion(self):
-        """Plot quaternion components over time"""
+        """Plot quaternion components over time."""
         ax = self.axes['quaternion']
         
         # Plot ground truth quaternion (if available)
@@ -449,10 +453,14 @@ def load_data(self, imu_data=None, dvl_data=None, cam_data=None, ekf_data=None, 
         
         # Plot EKF quaternion (if available)
         if self.ekf_df is not None:
-            ax.plot(self.ekf_df['time'], self.ekf_df['qw'], 'k-', label='qw (EKF)')
-            ax.plot(self.ekf_df['time'], self.ekf_df['qx'], 'c-', label='qx (EKF)')
-            ax.plot(self.ekf_df['time'], self.ekf_df['qy'], 'y-', label='qy (EKF)')
-            ax.plot(self.ekf_df['time'], self.ekf_df['qz'], 'p-', label='qz (EKF)')
+            if 'qw' in self.ekf_df.columns:
+                ax.plot(self.ekf_df['time'], self.ekf_df['qw'], 'k-', label='qw (EKF)')
+            if 'qx' in self.ekf_df.columns:
+                ax.plot(self.ekf_df['time'], self.ekf_df['qx'], 'c-', label='qx (EKF)')
+            if 'qy' in self.ekf_df.columns:
+                ax.plot(self.ekf_df['time'], self.ekf_df['qy'], 'y-', label='qy (EKF)')
+            if 'qz' in self.ekf_df.columns:
+                ax.plot(self.ekf_df['time'], self.ekf_df['qz'], 'p-', label='qz (EKF)')
         
         ax.set_title('Quaternion Components')
         ax.set_xlabel('Time (s)')
@@ -461,8 +469,8 @@ def load_data(self, imu_data=None, dvl_data=None, cam_data=None, ekf_data=None, 
         ax.legend()
 
     def _plot_ekf_error(self):
-        """Plot EKF estimation errors"""
-        ax = self.axes['error']
+        """Plot EKF estimation errors."""
+        ax = self.axes['error']  # Use the 'error' subplot
         if self.ekf_df is not None and self.dvl_df is not None:
             # Calculate true positions from DVL
             dt = np.diff(self.dvl_df['time']).mean()
@@ -478,25 +486,25 @@ def load_data(self, imu_data=None, dvl_data=None, cam_data=None, ekf_data=None, 
             interp_y = f_y(self.ekf_df['time'])
             
             # Calculate errors
-            x_error = self.ekf_df['x'] - interp_x
-            y_error = self.ekf_df['y'] - interp_y
-            
-            # Plot errors
-            ax.plot(self.ekf_df['time'], x_error, label='X Error')
-            ax.plot(self.ekf_df['time'], y_error, label='Y Error')
-            
-            # Plot uncertainty bounds if available
-            if 'x_std' in self.ekf_df.columns:
-                ax.fill_between(self.ekf_df['time'], 
-                              -self.ekf_df['x_std'], self.ekf_df['x_std'],
-                              alpha=0.2, label='X Uncertainty')
-                ax.fill_between(self.ekf_df['time'], 
-                              -self.ekf_df['y_std'], self.ekf_df['y_std'],
-                              alpha=0.2, label='Y Uncertainty')
+            if 'x' in self.ekf_df.columns and 'y' in self.ekf_df.columns:
+                x_error = self.ekf_df['x'] - interp_x
+                y_error = self.ekf_df['y'] - interp_y
+                
+                # Plot errors
+                ax.plot(self.ekf_df['time'], x_error, label='X Error')
+                ax.plot(self.ekf_df['time'], y_error, label='Y Error')
+                
+                # Plot uncertainty bounds if available
+                if 'x_std' in self.ekf_df.columns and 'y_std' in self.ekf_df.columns:
+                    ax.fill_between(self.ekf_df['time'], 
+                                -self.ekf_df['x_std'], self.ekf_df['x_std'],
+                                alpha=0.2, label='X Uncertainty')
+                    ax.fill_between(self.ekf_df['time'], 
+                                -self.ekf_df['y_std'], self.ekf_df['y_std'],
+                                alpha=0.2, label='Y Uncertainty')
             
         ax.set_title('EKF Position Error')
         ax.set_xlabel('Time (s)')
         ax.set_ylabel('Error (m)')
         ax.grid(True)
         ax.legend()
-
