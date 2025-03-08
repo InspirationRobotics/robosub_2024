@@ -78,11 +78,6 @@ class PoseEKF:
         self.imu["qy"] = msg.orientation.y
         self.imu["qz"] = msg.orientation.z
 
-        # Extract angluar velocity
-        self.imu["wx"] = msg.angular_velocity.x
-        self.imu["wy"] = msg.angular_velocity.y
-        self.imu["wz"] = msg.angular_velocity.z
-
     def update_dvl(self):
         """
         Update DVL data.
@@ -135,7 +130,6 @@ class PoseEKF:
         Nonlinear process model for EKF
         - Updates position based on vel
         - Updates vel based on acceleration transformed by the quaternion
-        - Updates quaternion based on ang vel from IMU
         """
         # Extract state variables
         position = x[:3]
@@ -149,27 +143,13 @@ class PoseEKF:
         acceleration_world = self.quaternion_rotate(quaternion, np.array([self.imu["ax"], self.imu["ay"], self.imu["az"]]))
         velocity_new = velocity + acceleration_world * dt
 
-        # Update quaternion using gyroscope angular velocity -- will be normalized in u
-        quaternion_new = self.update_quaternion(quaternion, np.array([self.imu["wx"], self.imu["wy"], self.imu["wz"]]), dt)
-        
-        #Old Code
-            #Predict quaternion (assume no change in orientation)
-            #quaternion_new = quaternion
-            #quaternion_new = quaternion_new / np.linalg.norm(quaternion_new)  # Normalize quaternion
+        #Predict quaternion (assume no change in orientation)
+        quaternion_new = quaternion
+        quaternion_new = quaternion_new / np.linalg.norm(quaternion_new)  # Normalize quaternion
 
         # Return the new state
         return np.concatenate([position_new, velocity_new, quaternion_new])
-    
-    def update_quaternion(self, q, gyro, dt):
-        """
-        Updates the quaternion using gyroscope angular velocity over the time step dt.
-        """
-        rot = R.from_quat(q)
-        delta_rot = R.from_rotvec(gyro * dt)
-        new_q = (rot * delta_rot).as_quat()
-        return new_q / np.linalg.norm(new_q)  # Normalize quaternion
 
-       
 
     @staticmethod
     def quaternion_rotate(q, v):
