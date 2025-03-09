@@ -104,41 +104,6 @@ class PoseEKF:
             self.imu["qy"] = msg.orientation.y
             self.imu["qz"] = msg.orientation.z
 
-    def update_filter(self):
-        """
-        Update the EKF with the latest sensor data.
-        """
-        # Check for valid sensor data
-        if np.any(np.isnan(self.camera_pose)) or np.any(np.isnan(self.dvl_velocity)) or np.any(np.isnan(self.imu["qw"])):
-            rospy.logwarn("Invalid sensor data detected. Skipping update.")
-            return
-
-        # Calculate time delta
-        current_time = time.time()
-        dt = current_time - self.last_time
-        self.last_time = current_time
-
-        # Update DVL data
-        self.update_dvl()
-
-        # Update the state transition matrix (F) with the current time step
-        self.ekf.F = self.process_jacobian(self.ekf.x, dt)
-
-        # Predict the next state
-        self.ekf.predict()
-
-        # Update the filter with combined measurements
-        combined_measurement = self.get_combined_measurement()
-        self.ekf.update(
-            z=combined_measurement,  # Measurement vector
-            HJacobian=self.measurement_jacobian,  # Jacobian function
-            Hx=self.measurement_model  # Measurement model function
-        )
-
-        # Publish the estimated pose
-        if not self.use_simulated_data:
-            self.publish_pose()
-
     def update_dvl(self):
         # Read DVL data
         if self.use_simulated_data:
@@ -318,3 +283,4 @@ class PoseEKF:
         position_variance = np.diag(self.ekf.P)[:3]  # First 3 elements correspond to position (x, y, z)
         position_uncertainty = np.sqrt(position_variance)  # Convert variance to standard deviation
         return position_uncertainty
+    
