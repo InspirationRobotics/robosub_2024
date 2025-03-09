@@ -1,7 +1,5 @@
 import time
 import threading
-import rospy
-from std_msgs.msg import Float64
 
 # use module pyserial (not serial)
 
@@ -20,7 +18,6 @@ class FOG:
 
     def __init__(self, port='/dev/ttyUSB0'):
         """Initialize the serial connection"""
-        rospy.init_node("FOG", anonymous=True)
         # Make serial stuff???
         self.ser = self._setupSerial(port)
         self.readData = False
@@ -41,7 +38,6 @@ class FOG:
         self.integration_factor = 0.0767 # Determined empirically to be 0.0767 deg/sec/mV (should be close to 1/SF)
         self.integrated_sum = 0
         self.bias = 0
-        self.pub_fog = rospy.Publisher("auv/devices/fog", Float64, queue_size=10)
 
     def _setupSerial(self, p : str) -> serial.Serial:
         """Make a serial connection to store in self.ser,
@@ -153,8 +149,6 @@ class FOG:
             angle_deg_sec = angle_mv*self.integration_factor
             self.integrated_sum += angle_deg_sec/(time.time() - self.prev_time)
             self.parsed_data["angle_deg"] = self.integrated_sum
-            self.publish_reading(self.integrated_sum)
-            time.sleep(0.1)
             self.prev_time = time.time()
             self.angle_sum = 0
             self.count = 0
@@ -213,11 +207,6 @@ class FOG:
                     line = [byte.hex()]
                 else:
                     line.append(byte.hex())
-    
-    def publish_reading(self, reading):
-        fog_reading = Float64()
-        fog_reading.data = reading
-        self.pub_fog.publish(fog_reading)
 
     def stop_read(self):
         self.readData = False

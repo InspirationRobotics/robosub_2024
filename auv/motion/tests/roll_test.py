@@ -1,11 +1,11 @@
 import rospy
 import time
-from auv.motion import robot_control2
+from auv.motion import robot_control
 from auv.utils import arm, disarm
 
 
 rospy.init_node("roll_test", anonymous=True)
-rc = robot_control2.RobotControl(enable_dvl=False)
+rc = robot_control.RobotControl(enable_dvl=False)
 
 arm.arm()
 time.sleep(3.0)

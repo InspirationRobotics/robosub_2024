@@ -35,11 +35,11 @@ import rospy
 from simple_pid import PID
 
 # For turning a status LED (based on a state) on and getting the configuration of a specified device, respectively
-from ..utils import statusLed, deviceHelper
+from ...utils import statusLed, deviceHelper
 
 # For handling ROS topics
-from ..utils.rospyHandler import RosHandler
-from ..utils.topicService import TopicService
+from ...utils.rospyHandler import RosHandler
+from ...utils.topicService import TopicService
 
 # Different modes/states of travel (predefined modes used by the Pixhawk)
 MODE_MANUAL = "MANUAL"
@@ -48,7 +48,6 @@ MODE_ALTHOLD = "ALT_HOLD"
 MODE_LOITER = "LOITER"
 MODE_AUTO = "AUTO"
 MODE_GUIDED = "GUIDED"
-MODE_ACRO = "ACRO"
 
 # Configuration of devices from either Graey or Onyx (depending)
 config = deviceHelper.variables
@@ -88,7 +87,7 @@ class AUV(RosHandler):
         self.depth_pid_offset = config.get("depth_pid_offset", 1500) # Get PID offset from key, if not found set PWM value to default neutral (1500)
         
         # Initialize the depth PID controller
-        self.depth_pid = PID(*self.depth_pid_params, setpoint=0.1) # Go to depth at 0.5 m
+        self.depth_pid = PID(*self.depth_pid_params, setpoint=0.5) # Go to depth at 0.5 m
         self.depth_pid.output_limits = (-self.depth_pid_params[0], self.depth_pid_params[0]) # Output limits of PID controller
 
         # Initialize topics from Pixhawk (through MAVROS)
@@ -196,10 +195,6 @@ class AUV(RosHandler):
         Returns:
             result.mode_sent (str): The mode that was sent to autopilot to set the new mode
         """
-        if not isinstance(mode, str):
-            mode = str(mode)
-            mode = mode[7:-1]
-        print(f"[DEBUG] Set mode to {mode}")
         # Handle althold specially, setting mode to hold depth and to stabalize to be the new modes
         if mode == MODE_ALTHOLD:
             self.do_hold_depth = True
@@ -335,7 +330,7 @@ class AUV(RosHandler):
         self.topic_subscriber(self.TOPIC_GET_RC)
         self.topic_subscriber(self.AUV_GET_THRUSTERS, self.thrusterCallback)
         self.topic_subscriber(self.AUV_GET_ARM)
-        self.topic_subscriber(self.AUV_GET_MODE, self.change_mode)
+        self.topic_subscriber(self.AUV_GET_MODE)
         self.topic_subscriber(self.TOPIC_GET_MAVBARO, self.get_baro)
         self.topic_subscriber(self.AUV_GET_DEPTH, self.set_depth)
         self.topic_subscriber(self.AUV_GET_REL_DEPTH, self.set_rel_depth)
@@ -413,7 +408,6 @@ class AUV(RosHandler):
                         self.modeRequest = modeRequest.data
                         while self.mode != self.modeRequest:
                             self.change_mode(self.modeRequest)
-                            print("I changed the mode lol")
                             time.sleep(0.1)
                     # Publish data from sensors(IMU, compass)
                     self.publish_sensors()
@@ -447,7 +441,7 @@ def main():
         print("Connected!")
 
         # Calibrate the depth first
-        auv.change_mode("ALT_HOLD")
+        auv.change_mode(MODE_ALTHOLD)
         auv.calibrate_depth()
         time.sleep(2)
         # arming
@@ -498,5 +492,3 @@ if __name__ == "__main__":
     mainTh = threading.Thread(target=main, daemon=True)
     mainTh.start() # Start the thread
     auv.connect("pix_standalone", rate=20)  # Change rate to 10 if issues arise
-    time.sleep(5)
-    auv.change_mode("ALT_HOLD")

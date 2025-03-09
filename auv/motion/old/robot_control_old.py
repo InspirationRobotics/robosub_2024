@@ -7,21 +7,19 @@ pixhawk flight controller and the software -- that is the job that pixstandalone
 import time
 
 # Import the MAVROS message types that are needed
-import geometry_msgs.msg._twist
 import mavros_msgs.msg
 import mavros_msgs.srv
 import rospy
-from std_msgs.msg import Float64, Float32MultiArray, String
-import geometry_msgs.msg
+from std_msgs.msg import Float64, Float32MultiArray
 
 # Import the PID controller
 from simple_pid import PID
 
 # Get the mathematical functions that handle various navigation tasks from utils.py
-from .utils import get_distance, get_heading_from_coords, heading_error, rotate_vector, inv_rotate_vector
-from ..utils import deviceHelper # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
-from ..device.dvl import dvl # DVL class that enables position estimation
-from ..device.fog import fog_interface as fog
+from ..utils import get_distance, get_heading_from_coords, heading_error, rotate_vector, inv_rotate_vector
+from ...utils import deviceHelper # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
+from ...device.dvl import dvl # DVL class that enables position estimation
+from ...device.fog import fog_interface as fog
 import math
 import numpy as np
 
@@ -54,18 +52,17 @@ class RobotControl:
 
         fog_enable = enable_fog
 
-        self.fog = None
+        if fog_enable == True:
+            self.fog = fog.FOG()
+            self.fog.calibrate()
+            self.fog.start_read()
 
         # Establish thruster and depth publishers
         self.sub_compass = rospy.Subscriber("/auv/devices/compass", Float64, self.get_callback_compass())
-        self.sub_fog = rospy.Subscriber("/auv/devices/fog", Float64, self.get_callback_fog())
         self.sub_depth = rospy.Subscriber("/auv/devices/baro", Float32MultiArray, self.callback_depth)
         self.pub_thrusters = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
         self.pub_depth = rospy.Publisher("auv/devices/setDepth", Float64, queue_size=10)
         self.pub_rel_depth = rospy.Publisher("auv/devices/setRelativeDepth", Float64, queue_size=10)
-        self.pub_mode = rospy.Publisher("auv/status/mode", String, queue_size=10)
-        self.pub_button = rospy.Publisher("/mavros/manual_control/send", mavros_msgs.msg.ManualControl, queue_size=10)
-        self.pub_ang_vel = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel_unstamped", geometry_msgs.msg.Twist, queue_size=10)
         
         # TODO: reset pix standalone depth Integration param 
 
@@ -123,10 +120,6 @@ class RobotControl:
             return _callback_compass_dvl
         else:
             return _callback_compass
-    
-    def get_callback_fog(self, msg):
-        """Get the compass heading from /auv/devices/fog topic"""
-        self.fog = msg.data
 
     def callback_depth(self, msg):
         """Get depth data from barometer /auv/devices/baro topic"""
@@ -145,22 +138,6 @@ class RobotControl:
         rel_depth.data = delta_depth
         self.pub_rel_depth.publish(rel_depth)
         print(f"[INFO] Changing Depth relatively by {delta_depth}, current {self.depth}")
-    
-    def set_mode(self, mode_input):
-        """Change the mode of the sub to specified mode"""
-        mode = String()
-        mode.data = mode_input
-        self.pub_mode.publish(mode)
-        print(f"[INFO] Changing mode to {mode}")
-    
-    def button_press(self, button=4):
-        """This simulates a button press on QGroundControl, primarily used to toggle roll/pitch
-        using unsigned 16 bit integer. Lowest bit is button 0, second lowest bit is button 1, etc.
-        Be warned that the sub disarms about 3 seconds after any button press"""
-        press = mavros_msgs.msg.ManualControl()
-        press.buttons = button
-        self.pub_button.publish(press)
-    
 
     def movement(
         self,
@@ -205,33 +182,41 @@ class RobotControl:
         if vertical!=0: self.set_relative_depth(vertical)
         self.pub_thrusters.publish(pwm)
 
-    def set_heading(self, target: int, fog = False):
+    def set_heading(self, target: int):
         """
         Yaw to the target heading; target heading is absolute (not relative)
         This is a blocking function
         
         Args:
             target (int): Absolute desired heading 
-            fog (boolean): Whether to use FOG (True) or compass (False)
         """
 
         # Mod the target to make sure it is between 0 - 359 degrees
         target = (target) % 360
         print(f"[INFO] Setting heading to {target}")
 
+        time_check = time.time()
+        self.prev_error = None
+
         while not rospy.is_shutdown():
-            if fog:
-                if self.fog == False:
-                    print("[WARN] FOG not ready")
-                    time.sleep(0.5)
-                    continue
-                error = heading_error(self.fog, target)
-            else:
-                if self.compass is None:
-                    print("[WARN] Compass not ready")
-                    time.sleep(0.5)
-                    continue
-                error = heading_error(self.compass, target)
+            if self.compass is None:
+                print("[WARN] Compass not ready")
+                time.sleep(0.5)
+                continue
+
+            error = heading_error(self.compass, target)
+
+            # Break the function if the error hasn't changed 
+            # by 3 degrees over 3 secs - prevents the AUV from getting
+            # stuck at an "incorrect" heading like RoboSub 2024
+            if time.time() - time_check > 3:
+                time_check = time.time()
+                if self.prev_error is None:
+                    self.prev_error = error
+                elif abs(error - self.prev_error) < 3:
+                    break
+                else:
+                    self.prev_error = error
 
             # Normalize error to the range -1 to 1 for the PID controller
             output = self.PIDs["yaw"](-error / 180)
@@ -669,29 +654,37 @@ class RobotControl:
         # Move forward for the specified time and at the specified power
         self.forwardUni(power, time)
 
-    
-    def roll(self, power=3, set_time=5):
-        """Roll with specified time and power, with toggle continuously being pressed"""
-        start_time = time.time()
-        button_number = 256 # Most likely?
-        print("[INFO] Starting roll.")
-        while time.time() - start_time < set_time:
-            self.button_press(button_number)
-            self.movement(lateral=power)
-        print("[INFO] Roll terminated.")
+    def rotate_degrees(self, rotation):
+        """Yaw to relative position with assistance from FOG,
+        absolute value of rotation at most 180 degrees
+        
+        Args:
+            rotation (int): Relative desired heading (deg)"""
+        
+        curr_deg = False
+        while not curr_deg:
+            if "angle_deg" in self.fog.parsed_data: 
+                curr_deg = self.fog.parsed_data["angle_deg"]
+                target = curr_deg + rotation
+            else:
+                print("[WARN] FOG is not ready")
+                time.sleep(0.1)
 
-    def roll2(self, roll_vel=1):
-        """This should publish a roll velocity in rad/sec"""
-        roll_cmd = geometry_msgs.msg.Twist()
-        roll_cmd.angular.x = roll_vel
-        self.pub_ang_vel.publish(roll_cmd)
+        while not rospy.is_shutdown(): # could be while True, but here we go:
+            curr_deg = self.fog.parsed_data["angle_deg"]
+            error = heading_error(curr_deg, target)
+        
+            # normalized error ideally b/w -1 and 1
+            output = self.PIDs["yaw"](-error / 180) # verify negative error
 
-if __name__ == "__main__":
-    rc = RobotControl()
-    rospy.init_node("mode_test", anonymous=True)
-    mode = input("Make your mode here: ")
-    rc.set_mode(mode)
-    button = int(input("Press a button: "))
-    rc.button_press(button)
-    roll_command = input("Make your roll velocity: ")
-    rc.roll2(roll_command)
+            print(f"[DEBUG] Heading error: {error}, output: {output} {self.compass} {target}")
+
+            if abs(error) <= 1:
+                print("[INFO] Heading reached")
+                break
+        
+            self.movement(yaw=output)
+            time.sleep(0.1)
+
+        print(f"[INFO] Finished setting heading to {target}")
+        

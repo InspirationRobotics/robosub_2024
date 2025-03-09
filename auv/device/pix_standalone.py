@@ -48,6 +48,7 @@ MODE_ALTHOLD = "ALT_HOLD"
 MODE_LOITER = "LOITER"
 MODE_AUTO = "AUTO"
 MODE_GUIDED = "GUIDED"
+MODE_ACRO = "ACRO"
 
 # Configuration of devices from either Graey or Onyx (depending)
 config = deviceHelper.variables
@@ -195,6 +196,10 @@ class AUV(RosHandler):
         Returns:
             result.mode_sent (str): The mode that was sent to autopilot to set the new mode
         """
+        if not isinstance(mode, str):
+            mode = str(mode)
+            mode = mode[7:-1]
+        print(f"[DEBUG] Set mode to {mode}")
         # Handle althold specially, setting mode to hold depth and to stabalize to be the new modes
         if mode == MODE_ALTHOLD:
             self.do_hold_depth = True
@@ -330,7 +335,7 @@ class AUV(RosHandler):
         self.topic_subscriber(self.TOPIC_GET_RC)
         self.topic_subscriber(self.AUV_GET_THRUSTERS, self.thrusterCallback)
         self.topic_subscriber(self.AUV_GET_ARM)
-        self.topic_subscriber(self.AUV_GET_MODE)
+        self.topic_subscriber(self.AUV_GET_MODE, self.change_mode)
         self.topic_subscriber(self.TOPIC_GET_MAVBARO, self.get_baro)
         self.topic_subscriber(self.AUV_GET_DEPTH, self.set_depth)
         self.topic_subscriber(self.AUV_GET_REL_DEPTH, self.set_rel_depth)
@@ -441,7 +446,7 @@ def main():
         print("Connected!")
 
         # Calibrate the depth first
-        auv.change_mode(MODE_ALTHOLD)
+        auv.change_mode("ALT_HOLD")
         auv.calibrate_depth()
         time.sleep(2)
         # arming
@@ -492,3 +497,4 @@ if __name__ == "__main__":
     mainTh = threading.Thread(target=main, daemon=True)
     mainTh.start() # Start the thread
     auv.connect("pix_standalone", rate=20)  # Change rate to 10 if issues arise
+    
