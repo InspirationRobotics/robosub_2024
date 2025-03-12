@@ -15,13 +15,13 @@ class SensorSimulator:
         self.turn_rate = np.pi/4  # rad/s (45 deg/s)
         
         # Noise parameters
-        self.imu_accel_noise_std = 0.01  # m/s^2
-        self.imu_gyro_noise_std = 0.001  # rad/s
-        self.imu_quat_noise_std = 0.001  # unitless
-        self.dvl_vel_noise_std = 0.002   # m/s
-        self.dvl_pos_noise_std = 0.001   # m
-        self.cam_pose_noise_std = 0.001  # m
-        self.cam_quat_noise_std = 0.001  # unitless
+        self.imu_accel_noise_std = 0.1  # m/s^2
+        self.imu_gyro_noise_std = 0.01  # rad/s
+        self.imu_quat_noise_std = 0.01  # unitless
+        self.dvl_vel_noise_std = 0.02   # m/s
+        self.dvl_pos_noise_std = 0.01   # m
+        self.cam_pose_noise_std = 0.1  # m
+        self.cam_quat_noise_std = 0.1  # unitless
 
         # Initialize storage and state
         self.reset()
@@ -460,7 +460,7 @@ class DataVisualizer:
             if 'qy' in self.ekf_df.columns:
                 ax.plot(self.ekf_df['time'], self.ekf_df['qy'], 'y-', label='qy (EKF)')
             if 'qz' in self.ekf_df.columns:
-                ax.plot(self.ekf_df['time'], self.ekf_df['qz'], 'p-', label='qz (EKF)')
+                ax.plot(self.ekf_df['time'], self.ekf_df['qz'], label='qz (EKF)')
         
         ax.set_title('Quaternion Components')
         ax.set_xlabel('Time (s)')

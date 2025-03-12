@@ -125,7 +125,7 @@ class PoseEKF:
         Initialize the Extended Kalman Filter.
         """
         # Initialize EKF with state vector: [x, y, z, vx, vy, vz, qw, qx, qy, qz]
-        ekf = ExtendedKalmanFilter(dim_x=10, dim_z=10, dim_u=0)
+        ekf = ExtendedKalmanFilter(dim_x=10, dim_z=3, dim_u=0)
 
         # Initialize state vector
         ekf.x = np.zeros(10)
@@ -139,9 +139,9 @@ class PoseEKF:
 
         # Measurement noise covariance matrix
         ekf.R = np.diag([
-            0.1, 0.1, 0.1,  # Position noise (x, y, z)
-            0.01, 0.01, 0.01, 0.01,  # Quaternion noise (qw, qx, qy, qz)
-            0.01, 0.01, 0.01  # Velocity noise (vx, vy, vz)
+            10, 10, 10,  # Position noise (x, y, z)
+            100, 100, 100, 100,  # Quaternion noise (qw, qx, qy, qz)
+            0.1, 0.1, 0.1  # Velocity noise (vx, vy, vz)
         ])
 
         # Assign process and measurement models
