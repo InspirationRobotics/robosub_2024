@@ -153,7 +153,7 @@ class EKFTester:
 if __name__ == "__main__":
     # Create a directory for this run
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_dir = os.path.join('/Users/teshner/Desktop/ECE191/EFKTesting2024Sub/auv/device/compass/altimu10v5/EKFComp', timestamp)
+    output_dir = os.path.join("C:/Users/joshy/OneDrive/Documents/24-25/191/robosub_2024/auv/device/compass/altimu10v5/EKFComp", timestamp)
     os.makedirs(output_dir, exist_ok=True)
     
     tester = EKFTester()

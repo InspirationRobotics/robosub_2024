@@ -281,20 +281,14 @@ class DataVisualizer:
         
         # Create subplots
         self.axes = {
-            'position': plt.subplot(331),  # Position plot
-            'velocity': plt.subplot(332),  # Velocity plot
-            'acceleration': plt.subplot(333),  # Acceleration plot
-            'angular': plt.subplot(334),  # Angular velocity plot
-            'quaternion': plt.subplot(335),  # Quaternion plot
-            'path': plt.subplot(336),  # 2D path plot
-            'error': plt.subplot(337)  # EKF error plot
+            'position': plt.subplot(221),  # Position plot
+            'quaternion': plt.subplot(222),  # Quaternion plot
+            'path': plt.subplot(223),  # 2D path plot
+            'error': plt.subplot(224)  # EKF error plot
         }
         
         # Plot all components
         self._plot_position()
-        self._plot_velocity()
-        self._plot_acceleration()
-        self._plot_angular_velocity()
         self._plot_quaternion()
         self._plot_2d_path()
         
@@ -309,13 +303,13 @@ class DataVisualizer:
     def _plot_position(self):
         """Plot position over time"""
         ax = self.axes['position']
-        if self.dvl_df is not None:
-            dt = np.diff(self.dvl_df['time']).mean()
-            x = np.cumsum(self.dvl_df['vx'] * dt)
-            y = np.cumsum(self.dvl_df['vy'] * dt)
-            ax.plot(self.dvl_df['time'], x, label='X (DVL)')
-            ax.plot(self.dvl_df['time'], y, label='Y (DVL)')
         
+        # Plot noisy camera position
+        if self.cam_df is not None:
+            ax.plot(self.cam_df['time'], self.cam_df['x'], label='X (Camera)')
+            ax.plot(self.cam_df['time'], self.cam_df['y'], label='Y (Camera)')
+        
+        # Plot EKF position
         if self.ekf_df is not None:
             ax.plot(self.ekf_df['time'], self.ekf_df['x'], '--', label='X (EKF)')
             ax.plot(self.ekf_df['time'], self.ekf_df['y'], '--', label='Y (EKF)')
