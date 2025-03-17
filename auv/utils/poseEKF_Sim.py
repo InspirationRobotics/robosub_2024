@@ -502,3 +502,74 @@ class DataVisualizer:
         ax.set_ylabel('Error (m)')
         ax.grid(True)
         ax.legend()
+    
+
+    def _calculate_position_error(self):
+        """Calculate average position error before and after filtering."""
+        if self.ground_truth is None or self.cam_df is None or self.ekf_df is None:
+            print("Ground truth, camera, or EKF data is missing. Cannot calculate position error.")
+            return None, None
+
+        # Calculate true positions from ground truth
+        true_x = self.ground_truth['x']
+        true_y = self.ground_truth['y']
+
+        # Calculate pre-filtering error (camera data)
+        pre_filter_error_x = self.cam_df['x'] - true_x
+        pre_filter_error_y = self.cam_df['y'] - true_y
+        pre_filter_error = np.sqrt(pre_filter_error_x**2 + pre_filter_error_y**2).mean()
+
+        # Calculate post-filtering error (EKF data)
+        post_filter_error_x = self.ekf_df['x'] - true_x
+        post_filter_error_y = self.ekf_df['y'] - true_y
+        post_filter_error = np.sqrt(post_filter_error_x**2 + post_filter_error_y**2).mean()
+
+        return pre_filter_error, post_filter_error
+
+    def _calculate_quaternion_error(self):
+        """Calculate average quaternion error before and after filtering."""
+        if self.ground_truth is None or self.cam_df is None or self.ekf_df is None:
+            print("Ground truth, camera, or EKF data is missing. Cannot calculate quaternion error.")
+            return None, None
+
+        # Calculate true quaternion from ground truth
+        true_qw = self.ground_truth['qw']
+        true_qx = self.ground_truth['qx']
+        true_qy = self.ground_truth['qy']
+        true_qz = self.ground_truth['qz']
+
+        # Calculate pre-filtering error (camera data)
+        pre_filter_error_qw = self.cam_df['qw'] - true_qw
+        pre_filter_error_qx = self.cam_df['qx'] - true_qx
+        pre_filter_error_qy = self.cam_df['qy'] - true_qy
+        pre_filter_error_qz = self.cam_df['qz'] - true_qz
+        pre_filter_error = np.sqrt(pre_filter_error_qw**2 + pre_filter_error_qx**2 + 
+                                  pre_filter_error_qy**2 + pre_filter_error_qz**2).mean()
+
+        # Calculate post-filtering error (EKF data)
+        post_filter_error_qw = self.ekf_df['qw'] - true_qw
+        post_filter_error_qx = self.ekf_df['qx'] - true_qx
+        post_filter_error_qy = self.ekf_df['qy'] - true_qy
+        post_filter_error_qz = self.ekf_df['qz'] - true_qz
+        post_filter_error = np.sqrt(post_filter_error_qw**2 + post_filter_error_qx**2 + 
+                                    post_filter_error_qy**2 + post_filter_error_qz**2).mean()
+
+        return pre_filter_error, post_filter_error
+
+    def print_errors(self):
+        """Print average position and quaternion errors before and after filtering."""
+        pos_pre, pos_post = self._calculate_position_error()
+        quat_pre, quat_post = self._calculate_quaternion_error()
+
+        if pos_pre is not None and pos_post is not None:
+            print(f"Average Position Error:")
+            print(f"  Pre-filtering: {pos_pre:.4f} m")
+            print(f"  Post-filtering: {pos_post:.4f} m")
+            print(f"  Improvement: {((pos_pre - pos_post) / pos_pre * 100):.2f}%")
+
+        if quat_pre is not None and quat_post is not None:
+            print(f"\nAverage Quaternion Error:")
+            print(f"  Pre-filtering: {quat_pre:.4f}")
+            print(f"  Post-filtering: {quat_post:.4f}")
+            print(f"  Improvement: {((quat_pre - quat_post) / quat_pre * 100):.2f}%")
+

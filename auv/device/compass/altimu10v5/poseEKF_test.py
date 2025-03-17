@@ -24,6 +24,9 @@ class EKFTester:
         self.dvl_df = pd.DataFrame(self.dvl_data).sort_values('time')
         self.camera_df = pd.DataFrame(self.camera_data).sort_values('time')
         
+        # Generate ground truth data
+        self.ground_truth = self._generate_ground_truth()  # <-- Added this line
+        
         # Create mock DVL object with expected interface
         mock_dvl = type('DVL', (), {
             'vel_rot': [0, 0, 0],  # Initial velocities
@@ -138,18 +141,75 @@ class EKFTester:
         visualizer = DataVisualizer()
         
         # Plot raw simulated data
-        visualizer.load_data(self.imu_df, self.dvl_df, self.camera_df)
+        visualizer.load_data(self.imu_df, self.dvl_df, self.camera_df, ground_truth=self.ground_truth)  # <-- Added ground_truth
         raw_output_file = os.path.join(output_dir, 'raw_simulated_data.png')
         visualizer.plot_all(show_ekf=False, output_file=raw_output_file)
         
         # Plot EKF-processed data
-        visualizer.load_data(self.imu_df, self.dvl_df, self.camera_df, self.ekf_df)
+        visualizer.load_data(self.imu_df, self.dvl_df, self.camera_df, self.ekf_df, ground_truth=self.ground_truth)  # <-- Added ground_truth
+        visualizer.print_errors()
         ekf_output_file = os.path.join(output_dir, 'ekf_processed_data.png')
         visualizer.plot_all(show_ekf=True, output_file=ekf_output_file)
         
         print(f"Raw simulated data plot saved to {raw_output_file}")
         print(f"EKF processed data plot saved to {ekf_output_file}")
-
+        
+    def _generate_ground_truth(self):
+        """Generate ground truth data for position and orientation."""
+        ground_truth = []
+        t = 0.0
+        orientation = 0.0
+        position = np.zeros(3)
+        
+        # Simulate the square path to generate ground truth
+        movements = [
+            np.array([0.0, 1.0, 0.0]),  # Forward
+            np.array([0.0, 0.0, 0.0]),  # Turn left
+            np.array([-1.0, 0.0, 0.0]), # Left
+            np.array([0.0, 0.0, 0.0]),  # Turn left
+            np.array([0.0, -1.0, 0.0]),# Back
+            np.array([0.0, 0.0, 0.0]),  # Turn left
+            np.array([1.0, 0.0, 0.0]),  # Right
+        ]
+        
+        # Define turn angles for each movement
+        turn_angles = [0.0, np.pi/2, 0.0, np.pi/2, 0.0, np.pi/2, 0.0]
+        
+        for direction, turn_angle in zip(movements, turn_angles):  # <-- Fixed here
+            if np.any(direction != 0):
+                duration = self.simulator.side_length / self.simulator.cruise_speed
+                vel = direction * self.simulator.cruise_speed
+                while t < duration:
+                    position += vel * self.simulator.imu_dt
+                    ground_truth.append({
+                        'time': t,
+                        'x': position[0],
+                        'y': position[1],
+                        'z': position[2],
+                        'qw': np.cos(orientation / 2),
+                        'qx': 0.0,
+                        'qy': 0.0,
+                        'qz': np.sin(orientation / 2)
+                    })
+                    t += self.simulator.imu_dt
+            elif turn_angle != 0:
+                duration = abs(turn_angle / self.simulator.turn_rate)
+                omega = turn_angle / duration
+                while t < duration:
+                    orientation += omega * self.simulator.imu_dt
+                    ground_truth.append({
+                        'time': t,
+                        'x': position[0],
+                        'y': position[1],
+                        'z': position[2],
+                        'qw': np.cos(orientation / 2),
+                        'qx': 0.0,
+                        'qy': 0.0,
+                        'qz': np.sin(orientation / 2)
+                    })
+                    t += self.simulator.imu_dt
+        
+        return pd.DataFrame(ground_truth)
 if __name__ == "__main__":
     # Create a directory for this run
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
