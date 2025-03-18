@@ -2,8 +2,6 @@
 
 Team Inspiration's repository for the RoboSub 2024 competition. We are using ROS, python, and C++.
 
-*Please use this repository only for source files*; do not upload binary files like images/videos/ROSBags. While we have several binary files such as a few reference images and .blob files for our YOLO models, this is not ideal.
-
 ## Getting Started
 
 ### Prerequisites

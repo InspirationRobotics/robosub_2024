@@ -1,7 +1,5 @@
 """
 To create a sequential order of missions for Graey to follow.
-
-Onyx will complete the Coin Flip, Gate, and Buoy missions.
 """
 
 import rospy
@@ -28,8 +26,6 @@ time.sleep(5)
 
 # Rotate towards the heading of the gate, move 2 meters forward
 rc.set_heading(gate_heading)
-
-# Run the gate mission using just the DVL lol
 
 curr_time = time.time()
 

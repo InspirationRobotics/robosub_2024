@@ -1,7 +1,9 @@
 """
-To create a sequential order of missions for Onyx to follow.
-
-Onyx will complete the Coin Flip, Gate, and Buoy missions.
+Running the gate mission (dead reckoning), style, buoy, and octagon missions.
+Finals run for 2024 season. 
+NOTE: This code did not give the intended result because the set_heading function only works when the differences between 
+actual and desired heading are outside a certain range -- if these are too close together, the loop will stall (which prevented Onyx
+from reaching the Octagon mission).
 """
 
 import rospy
@@ -25,11 +27,7 @@ arm.arm()
 rc.set_depth(0.65)
 
 time.sleep(5)
-
-# Rotate towards the heading of the gate, move 2 meters forward
 rc.set_heading(gate_heading)
-
-# Run the gate mission using just the DVL lol
 
 curr_time = time.time()
 
@@ -48,10 +46,6 @@ while time.time() - curr_time < 5:
     rc.movement(forward=2)
 
 rc.set_heading(gate_heading - 70)
-
-# # curr_time = time.time()
-# # while time.time() - curr_time < 7:
-#     rc.movement(forward=2)
 
 # Run the buoy mission
 buoy = buoy_mission.BuoyMission(target)
@@ -81,3 +75,4 @@ octagon.cleanup()
 time.sleep(1.0)
 
 print("[INFO] Mission run terminate")
+disarm.disarm()
