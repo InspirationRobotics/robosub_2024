@@ -45,8 +45,8 @@ python3 -m pip install -e .
 #### On your own computer
 
 ```bash
-git clone https://github.com/InspirationRobotics/robosub_2024
-cd robosub_2024
+git clone https://github.com/InspirationRobotics/robosub_2025
+cd robosub_2025
 python3 -m pip install -e ."[cv,dev]"
 # or 
 python2 -m pip install -e ."[cv,dev]"
