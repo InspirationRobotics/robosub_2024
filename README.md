@@ -57,7 +57,7 @@ python2 -m pip install -e ."[cv,dev]"
 In order not to have a messy repo, we have a specific structure for the repo. Please follow this structure when adding new features.
 
 ```bash
-robosub_2024
+robosub_2025
 ├── auv
 │   ├── device
 │   │   ├── # everything related to the sensors
