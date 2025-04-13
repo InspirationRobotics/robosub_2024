@@ -1,6 +1,6 @@
 # robosub_2025
 
-Team Inspiration's repository for the RoboSub 2024 competition. We are using ROS, python, and C++.
+Team Inspiration's repository for the RoboSub 2025 competition. We are using ROS, python, and C++.
 
 ## Getting Started
 
