@@ -37,7 +37,7 @@ Make sure to follow the README to install the dependencies in the correct order.
 (For the following, you can also use the SSH link instead of the HTTPS link -- HTTPS is usually simpler)
 
 ```bash
-git clone https://github.com/InspirationRobotics/robosub_2024
+git clone https://github.com/InspirationRobotics/robosub_2025
 mv robosub_2023 auv && cd auv
 python3 -m pip install -e .
 ```
