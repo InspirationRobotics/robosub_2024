@@ -23,10 +23,10 @@ from auv.utils import deviceHelper
 
 
 # Order of cameras is [forward-facing, bottom-facing]
-usbIDS = [deviceHelper.dataFromConfig("forwardUSB"), deviceHelper.dataFromConfig("bottomUSB")]
-ogDev = []
-oaks = []
-newDev = []
+usbIDS  = [deviceHelper.dataFromConfig("forwardUSB"), deviceHelper.dataFromConfig("bottomUSB")]
+ogDev   = []
+oaks    = []
+newDev  = []
 
 
 def list_devices():

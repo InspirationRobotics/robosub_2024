@@ -146,23 +146,23 @@ class oakCamera:
             print("Found model; creating pipeline")
 
             # Open the JSON file and load the data
-            jsonFile = open(jsonFile)
-            data = json.load(jsonFile)
-            NN_params = data["nn_config"]["NN_specific_metadata"]
-            nnBlobPath = blobFile
-            classAmt = NN_params["classes"]
-            anchors = NN_params["anchors"]
-            anchorMasks = NN_params["anchor_masks"]
-            self.labelMap = data["mappings"]["labels"]
+            jsonFile        = open(jsonFile)
+            data            = json.load(jsonFile)
+            NN_params       = data["nn_config"]["NN_specific_metadata"]
+            nnBlobPath      = blobFile
+            classAmt        = NN_params["classes"]
+            anchors         = NN_params["anchors"]
+            anchorMasks     = NN_params["anchor_masks"]
+            self.labelMap   = data["mappings"]["labels"]
 
             # Create the model-based pipeline
             pipeline = dai.Pipeline()
 
             # Define the sources and outputs
-            camRgb = pipeline.create(dai.node.ColorCamera)
-            detectionNetwork = pipeline.create(dai.node.YoloDetectionNetwork)
-            xoutRgb = pipeline.create(dai.node.XLinkOut)
-            nnOut = pipeline.create(dai.node.XLinkOut)
+            camRgb              = pipeline.create(dai.node.ColorCamera)
+            detectionNetwork    = pipeline.create(dai.node.YoloDetectionNetwork)
+            xoutRgb             = pipeline.create(dai.node.XLinkOut)
+            nnOut               = pipeline.create(dai.node.XLinkOut)
 
             # Setting the correct stream names
             xoutRgb.setStreamName("rgb")
@@ -182,23 +182,23 @@ class oakCamera:
 
             # Neural network-specific settings
             detectionNetwork.setConfidenceThreshold(confidence) # Detections having a confidence below this confidence value will be ignored
-            detectionNetwork.setNumClasses(classAmt) # Specify the number of classes the detection network should recognize
-            detectionNetwork.setCoordinateSize(4) # Define the size of the coordinates to represent each detection (there are 4: xmin, ymin, xmax, ymax)
-            detectionNetwork.setAnchors(anchors) # Set the anchors for the network. Anchors are used in determining the default sizes and shapes of bounding boxes
-            detectionNetwork.setAnchorMasks(anchorMasks) # Set the anchor masks for the network. Anchor masks help focus on different aspects of an image for different anchors. 
-            detectionNetwork.setIouThreshold(0.5) # Set the Intersection over Union (IoU) threshold for filtering overlapping detections
-            detectionNetwork.setBlobPath(nnBlobPath) # Set the path for the blob file that contains the Neural Network to be used
+            detectionNetwork.setNumClasses(classAmt)            # Specify the number of classes the detection network should recognize
+            detectionNetwork.setCoordinateSize(4)               # Define the size of the coordinates to represent each detection (there are 4: xmin, ymin, xmax, ymax)
+            detectionNetwork.setAnchors(anchors)                # Set the anchors for the network. Anchors are used in determining the default sizes and shapes of bounding boxes
+            detectionNetwork.setAnchorMasks(anchorMasks)        # Set the anchor masks for the network. Anchor masks help focus on different aspects of an image for different anchors. 
+            detectionNetwork.setIouThreshold(0.5)               # Set the Intersection over Union (IoU) threshold for filtering overlapping detections
+            detectionNetwork.setBlobPath(nnBlobPath)            # Set the path for the blob file that contains the Neural Network to be used
             # detectionNetwork.setNumInferenceThreads(2) needed?
-            detectionNetwork.input.setBlocking(False) # Make the input queue non-blocking so the input stream does not wait for a full queue to continue running the stream
+            detectionNetwork.input.setBlocking(False)           # Make the input queue non-blocking so the input stream does not wait for a full queue to continue running the stream
 
             # Linking the different components of the pipeline
-            camRgb.preview.link(detectionNetwork.input) # Link the color camera (RGB) to the input of the detection network
+            camRgb.preview.link(detectionNetwork.input)         # Link the color camera (RGB) to the input of the detection network
             
             
             # This effectively allows for two feeds, one for performing manipulations through the NN that the a feed will show,
             # while another feed will show just the RGB feed of the raw OAK-D camera stream 
-            detectionNetwork.passthrough.link(xoutRgb.input) # Link a passthrough (allows for the data to pass through the NN (neural network) link unaltered) to the color camera
-            detectionNetwork.out.link(nnOut.input) # Link the NN results to the NN output (shows the NN labeling results)
+            detectionNetwork.passthrough.link(xoutRgb.input)    # Link a passthrough (allows for the data to pass through the NN (neural network) link unaltered) to the color camera
+            detectionNetwork.out.link(nnOut.input)              # Link the NN results to the NN output (shows the NN labeling results)
 
             # Initializing Oak-D with pipeline
             device_info = dai.DeviceInfo(self.mxid)
@@ -318,7 +318,7 @@ class oakCamera:
         """
         Deals with running a ML (neural network) model on the OAK-D data. This is what actually retrieves the results from the data processing by the model.
         """
-        cam = self.device.getOutputQueue(name="rgb", maxSize=4, blocking=False) # Get the RGB camera output (maxSize == 4 represents the largest queue possible)
+        qcam = self.device.getOutputQueue(name="rgb", maxSize=4, blocking=False) # Get the RGB camera output (maxSize == 4 represents the largest queue possible)
         
         # If there is an actual model to be run, then get the device's neural network output queue
         if self.modelPath != "raw":
@@ -327,7 +327,7 @@ class oakCamera:
         while not self.rospy.is_shutdown() and not self.isKilled:
             try:
                 # Get an RGB frame from the camera queue
-                frame1 = cam.get().getCvFrame()
+                frame1 = qcam.get().getCvFrame()
                 if self.modelPath != "raw":
                     # Retrieve a detection packet from the detection queue
                     inDet = qDet.get()
