@@ -1,97 +1,74 @@
+"""
+Creates a ROS Bag file that records the data from the custom ROS subscribers that detail data from the compass, IMU, barometer,
+thrusters, depth, arm, and mode of the sub
+
+This allows for saving data and playing back data synchronously (since a ROS Bag file saves the timestamps of when the data was published)
+"""
+
 #!/usr/bin/env python
 import os
 import signal
+import threading
 import time
-import csv
 from datetime import datetime
 
 import rosbag
 import rospy
 import std_msgs.msg
-from mavros_msgs.msg import OverrideRCIn
+from mavros_msgs.msg import OverrideRCIn, State
+from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 from sensor_msgs.msg import FluidPressure, Imu
 
 
-class RosbagRecorder:
-    def __init__(self):
+class rosBags:
+    def create_rosbag(self):
         rospy.init_node("rosbag_creator", anonymous=True)
-        self.bag = None
-        self.keep_running = True
-        self.csv_files = {}
+        fileName = str(datetime.now())
+        fileName = fileName.split(".")
+        fileName = fileName[0].split(" ")
+        temp = fileName[1].split(":")
+        fileName[1] = f"{temp[0]}-{temp[1]}-{temp[2]}"
+        fileName = f"{fileName[0]}_{fileName[1]}"
+        self.name = f"/home/inspiration/bags/{fileName}.bag"
+        os.system("mkdir /home/inspiration/bags >/dev/null 2>&1")
+        os.system(f"touch {self.name}")
+        self.bag = rosbag.Bag(self.name, "w")
+        print(f"Successfully made bag file: {self.name}")
 
-    def generate_filename(self):
-        now = datetime.now()
-        time_str = now.strftime("%Y-%m-%d_%H-%M-%S")
-        os.makedirs("/home/inspiration/bags", exist_ok=True)
-        os.makedirs("/home/inspiration/csv_output", exist_ok=True)  # Create directory for CSVs
-        return f"/home/inspiration/bags/{time_str}.bag"
+        # Subscribe to the desired topics and save messages to the bag.
+        rospy.Subscriber("/auv/devices/compass", std_msgs.msg.Float64, self.bag_write_callback, callback_args=("/auv/devices/compass"))
+        rospy.Subscriber("/auv/devices/imu", Imu, self.bag_write_callback, callback_args=("/auv/devices/imu"))
+        rospy.Subscriber("/auv/devices/baro", std_msgs.msg.Float32MultiArray, self.bag_write_callback, callback_args=("/auv/devices/baro"))
+        rospy.Subscriber("/auv/devices/thrusters", OverrideRCIn, self.bag_write_callback, callback_args=("/auv/devices/thrusters"))
+        rospy.Subscriber("/auv/devices/setDepth", std_msgs.msg.Float64, self.bag_write_callback, callback_args=("/auv/devices/setDepth"))
+        rospy.Subscriber("/auv/status/arm", std_msgs.msg.Bool, self.bag_write_callback, callback_args=("/auv/status/arm"))
+        rospy.Subscriber("/auv/status/mode", std_msgs.msg.String, self.bag_write_callback, callback_args=("/auv/status/mode"))
+        rospy.spin()
 
-    def start(self):
-        filename = self.generate_filename()
-        print(f"📦 Creating bag file: {filename}")
-        with rosbag.Bag(filename, 'w') as self.bag:
-            self.setup_subscribers()
-            print("🟢 Recording started. Press Ctrl+C to stop.")
-            while not rospy.is_shutdown() and self.keep_running:
-                time.sleep(0.1)
-        print(f"✅ Bag saved and indexed at: {filename}")
-
-    def setup_subscribers(self):
-        # Set up subscribers for each topic
-        self.setup_topic_and_csv("/auv/devices/compass", std_msgs.msg.Float64)
-        self.setup_topic_and_csv("/auv/devices/imu", Imu)
-        self.setup_topic_and_csv("/auv/devices/baro", std_msgs.msg.Float32MultiArray)
-        self.setup_topic_and_csv("/auv/devices/thrusters", OverrideRCIn)
-        self.setup_topic_and_csv("/auv/devices/setDepth", std_msgs.msg.Float64)
-        self.setup_topic_and_csv("/auv/status/arm", std_msgs.msg.Bool)
-        self.setup_topic_and_csv("/auv/status/mode", std_msgs.msg.String)
-
-    def setup_topic_and_csv(self, topic, msg_type):
-        # Create a CSV file for each topic
-        csv_file = f"/home/inspiration/csv_output{topic.replace('/', '_')}.csv"
-        csv_file = csv_file.replace(":", "_")
-        self.csv_files[topic] = open(csv_file, 'w', newline='')
-        self.csv_writers = {}
-        self.csv_writers[topic] = csv.writer(self.csv_files[topic])
-
-        rospy.Subscriber(topic, msg_type, self.bag_write_callback, callback_args=topic)
+    def closeBag(self):
+        # Close the bag file
+        self.bag.close()
 
     def bag_write_callback(self, msg, topic):
-        if self.bag:
-            try:
-                # Write to the bag
-                self.bag.write(topic, msg)
-                
-                # Write to CSV
-                if topic not in self.csv_writers:
-                    return
-                writer = self.csv_writers[topic]
-                
-                if writer.writerow == self.csv_writers[topic]:
-                    # Write header for CSV file if it's the first message
-                    headers = list(msg.__slots__)
-                    writer.writerow(headers)
-                
-                # Write message data (fields) into CSV
-                row = [getattr(msg, field) for field in msg.__slots__]
-                writer.writerow(row)
-
-            except Exception as e:
-                rospy.logerr(f"Bag write error on {topic}: {e}")
-
-    def shutdown(self):
-        self.keep_running = False
-        for topic, file in self.csv_files.items():
-            file.close()
+        self.bag.write(topic, msg)
 
 
-recorder = RosbagRecorder()
+def onExit(signum, frame):
+    try:
+        print("\nClosing Rosbag...")
+        rospy.signal_shutdown("Rospy Exited")
+        while not rospy.is_shutdown():
+            pass
+        bag.closeBag()
+        time.sleep(1)
+        print(f"\nBag Saved to {bag.name} ...Done")
+        exit(1)
+    except:
+        pass
 
-def handle_shutdown(sig, frame):
-    print("\n🛑 Ctrl+C received, shutting down...")
-    recorder.shutdown()
 
-signal.signal(signal.SIGINT, handle_shutdown)
+signal.signal(signal.SIGINT, onExit)
 
 if __name__ == "__main__":
-    recorder.start()
+    bag = rosBags()
+    bag.create_rosbag()
