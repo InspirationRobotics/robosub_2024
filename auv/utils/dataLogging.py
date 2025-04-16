@@ -45,6 +45,7 @@ class RosbagRecorder:
     def bag_write_callback(self, msg, topic):
         if self.bag:
             try:
+                print(msg)
                 self.bag.write(topic, msg)
             except Exception as e:
                 rospy.logerr(f"Bag write error on {topic}: {e}")
