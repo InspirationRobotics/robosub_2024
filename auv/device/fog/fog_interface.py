@@ -39,7 +39,7 @@ class FOGNode:
         self.pub_diag_sig = rospy.Publisher("/fog/diag_sig", Float64, queue_size=10)
 
         # Calibration first
-        self.calibrate()
+        # self.calibrate()
 
         # Start Timer-based read loop
         self.line_buffer = []
