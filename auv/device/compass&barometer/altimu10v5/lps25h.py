@@ -65,6 +65,7 @@ if __name__ == "__main__":
         while True:
             # Get barometer data
             barometer_data = barometer.get_barometer_raw()
+            print(barometer_data)
             barometer.log_sensor_data("Barometer", barometer_data,"Barometer-LPS25H.csv")
             
 
