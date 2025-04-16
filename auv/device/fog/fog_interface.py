@@ -23,20 +23,20 @@ class FOG:
         rospy.init_node("FOG", anonymous=True)
         
         # Make serial stuff???
-        self.ser = self._setupSerial(port)
-        self.readData = False
+        self.ser        = self._setupSerial(port)
+        self.readData   = False
 
-        self.xDataNames = ["temp", "supply_voltage", "sld_curr", "diag_sig", "angle_deg"]
-        self.data = {}
-        self.parsed_data = {}
+        self.xDataNames     = ["temp", "supply_voltage", "sld_curr", "diag_sig", "angle_deg"]
+        self.data           = {}
+        self.parsed_data    = {}
 
-        self.samples = 200
-        self.count = 0
-        self.angle_sum = 0
+        self.samples    = 200
+        self.count      = 0
+        self.angle_sum  = 0
 
-        self.cal_time = 10 # seconds
-        self.cal_sum = 0
-        self.cal_count = 0
+        self.cal_time   = 10 # seconds
+        self.cal_sum    = 0
+        self.cal_count  = 0
 
         # Previous was 0.0727
         self.integration_factor = 0.0767 # Determined empirically to be 0.0767 deg/sec/mV (should be close to 1/SF)
@@ -232,63 +232,24 @@ class FOG:
 
 if __name__ == "__main__":
     fog = FOG(fog_port)
+
+    # Step 1: Calibrate
     fog.calibrate()
 
-    # --------- Calibration metrics for 60 seconds ------------
-    # fog.start_read()
-    
-    # startTime = time.time()
-    # startTime2 = time.time()
-    # times = []
-
-    # time.sleep(0.1)
-    # first = fog.parsed_data["angle_deg"] if "angle_deg" in fog.parsed_data.keys() else "No data"
-    # while time.time() - startTime < 60:
-    #     # Record every 10 seconds
-    #     if time.time() - startTime2 > 10:
-    #         times.append(fog.parsed_data["angle_deg"])
-    #         startTime2 = time.time()
-    #     time.sleep(0.1)
-    # last = fog.parsed_data["angle_deg"]
-
-    # for i in range(len(times)):
-    #     print(f"Time {(i+1)*10}: {times[i]-first}")
-
-    # print(f"First: {first} Last: {last} Difference: {last-first}")
-
-    # fog.stop_read()
-    # ---------------------------------------------------------
-
-    print("Now just running for 30 seconds")
-
+    # Step 2: Start reading
+    print("Now just running FOG data for 30 seconds")
     fog.start_read()
 
-    startTime = time.time()
-    while time.time() - startTime < 1200:
-        print(fog.parsed_data["angle_deg"] if "angle_deg" in fog.parsed_data.keys() else "No data")
-        time.sleep(0.25)
-
+    start_time = time.time()
+    try:
+        while time.time() - start_time < 30:
+            if "angle_deg" in fog.parsed_data:
+                print(fog.parsed_data["angle_deg"])
+            else:
+                print("No FOG data yet.")
+            time.sleep(0.25)
+    except KeyboardInterrupt:
+        print("Stopping FOG data collection...")
+        
+    fog.stop_read()
     fog.close()
-
-    def yaw(current_yaw, fog_heading):
-        #Normalize the yaw values to the range [0, 360):
-        current_yaw = current_yaw % 360
-        fog_heading = fog_heading % 360
-
-        #Calculate the raw yaw difference:
-        yaw_diff = fog_heading - current_yaw
-
-        #Adjust for minimal rotation:
-        if yaw_diff > 180:
-            yaw_diff -= 360
-        elif yaw_diff < -180:
-            yaw_diff += 360
-        print(f"Change in yaw: {yaw_diff}")
-
-        #Update the current yaw:
-        new_yaw = current_yaw + yaw_diff
-
-        #Normalize the new yaw to the range [0, 360)
-        new_yaw = new_yaw % 360
-
-        return new_yaw
