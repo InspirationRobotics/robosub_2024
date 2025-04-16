@@ -92,23 +92,23 @@ class AUV(RosHandler):
         self.depth_pid.output_limits = (-self.depth_pid_params[0], self.depth_pid_params[0]) # Output limits of PID controller
 
         # Initialize topics from Pixhawk (through MAVROS)
-        self.TOPIC_STATE = TopicService("/mavros/state", mavros_msgs.msg.State)
-        self.SERVICE_ARM = TopicService("/mavros/cmd/arming", mavros_msgs.srv.CommandBool)
-        self.SERVICE_SET_MODE = TopicService("/mavros/set_mode", mavros_msgs.srv.SetMode)
-        self.SERVICE_SET_PARAM = TopicService("/mavros/param/set", mavros_msgs.srv.ParamSet)
-        self.SERVICE_GET_PARAM = TopicService("/mavros/param/get", mavros_msgs.srv.ParamGet)
+        self.TOPIC_STATE        = TopicService("/mavros/state"      , mavros_msgs.msg.State)
+        self.SERVICE_ARM        = TopicService("/mavros/cmd/arming" , mavros_msgs.srv.CommandBool)
+        self.SERVICE_SET_MODE   = TopicService("/mavros/set_mode"   , mavros_msgs.srv.SetMode)
+        self.SERVICE_SET_PARAM  = TopicService("/mavros/param/set"  , mavros_msgs.srv.ParamSet)
+        self.SERVICE_GET_PARAM  = TopicService("/mavros/param/get"  , mavros_msgs.srv.ParamGet)
 
         # Movement topics, only works/is applicable in autonomous mode
         self.TOPIC_SET_VELOCITY = TopicService("/mavros/setpoint_velocity/cmd_vel_unstamped", geometry_msgs.msg.Twist)
-        self.TOPIC_SET_RC_OVR = TopicService("/mavros/rc/override", mavros_msgs.msg.OverrideRCIn)
+        self.TOPIC_SET_RC_OVR   = TopicService("/mavros/rc/override", mavros_msgs.msg.OverrideRCIn)
 
         # Sensory data (IMU, compass, remote control input, input from flight controller, battery state)
         self.TOPIC_GET_IMU_DATA = TopicService("/mavros/imu/data", sensor_msgs.msg.Imu)
-        self.TOPIC_GET_CMP_HDG = TopicService("/mavros/global_position/compass_hdg", std_msgs.msg.Float64)
-        self.TOPIC_GET_RC = TopicService("/mavros/rc/in", mavros_msgs.msg.RCIn)
-        self.TOPIC_GET_MAVBARO = TopicService("/mavlink/from", mavros_msgs.msg.Mavlink)
+        self.TOPIC_GET_CMP_HDG  = TopicService("/mavros/global_position/compass_hdg", std_msgs.msg.Float64)
+        self.TOPIC_GET_RC       = TopicService("/mavros/rc/in"  , mavros_msgs.msg.RCIn)
+        self.TOPIC_GET_MAVBARO  = TopicService("/mavlink/from"  , mavros_msgs.msg.Mavlink)
         # https://discuss.bluerobotics.com/t/ros-support-for-bluerov2/1550/24
-        self.TOPIC_GET_BATTERY = TopicService("/mavros/battery", sensor_msgs.msg.BatteryState)
+        self.TOPIC_GET_BATTERY  = TopicService("/mavros/battery"    , sensor_msgs.msg.BatteryState)
 
         # Custom ROS topics
         self.AUV_COMPASS = TopicService("/auv/devices/compass", std_msgs.msg.Float64)
@@ -213,6 +213,7 @@ class AUV(RosHandler):
         result = self.service_caller(self.SERVICE_SET_MODE, timeout=30)
         return result.mode_sent
 
+    # TODO :consider adding a lock to self.depth
     def calibrate_depth(self, sample_time=3):
         """
         To calibrate the depth data
@@ -343,7 +344,7 @@ class AUV(RosHandler):
 
     def start_threads(self):
         """Start threads for reading sensor data and thruster data"""
-        sensor_thread = threading.Thread(target=self.get_sensors, daemon=True)
+        sensor_thread   = threading.Thread(target=self.get_sensors, daemon=True)
         thruster_thread = threading.Thread(target=self.publish_thrusters, daemon=True)
         sensor_thread.start()
         thruster_thread.start()
@@ -399,9 +400,9 @@ class AUV(RosHandler):
             if self.connected:
                 try:
                     # Get the data from compass, IMU, arm status, mode
-                    self.hdg = self.TOPIC_GET_CMP_HDG.get_data_last()
-                    self.imu = self.TOPIC_GET_IMU_DATA.get_data_last()
-                    armRequest = self.AUV_GET_ARM.get_data()
+                    self.hdg    = self.TOPIC_GET_CMP_HDG.get_data_last()
+                    self.imu    = self.TOPIC_GET_IMU_DATA.get_data_last()
+                    armRequest  = self.AUV_GET_ARM.get_data()
                     modeRequest = self.AUV_GET_MODE.get_data()
                     # Change the arming and mode of the sub based on request (from other files which publish to these ROS topics)
                     if armRequest != None:
