@@ -1,27 +1,30 @@
+#!/usr/bin/env python
 import rospy
 from sensor_msgs.msg import Imu
 import csv
-import os
 from threading import Thread
 from queue import Queue
-from datetime import datetime
-from dataCollect.filenameHelper import getFileName 
+from dataCollect.filenameHelper import getFileName  # Your helper for naming files
 
 class ImuSubscriber:
     def __init__(self):
         rospy.init_node('imu_collector', anonymous=True)
 
-        self.csv_filename = getFileName("compass_data")
-        self.writer = csv.writer(self.csv_filename)
+        # Prepare the CSV file and writer
+        self.csv_path = getFileName("compass_data")
+        self.csv_file = open(self.csv_path, 'w', newline='')
+        self.writer = csv.writer(self.csv_file)
         self.writer.writerow(["timestamp", "accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"])
 
         # Async queue for writing
         self.queue = Queue()
         self.shutdown_flag = False
 
+        # Subscribe to the IMU topic
         rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
         rospy.on_shutdown(self.shutdown)
 
+        # Start background writer thread
         self.writer_thread = Thread(target=self.csv_writer)
         self.writer_thread.start()
 
@@ -29,7 +32,7 @@ class ImuSubscriber:
         rospy.spin()
 
     def imu_callback(self, msg):
-        # Timestamp and IMU readings
+        # Get timestamp and sensor data
         timestamp = msg.header.stamp.to_sec()
         ax = msg.linear_acceleration.x
         ay = msg.linear_acceleration.y
@@ -57,7 +60,4 @@ class ImuSubscriber:
 
 
 if __name__ == '__main__':
-    imu = ImuSubscriber()
-    rospy.on_shutdown(imu.shutdown)
-
-
+    ImuSubscriber()
