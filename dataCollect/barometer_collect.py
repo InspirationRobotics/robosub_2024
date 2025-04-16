@@ -8,16 +8,19 @@ import mavros_msgs.msg  # importing only what you use is cleaner
 class BaroSubscriber():
     def __init__(self):
         rospy.init_node('baro_subscriber', anonymous=True)
+        print("BaroSubscriber initialized")
         self.subscriber = rospy.Subscriber('/mavlink/from', mavros_msgs.msg.Mavlink, self.listener_callback)
+        print("BaroSubscriber subscriber initialized")
 
     def listener_callback(self, msg):
+        print("BaroSubscriber listener_callback called")
         print(msg)
 
 
 def main():
     Baro = BaroSubscriber()
     rospy.spin()
-    rospy.shutdown()
+
 
 
 if __name__ == '__main__':
