@@ -5,7 +5,7 @@ import os
 from threading import Thread
 from queue import Queue
 from datetime import datetime
-from filenameHelper import getFileName
+from filenameHelper import getFileName 
 
 class ImuSubscriber:
     def __init__(self):
@@ -19,7 +19,7 @@ class ImuSubscriber:
         self.queue = Queue()
         self.shutdown_flag = False
 
-        rospy.Subscriber('/imu/data', Imu, self.imu_callback)
+        rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
         rospy.on_shutdown(self.shutdown)
 
         self.writer_thread = Thread(target=self.csv_writer)
