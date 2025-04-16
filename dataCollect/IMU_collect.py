@@ -12,7 +12,7 @@ class ImuSubscriber:
         rospy.init_node('imu_collector', anonymous=True)
 
         self.csv_filename = getFileName("compass_data")
-        self.writer = csv.writer(self.csv_file)
+        self.writer = csv.writer(self.csv_filename)
         self.writer.writerow(["timestamp", "accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"])
 
         # Async queue for writing
