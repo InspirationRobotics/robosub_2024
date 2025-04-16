@@ -1,58 +1,63 @@
-#!/usr/bin/env python3
-
 import rospy
+from sensor_msgs.msg import Imu
 import csv
 import os
-from sensor_msgs.msg import Imu
+from threading import Thread
+from queue import Queue
+from datetime import datetime
+from filenameHelper import getFileName
 
-
-class ImuCollector:
+class ImuSubscriber:
     def __init__(self):
-        rospy.init_node("imu_data_collector", anonymous=True)
-        print("🛰️  IMU Data Collector Initialized")
+        rospy.init_node('imu_collector', anonymous=True)
 
-        # Make sure the folder exists
-        os.makedirs("imu_logs", exist_ok=True)
+        self.csv_filename = getFileName("compass_data")
+        self.writer = csv.writer(self.csv_file)
+        self.writer.writerow(["timestamp", "accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"])
 
-        # Open CSV file for writing
-        filename = "imu_logs/imu_data.csv"
-        self.csv_file = open(filename, mode="w", newline="")
-        self.csv_writer = csv.writer(self.csv_file)
+        # Async queue for writing
+        self.queue = Queue()
+        self.shutdown_flag = False
 
-        # CSV Header
-        self.csv_writer.writerow([
-            "Time (ROS)",
-            "Orientation_x", "Orientation_y", "Orientation_z", "Orientation_w",
-            "AngularVel_x", "AngularVel_y", "AngularVel_z",
-            "LinearAcc_x", "LinearAcc_y", "LinearAcc_z"
-        ])
-
-        # Subscribe to the IMU topic
-        self.subscriber = rospy.Subscriber("/mavros/imu/data", Imu, self.imu_callback)
+        rospy.Subscriber('/imu/data', Imu, self.imu_callback)
         rospy.on_shutdown(self.shutdown)
 
-    def imu_callback(self, msg: Imu):
-        # Extract IMU data
-        orientation = msg.orientation
-        angular_velocity = msg.angular_velocity
-        linear_acceleration = msg.linear_acceleration
+        self.writer_thread = Thread(target=self.csv_writer)
+        self.writer_thread.start()
+
+        rospy.loginfo("🔁 IMU data collection started.")
+        rospy.spin()
+
+    def imu_callback(self, msg):
+        # Timestamp and IMU readings
         timestamp = msg.header.stamp.to_sec()
+        ax = msg.linear_acceleration.x
+        ay = msg.linear_acceleration.y
+        az = msg.linear_acceleration.z
+        gx = msg.angular_velocity.x
+        gy = msg.angular_velocity.y
+        gz = msg.angular_velocity.z
 
-        # Write to CSV
-        self.csv_writer.writerow([
-            timestamp,
-            orientation.x, orientation.y, orientation.z, orientation.w,
-            angular_velocity.x, angular_velocity.y, angular_velocity.z,
-            linear_acceleration.x, linear_acceleration.y, linear_acceleration.z
-        ])
+        self.queue.put([timestamp, ax, ay, az, gx, gy, gz])
 
-        rospy.loginfo_throttle(5, f"📥 IMU data logged at time {timestamp:.2f}")
+    def csv_writer(self):
+        while not self.shutdown_flag or not self.queue.empty():
+            try:
+                row = self.queue.get(timeout=0.1)
+                self.writer.writerow(row)
+            except:
+                continue
 
     def shutdown(self):
-        print("📦 Shutting down IMU collector... saving file.")
+        rospy.loginfo("🛑 Shutting down IMU logger...")
+        self.shutdown_flag = True
+        self.writer_thread.join()
         self.csv_file.close()
+        rospy.loginfo(f"✅ CSV saved at: {self.csv_path}")
 
 
-if __name__ == "__main__":
-    collector = ImuCollector()
-    rospy.spin()
+if __name__ == '__main__':
+    imu = ImuSubscriber()
+    rospy.on_shutdown(imu.shutdown)
+
+
