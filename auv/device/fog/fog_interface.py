@@ -248,6 +248,5 @@ if __name__ == "__main__":
             time.sleep(0.25)
     except KeyboardInterrupt:
         print("Stopping FOG data collection...")
-
-    fog.stop_read()
+        fog.stop_read()
     fog.close()
