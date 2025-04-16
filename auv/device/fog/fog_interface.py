@@ -240,11 +240,12 @@ if __name__ == "__main__":
     print("Now just running FOG data for 30 seconds")
     fog.start_read()
     try:
-        if "angle_deg" in fog.parsed_data:
-            print(fog.parsed_data["angle_deg"])
-        else:
-            print("No FOG data yet.")
-        time.sleep(0.25)
+        while True:
+            if "angle_deg" in fog.parsed_data:
+                print(fog.parsed_data["angle_deg"])
+            else:
+                print("No FOG data yet.")
+            time.sleep(0.25)
     except KeyboardInterrupt:
         print("Stopping FOG data collection...")
 
