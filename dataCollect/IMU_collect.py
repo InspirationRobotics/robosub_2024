@@ -24,9 +24,6 @@ class ImuSubscriber:
         rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
         rospy.on_shutdown(self.shutdown)
 
-        # Start background writer thread
-        self.writer_thread = Thread(target=self.csv_writer)
-        self.writer_thread.start()
 
         rospy.loginfo("🔁 IMU data collection started.")
         rospy.spin()
@@ -41,20 +38,12 @@ class ImuSubscriber:
         gy = msg.angular_velocity.y
         gz = msg.angular_velocity.z
 
-        self.queue.put([timestamp, ax, ay, az, gx, gy, gz])
+        self.writer.writerow([timestamp, ax, ay, az, gx, gy, gz])
 
-    def csv_writer(self):
-        while not self.shutdown_flag or not self.queue.empty():
-            try:
-                row = self.queue.get(timeout=0.1)
-                self.writer.writerow(row)
-            except:
-                continue
 
     def shutdown(self):
         rospy.loginfo("🛑 Shutting down IMU logger...")
         self.shutdown_flag = True
-        self.writer_thread.join()
         self.csv_file.close()
         rospy.loginfo(f"✅ CSV saved at: {self.csv_path}")
 
