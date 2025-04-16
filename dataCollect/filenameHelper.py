@@ -1,3 +1,4 @@
+from datetime import datetime
 def getFileName(name:str):
     fileName = str(datetime.now())
     fileName = fileName.split(".")
