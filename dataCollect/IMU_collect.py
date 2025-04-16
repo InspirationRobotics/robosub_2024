@@ -38,15 +38,17 @@ class ImuSubscriber:
         gy = msg.angular_velocity.y
         gz = msg.angular_velocity.z
 
-        self.writer.writerow([timestamp, ax, ay, az, gx, gy, gz])
+        if not self.shutdown_flag:
+            self.writer.writerow([timestamp, ax, ay, az, gx, gy, gz])
 
 
     def shutdown(self):
-        rospy.loginfo("🛑 Shutting down IMU logger...")
         self.shutdown_flag = True
         self.csv_file.close()
+        rospy.loginfo("🛑 Shutting down IMU logger...")
         rospy.loginfo(f"✅ CSV saved at: {self.csv_path}")
 
 
 if __name__ == '__main__':
-    ImuSubscriber()
+    imu = ImuSubscriber()
+    rospy.on_shutdown(imu.shutdown)
