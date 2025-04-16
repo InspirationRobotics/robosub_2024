@@ -21,6 +21,7 @@ class FOG:
     def __init__(self, port='/dev/ttyUSB0'):
         """Initialize the serial connection"""
         rospy.init_node("FOG", anonymous=True)
+        
         # Make serial stuff???
         self.ser = self._setupSerial(port)
         self.readData = False
