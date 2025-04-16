@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 
 import time
-import threading
 import rospy
-from std_msgs.msg import Float64
 import serial
+from std_msgs.msg import Float64
 from auv.utils import deviceHelper
 
 fog_port = deviceHelper.dataFromConfig("fog")
 
-class FOG:
+class FOGNode:
     def __init__(self, port='/dev/ttyUSB0'):
         rospy.init_node("fog_node", anonymous=True)
-
         self.ser = self._setupSerial(port)
-        self.readData = False
 
-        self.xDataNames = ["temp", "supply_voltage", "sld_curr", "diag_sig", "angle_deg"]
         self.data = {}
         self.parsed_data = {}
+
+        self.xDataNames = ["temp", "supply_voltage", "sld_curr", "diag_sig", "angle_deg"]
 
         self.samples = 200
         self.count = 0
@@ -31,6 +29,7 @@ class FOG:
         self.integration_factor = 0.0767
         self.integrated_sum = 0
         self.bias = 0
+        self.prev_time = time.time()
 
         # ROS publishers
         self.pub_angle = rospy.Publisher("/fog/angle_deg", Float64, queue_size=10)
@@ -38,6 +37,14 @@ class FOG:
         self.pub_voltage = rospy.Publisher("/fog/supply_voltage", Float64, queue_size=10)
         self.pub_sld_curr = rospy.Publisher("/fog/sld_curr", Float64, queue_size=10)
         self.pub_diag_sig = rospy.Publisher("/fog/diag_sig", Float64, queue_size=10)
+
+        # Calibration first
+        self.calibrate()
+
+        # Start Timer-based read loop
+        self.line_buffer = []
+        self.prev_line = []
+        rospy.Timer(rospy.Duration(0.001), self.read_callback)
 
     def _setupSerial(self, p):
         return serial.Serial(
@@ -48,45 +55,18 @@ class FOG:
             bytesize=serial.EIGHTBITS
         )
 
-    def start_read(self, func=None):
-        self.reset_params()
-        self.readData = True
-        self.read_thread = threading.Thread(target=self._read_fog, args=(func,))
-        self.read_thread.start()
-
-    def stop_read(self):
-        self.readData = False
-        self.read_thread.join()
-        rospy.loginfo("FOG read thread stopped.")
-
-    def close(self):
-        if self.readData:
-            self.stop_read()
-        self.ser.close()
-        rospy.loginfo("FOG serial port closed.")
-
-    def reset_params(self):
-        self.data = {}
-        self.parsed_data = {}
-
-        self.count = 0
-        self.angle_sum = 0
-        self.integrated_sum = 0
-        self.prev_time = time.time()
-
-        self.cal_sum = 0
-        self.cal_count = 0
-
-    def reset_bias(self):
-        self.bias = 0
-
     def calibrate(self):
         rospy.loginfo("Calibrating FOG... DO NOT TOUCH")
-        self.reset_params()
-        self.start_read(self._cal_fog_angle_data)
-        time.sleep(self.cal_time)
+        self.cal_sum = 0
+        self.cal_count = 0
+        start_time = time.time()
+        self.line_buffer = []
+        self.prev_line = []
+
+        while time.time() - start_time < self.cal_time and not rospy.is_shutdown():
+            self._read_serial_line(self._cal_fog_angle_data)
+
         self.bias = self.cal_sum / (self.cal_count + 1e-5)
-        self.stop_read()
         rospy.loginfo(f"Calibration complete. Bias: {self.bias:.4f}")
 
     def _handle_checksum(self, data):
@@ -125,9 +105,11 @@ class FOG:
         if self.count >= self.samples:
             angle_mv = (self.angle_sum / self.samples) * (2.5 / (2**23))
             angle_deg_sec = angle_mv * self.integration_factor
-            self.integrated_sum += angle_deg_sec * (time.time() - self.prev_time)
+            now = time.time()
+            dt = now - self.prev_time
+            self.integrated_sum += angle_deg_sec * dt
             self.parsed_data["angle_deg"] = self.integrated_sum
-            self.prev_time = time.time()
+            self.prev_time = now
             self.angle_sum = 0
             self.count = 0
 
@@ -148,51 +130,37 @@ class FOG:
         if "diag_sig" in self.data:
             self.parsed_data["diag_sig"] = self.data["diag_sig"] * (2.5 / (2**15))
 
-    def _read_fog(self, func=None):
-        line = []
-        prev_line = []
-        while self.readData:
-            while self.ser.in_waiting:
-                if not self.readData:
-                    break
-                byte = self.ser.read(1)
-                if byte == b'\xdd':
-                    if len(line) == 8 and (not prev_line or prev_line[4] != line[4]):
-                        if func:
-                            func(line, prev_line)
-                        else:
-                            self._parse_fog_data(line, prev_line)
-                        prev_line = line
-                    line = [byte.hex()]
-                else:
-                    line.append(byte.hex())
+    def _read_serial_line(self, callback):
+        while self.ser.in_waiting:
+            byte = self.ser.read(1)
+            if byte == b'\xdd':
+                if len(self.line_buffer) == 8 and (not self.prev_line or self.prev_line[4] != self.line_buffer[4]):
+                    callback(self.line_buffer, self.prev_line)
+                    self.prev_line = self.line_buffer
+                self.line_buffer = [byte.hex()]
+            else:
+                self.line_buffer.append(byte.hex())
+
+    def read_callback(self, event):
+        self._read_serial_line(self._parse_fog_data)
 
     def publish_reading(self):
-        def pub_val(pub, key):
+        def pub(pub, key):
             if key in self.parsed_data:
-                msg = Float64()
-                msg.data = self.parsed_data[key]
-                pub.publish(msg)
+                pub.publish(Float64(data=self.parsed_data[key]))
 
-        pub_val(self.pub_angle, "angle_deg")
-        pub_val(self.pub_temp, "temp")
-        pub_val(self.pub_voltage, "supply_voltage")
-        pub_val(self.pub_sld_curr, "sld_curr")
-        pub_val(self.pub_diag_sig, "diag_sig")
+        pub(self.pub_angle, "angle_deg")
+        pub(self.pub_temp, "temp")
+        pub(self.pub_voltage, "supply_voltage")
+        pub(self.pub_sld_curr, "sld_curr")
+        pub(self.pub_diag_sig, "diag_sig")
+
+    def shutdown(self):
+        self.ser.close()
 
 if __name__ == "__main__":
-    fog = FOG(fog_port)
 
-    rospy.loginfo("Starting FOG calibration...")
-    fog.calibrate()
+    fog_node = FOGNode(fog_port)
+    rospy.spin()
+    rospy.on_shutdown(fog_node.shutdown)
 
-    rospy.loginfo("FOG is now publishing data.")
-    fog.start_read()
-
-    try:
-        rospy.spin()
-    except rospy.ROSInterruptException:
-        rospy.loginfo("ROS shutdown signal received.")
-    finally:
-        fog.stop_read()
-        fog.close()
