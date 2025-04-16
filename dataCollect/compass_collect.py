@@ -2,9 +2,10 @@
 import rospy
 import std_msgs.msg
 import csv
+from datetime import datetime
 from sensor_msgs.msg import FluidPressure  # Although not used here, kept for consistency
 import mavros_msgs.msg  # Importing only what is used
-
+from filenameHelper import getFileName  # Assuming this is a custom helper function for file naming
 
 class CompassSubscriber():
     def __init__(self):
@@ -15,7 +16,8 @@ class CompassSubscriber():
         self.subscriber = rospy.Subscriber('/mavros/global_position/compass_hdg', std_msgs.msg.Float64, self.listener_callback)
         
         # Open the CSV file for writing and prepare the writer
-        self.csv_filename = "/home/inspiration/compass_data.csv"
+
+        self.csv_filename = getFileName("compass_data")
         self.csv_file = open(self.csv_filename, 'w', newline='')
         self.csv_writer = csv.writer(self.csv_file)
         
