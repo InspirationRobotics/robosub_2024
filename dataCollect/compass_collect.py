@@ -16,7 +16,7 @@ class CompassSubscriber():
         
         # Open the CSV file for writing and prepare the writer
 
-        self.csv_filename = getFileName("compass_data")
+        self.csv_filename = getFileName("compass")
         self.csv_file = open(self.csv_filename, 'w', newline='')
         self.csv_writer = csv.writer(self.csv_file)
         

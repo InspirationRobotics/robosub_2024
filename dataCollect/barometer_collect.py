@@ -20,7 +20,7 @@ class BaroSubscriber:
         os.makedirs("baro_logs", exist_ok=True)
 
         # Open a CSV file to write the data
-        self.csv_file = open(getFileName("barometer_data"), mode="w", newline="")
+        self.csv_file = open(getFileName("barometer"), mode="w", newline="")
         self.csv_writer = csv.writer(self.csv_file)
         self.csv_writer.writerow(["Time_boot_ms", "Pressure_abs (mBar)", "Pressure_diff", "Temperature", "Depth (m)"])
 

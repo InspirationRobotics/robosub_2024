@@ -11,7 +11,7 @@ class ImuSubscriber:
         rospy.init_node('imu_collector', anonymous=True)
 
         # Prepare the CSV file and writer
-        self.csv_path = getFileName("imu_data")
+        self.csv_path = getFileName("imu")
         self.csv_file = open(self.csv_path, 'w', newline='')
         self.writer = csv.writer(self.csv_file)
         self.writer.writerow(["timestamp", "accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"])
