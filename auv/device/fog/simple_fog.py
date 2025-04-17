@@ -1,6 +1,8 @@
 import time
 import serial
 
+from auv.utils import deviceHelper
+
 class SimpleFOG:
     def __init__(self, port='/dev/ttyUSB0'):
         """Initialize the serial connection"""
@@ -36,7 +38,9 @@ class SimpleFOG:
                     line.append(byte.hex())
 
 if __name__ == "__main__":
-    fog = SimpleFOG('/dev/ttyUSB0')  # Change the port if necessary
+    fog_port = deviceHelper.dataFromConfig("fog")
+
+    fog = SimpleFOG(fog_port)  # Change the port if necessary
 
     print("Reading raw FOG data...")
     try:
