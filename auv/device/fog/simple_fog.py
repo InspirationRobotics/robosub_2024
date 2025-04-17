@@ -51,6 +51,7 @@ class SimpleFOG:
         self.angle_sum += (angle_signed - self.bias)
         self.count += 1
 
+        Xdata = int(curr_line[5], 16)
         if self.count >= self.samples:
             angle_mv = (self.angle_sum / self.samples) * (2.5 / (2**23)) * 1000  # mV
             angle_deg_sec = angle_mv * self.integration_factor
@@ -61,7 +62,7 @@ class SimpleFOG:
             self.angle_sum = 0
             self.count = 0
 
-            return angle_data, angle_mv, self.integrated_sum
+            return angle_deg_sec, Xdata, self.integrated_sum
         return None
 
     def _read_fog(self):
