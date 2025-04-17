@@ -57,8 +57,8 @@ class RobotControl:
         self.fog = None
 
         # Establish thruster and depth publishers
-        self.sub_compass = rospy.Subscriber("/auv/devices/compass", Float64, self.get_callback_compass())
-        self.sub_fog = rospy.Subscriber("/auv/devices/fog", Float64, self.get_callback_fog())
+        self.sub_compass = rospy.Subscriber("/auv/devices/compass", Float64, self.get_callback_compass)
+        self.sub_fog = rospy.Subscriber("/auv/devices/fog", Float64, self.get_callback_fog)
         self.sub_depth = rospy.Subscriber("/auv/devices/baro", Float32MultiArray, self.callback_depth)
         self.pub_thrusters = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
         self.pub_depth = rospy.Publisher("auv/devices/setDepth", Float64, queue_size=10)
