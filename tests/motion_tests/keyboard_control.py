@@ -47,7 +47,7 @@ if __name__ == "__main__":
         while not rospy.is_shutdown():
             key = get_key()
             motion_args = {}
-
+            print(f"You pressed: {key}")
             if key in move_bindings:
                 motion_args = move_bindings[key]
                 rc.movement(**motion_args)
