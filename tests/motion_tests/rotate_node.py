@@ -26,4 +26,4 @@ if __name__ == "__main__":
         auv = AUV()
         auv.run()
     except rospy.ROSInterruptException:
-        
+        pass
