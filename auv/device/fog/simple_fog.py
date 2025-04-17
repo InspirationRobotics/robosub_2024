@@ -4,9 +4,11 @@ import serial
 from auv.utils import deviceHelper
 
 class SimpleFOG:
+      # Reference voltage for the FOG sensor
     def __init__(self, port='/dev/ttyUSB0'):
         """Initialize the serial connection"""
         self.ser = self._setupSerial(port)
+        self.reference_voltage = 5
     
     def _setupSerial(self, p: str) -> serial.Serial:
         """Sets up the serial connection."""
@@ -32,7 +34,10 @@ class SimpleFOG:
                         # When a complete line of 8 bytes is read
                         # Print the raw angle data (3 bytes corresponding to the angle)
                         angle_data = int(line[1], 16) << 16 | int(line[2], 16) << 8 | int(line[3], 16)
+                        raw_value = int(line[5], 16) << 8 | int(line[6], 16)
+                        voltage_data = (raw_value / (2**15)) * self.reference_voltage * 1000
                         print(f"Raw Angle Data: {angle_data}")
+                        print(f"Voltage Data: {voltage_data} mV")
                     line = [byte.hex()]
                 else:
                     line.append(byte.hex())
