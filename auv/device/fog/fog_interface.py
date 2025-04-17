@@ -42,7 +42,8 @@ class FOG:
         self.integration_factor = 0.0767 # Determined empirically to be 0.0767 deg/sec/mV (should be close to 1/SF)
         self.integrated_sum = 0
         self.bias = 0
-        self.pub_fog = rospy.Publisher("auv/devices/fog", Float64, queue_size=10)
+        self.pub_fog_ang = rospy.Publisher("auv/devices/fog/ang", Float64, queue_size=10)
+        self.pub_fog_angvel = rospy.Publisher("auv/devices/fog/angvel", Float64, queue_size=10)
 
     def _setupSerial(self, p : str) -> serial.Serial:
         """Make a serial connection to store in self.ser,
@@ -218,7 +219,7 @@ class FOG:
     def publish_reading(self, reading):
         fog_reading = Float64()
         fog_reading.data = reading
-        self.pub_fog.publish(fog_reading)
+        self.pub_fog_ang.publish(fog_reading)
 
     def stop_read(self):
         self.readData = False
