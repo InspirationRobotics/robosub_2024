@@ -108,7 +108,7 @@ class RobotControl:
         # Wait for the topics to run
         time.sleep(1)
 
-    def get_callback_compass(self):
+    def get_callback_compass(self,msg):
         def _callback_compass(msg):
             """Get the compass heading from /auv/devices/compass topic"""
             self.compass = msg.data
