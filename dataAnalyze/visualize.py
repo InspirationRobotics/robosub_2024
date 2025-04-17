@@ -13,7 +13,7 @@ def plot_data(x, y, title='Data Plot', xlabel='Time (s)', ylabel='Value'):
         ylabel (str): The label for the y-axis.
     """
     plt.figure(figsize=(10, 6))
-    plt.plot(x, y, marker='o', linestyle='-', label=title)
+    plt.scatter(x, y, label=title, color='blue', marker='o')
     plt.title(title)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
