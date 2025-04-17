@@ -92,7 +92,7 @@ class SimpleFOG:
             time.sleep(1/60)
             cnt += 1
 
-        def _log_to_csv(self, timestamp, angle_data, voltage_data, integrated_angle):
+    def _log_to_csv(self,  timestamp, angle_data, voltage_data, integrated_angle):
             with open(self.csv_file, mode='a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow([timestamp, angle_data, voltage_data, integrated_angle])
