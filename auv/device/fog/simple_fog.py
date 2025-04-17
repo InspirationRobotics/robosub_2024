@@ -73,6 +73,7 @@ class SimpleFOG:
                 byte = self.ser.read(1)
                 if byte == b'\xdd':
                     if len(line) == 8:
+                        print(f"Raw 8-byte packet: {line}")  # 🔍 Debug print
                         curr_line = line
                         parsed = self._parse_fog_data(curr_line, prev_line)
                         prev_line = curr_line
@@ -91,10 +92,10 @@ class SimpleFOG:
             time.sleep(1/60)
             cnt += 1
 
-    def _log_to_csv(self, timestamp, angle_data, voltage_data, integrated_angle):
-        with open(self.csv_file, mode='a', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow([timestamp, angle_data, voltage_data, integrated_angle])
+        def _log_to_csv(self, timestamp, angle_data, voltage_data, integrated_angle):
+            with open(self.csv_file, mode='a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([timestamp, angle_data, voltage_data, integrated_angle])
 
 if __name__ == "__main__":
     fog_port = deviceHelper.dataFromConfig("fog")
