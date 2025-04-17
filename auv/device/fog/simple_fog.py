@@ -30,7 +30,7 @@ class SimpleFOG:
     def _read_fog(self):
         """Read the FOG sensor data continuously and log to CSV"""
         line = []
-        
+        cnt = 0
         while True:
             if self.ser.in_waiting:
                 # Read one byte from the serial connection
@@ -45,7 +45,7 @@ class SimpleFOG:
                         voltage_data = (raw_value / (2**15)) * self.reference_voltage * 1000
 
                         # Get the current timestamp
-                        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+                        timestamp = time.strftime('%Y-%m-%d %H:%M:%S') + "_" +str(cnt)
 
                         # Log the data to CSV
                         self._log_to_csv(timestamp, angle_data, voltage_data)
@@ -61,6 +61,7 @@ class SimpleFOG:
                     line.append(byte.hex())
 
             time.sleep(1/60)
+            cnt += 1
 
 
     def _log_to_csv(self, timestamp, angle_data, voltage_data):
