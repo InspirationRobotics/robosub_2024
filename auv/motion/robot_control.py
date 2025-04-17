@@ -7,7 +7,7 @@ pixhawk flight controller and the software -- that is the job that pixstandalone
 import time
 
 # Import the MAVROS message types that are needed
-import geometry_msgs.msg._twist
+from geometry_msgs.msg import Twist
 import mavros_msgs.msg
 import mavros_msgs.srv
 import rospy
