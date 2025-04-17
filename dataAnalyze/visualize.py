@@ -24,7 +24,7 @@ def plot_data(x, y, title='Data Plot', xlabel='Time (s)', ylabel='Value'):
 
 
 if __name__ == "__main__":
-    filename = "/home/chaser/2025-04-16_15-35-06_compass_ground_static001_data.csv"
+    filename = "/home/chaser/fog_data.csv"
     data = pd.read_csv(filename)
 
     time = data.iloc[:, 0]  # First column is assumed to be timestamp

@@ -60,6 +60,9 @@ class SimpleFOG:
                 else:
                     line.append(byte.hex())
 
+            time.sleep(1/60)
+
+
     def _log_to_csv(self, timestamp, angle_data, voltage_data):
         """Logs the data to the CSV file"""
         with open(self.csv_file, mode='a', newline='') as file:
