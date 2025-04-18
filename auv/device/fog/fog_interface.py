@@ -234,9 +234,9 @@ class FOG:
 
 if __name__ == "__main__":
     fog = FOG(fog_port)
+    fog.calibrate()
     rospy.spin()
     # Step 1: Calibrate
-    fog.calibrate()
 
     # # Step 2: Start reading
     # print("Now just running FOG data for 30 seconds")
