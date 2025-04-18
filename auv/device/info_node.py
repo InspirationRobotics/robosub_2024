@@ -269,7 +269,7 @@ class AUV(RosHandler):
     def baroCallback(self, baro):
         """
         Handles barometric data by unpacking, calculating depth from raw data, then publishes raw data
-        Topic: /mavros/global_position/compass_hdg
+        Topic: /mavlink/from
         msg: mavros_msgs.msg.Mavlink
 
         publish: /auv/devices/baro
@@ -291,9 +291,10 @@ class AUV(RosHandler):
                 if(self.depth_sample_size >= len(self.depth_samples) and not self.calibrate):
                     self.depth_samples.append(self.depth)
                 else:
-                    self.calibtrate = True
-                    self.depth_calib = mean(self.depth_samples)
-                    print(f"[depth_calib] Finished. Surface is: {self.depth_calib}")
+                    if not self.calibrate:
+                        self.calibtrate = True
+                        self.depth_calib = mean(self.depth_samples)
+                        print(f"[depth_calib] Finished. Surface is: {self.depth_calib}")
 
 
                 # Publish the barometric data
