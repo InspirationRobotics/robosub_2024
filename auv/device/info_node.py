@@ -294,7 +294,7 @@ class AUV(RosHandler):
                     self.calibtrate = True
                     self.depth_calib = mean(self.depth_samples)
                     print(f"[depth_calib] Finished. Surface is: {self.depth_calib}")
-                    del self.depth_samples
+
 
                 # Publish the barometric data
                 baro_data = std_msgs.msg.Float32MultiArray()
