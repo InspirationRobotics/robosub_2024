@@ -123,7 +123,7 @@ class AUV(RosHandler):
 
         # initialize the ROS node
         rospy.init_node("info_node", anonymous=True)
-        rospy.Rate(60)   # Change rate to 10 if issues arise
+        # rospy.Rate(60)   # Change rate to 10 if issues arise
         self.connected = True
 
         # Subscribe to topics
@@ -131,7 +131,7 @@ class AUV(RosHandler):
 
         # spin
         rospy.spin()
-        
+
     def arm(self, status: bool):
         """
         Arms the sub
@@ -311,6 +311,7 @@ class AUV(RosHandler):
                 self.AUV_BARO.set_data(baro_data)
                 self.topic_publisher(topic=self.AUV_BARO)
 
+                time.sleep(1/20) # 20Hz
         # Handle exceptions
         except Exception as e:
             print("Baro Failed")
