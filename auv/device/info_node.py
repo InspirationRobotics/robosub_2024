@@ -81,7 +81,7 @@ class AUV(RosHandler):
         self.depth_pwm          = 0
 
         # why do we have pid here?
-        self.depth_sample_size  = 200 # Number of samples for calibraiton
+        self.depth_sample_size  = 100 # Number of samples for calibraiton
         self.depth_samples      = []
         self.calibrate          = False # Whether to calibrate the depth or not
         self.depth_calib        = 0
