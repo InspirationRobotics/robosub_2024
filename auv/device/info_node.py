@@ -58,9 +58,7 @@ class AUV(RosHandler):
     """
     Creates a class for the sub, inheriting from ROSHandler (all of the functions from RosHandler are now in AUV)
     """
-    def __init__(self):
-        self.connect("info_node", rate=60)  # Change rate to 10 if issues arise
-        
+    def __init__(self):        
         # Accessing the device configurations
         self.config = config
 
@@ -125,6 +123,10 @@ class AUV(RosHandler):
 
         # Subscribe to topics
         self.enable_topics_for_read()
+
+        # initialize the ROS node
+        self.connect("info_node", rate=60)  # Change rate to 10 if issues arise
+
 
     def arm(self, status: bool):
         """
