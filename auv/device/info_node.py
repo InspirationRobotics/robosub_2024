@@ -304,9 +304,11 @@ class AUV(RosHandler):
                         self.depth_calib = mean(self.depth_samples)
                         print(f"[depth_calib] Finished. Surface is: {self.depth_calib}")
 
+                # TODO maybe we can just pubish a float 64/32
                 # Publish the barometric data
-                msg.data = [self.depth, press_diff]
-                self.AUV_BARO.set_data(msg)
+                baro_data = std_msgs.msg.Float32MultiArray()
+                baro_data.data = [self.depth, press_diff]
+                self.AUV_BARO.set_data(baro_data)
                 self.topic_publisher(topic=self.AUV_BARO)
 
                 time.sleep(1/20) # Attempt 20Hz
