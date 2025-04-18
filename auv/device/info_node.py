@@ -121,11 +121,11 @@ class AUV(RosHandler):
         self.AUV_GET_ARM        = TopicService("/auv/status/arm", std_msgs.msg.Bool)
         self.AUV_GET_MODE       = TopicService("/auv/status/mode", std_msgs.msg.String)
 
-        # Subscribe to topics
-        self.enable_topics_for_read()
-
         # initialize the ROS node
         self.connect("info_node", rate=60)  # Change rate to 10 if issues arise
+
+        # Subscribe to topics
+        self.enable_topics_for_read()
 
 
     def arm(self, status: bool):
