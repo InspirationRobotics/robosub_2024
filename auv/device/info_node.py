@@ -131,8 +131,7 @@ class AUV(RosHandler):
 
         # spin
         rospy.spin()
-
-
+        
     def arm(self, status: bool):
         """
         Arms the sub
@@ -301,7 +300,7 @@ class AUV(RosHandler):
                     if(self.depth_sample_size >= len(self.depth_samples)):
                         self.depth_samples.append(self.depth)
                     else:
-                        self.calibtrate = True
+                        self.calibrate = True
                         self.depth_calib = mean(self.depth_samples)
                         print(f"[depth_calib] Finished. Surface is: {self.depth_calib}")
 
@@ -345,5 +344,6 @@ signal.signal(signal.SIGINT, onExit)
 if __name__ == "__main__":
     """For running the script directly"""
     auv = AUV()
+    
     
     
