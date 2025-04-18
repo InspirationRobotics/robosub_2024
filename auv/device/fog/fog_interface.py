@@ -155,6 +155,7 @@ class FOG:
             angle_deg_sec = angle_mv*self.integration_factor
             self.integrated_sum += angle_deg_sec*(time.time() - self.prev_time)
             self.parsed_data["angle_deg"] = self.integrated_sum
+            print(self.parsed_data["angle_deg"])
             self.publish_reading(self.integrated_sum)
             time.sleep(0.1)
             self.prev_time = time.time()
@@ -233,22 +234,22 @@ class FOG:
 
 if __name__ == "__main__":
     fog = FOG(fog_port)
-
+    rospy.spin()
     # Step 1: Calibrate
     fog.calibrate()
 
-    # Step 2: Start reading
-    print("Now just running FOG data for 30 seconds")
-    fog.start_read()
-    try:
-        while True:
-            if "angle_deg" in fog.parsed_data:
-                print(fog.parsed_data["angle_deg"])
-                fog.publish_reading(fog.parsed_data["angle_deg"])
-            else:
-                print("No FOG data yet.")
-            time.sleep(0.25)
-    except KeyboardInterrupt:
-        print("Stopping FOG data collection...")
-        fog.stop_read()
-        fog.close()
+    # # Step 2: Start reading
+    # print("Now just running FOG data for 30 seconds")
+    # fog.start_read()
+    # try:
+    #     while True:
+    #         if "angle_deg" in fog.parsed_data:
+    #             print(fog.parsed_data["angle_deg"])
+    #             fog.publish_reading(fog.parsed_data["angle_deg"])
+    #         else:
+    #             print("No FOG data yet.")
+    #         time.sleep(0.25)
+    # except KeyboardInterrupt:
+    #     print("Stopping FOG data collection...")
+    #     fog.stop_read()
+    #     fog.close()
