@@ -250,10 +250,10 @@ class AUV(RosHandler):
         """
         Get IMU from mavros and publish it to the AUV IMU topic
         Topic: /mavros/imu/data
-        msg: sensor_msgs.msg.Imu
+        msg: sensor_msgs.msg.Imu   10Hz
 
         publish: /auv/devices/imu
-        msg: sensor_msgs.msg.Imu
+        msg: sensor_msgs.msg.Imu   10Hz
         """
         data = msg
         self.AUV_IMU.set_data(data)
@@ -274,20 +274,20 @@ class AUV(RosHandler):
         self.AUV_COMPASS.set_data(data)
         self.topic_publisher(topic=self.AUV_COMPASS)
 
-    def baroCallback(self, baro):
+    def baroCallback(self, msg):
         """
         Handles barometric data by unpacking, calculating depth from raw data, then publishes raw data
         Topic: /mavlink/from
-        msg: mavros_msgs.msg.Mavlink
+        msg: mavros_msgs.msg.Mavlink        120Hz
 
         publish: /auv/devices/baro
-        msg: std_msgs.msg.Float32MultiArray
+        msg: std_msgs.msg.Float32MultiArray 2Hz
         """
         try:
             # If the barometric data message has the right ID
-            if baro.msgid == 143:
+            if msg.msgid == 143:
                 # Unpack the data
-                p = pack("QQ", *baro.payload64)
+                p = pack("QQ", *msg.payload64)
                 time_boot_ms, press_abs, press_diff, temperature = unpack("Iffhxx", p) # Pressure is in mBar
 
                 # Calculate the depth based on the pressure
@@ -304,14 +304,12 @@ class AUV(RosHandler):
                         self.depth_calib = mean(self.depth_samples)
                         print(f"[depth_calib] Finished. Surface is: {self.depth_calib}")
 
-
                 # Publish the barometric data
-                baro_data = std_msgs.msg.Float32MultiArray()
-                baro_data.data = [self.depth, press_diff]
-                self.AUV_BARO.set_data(baro_data)
+                msg.data = [self.depth, press_diff]
+                self.AUV_BARO.set_data(msg)
                 self.topic_publisher(topic=self.AUV_BARO)
 
-                time.sleep(1/20) # 20Hz
+                time.sleep(1/20) # Attempt 20Hz
         # Handle exceptions
         except Exception as e:
             print("Baro Failed")
