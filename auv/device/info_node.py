@@ -129,6 +129,9 @@ class AUV(RosHandler):
         # Subscribe to topics
         self.enable_topics_for_read()
 
+        # spin
+        rospy.spin()
+
 
     def arm(self, status: bool):
         """
