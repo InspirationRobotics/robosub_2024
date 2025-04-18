@@ -336,5 +336,5 @@ signal.signal(signal.SIGINT, onExit)
 if __name__ == "__main__":
     """For running the script directly"""
     auv = AUV()
-    auv.connect("pix_standalone", rate=20)  # Change rate to 10 if issues arise
+    auv.connect("info_node", rate=60)  # Change rate to 10 if issues arise
     
