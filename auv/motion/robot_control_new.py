@@ -67,8 +67,6 @@ class RobotControl:
         self.sub_fog        = rospy.Subscriber("/auv/devices/fog", Float64, self.get_callback_fog)
         self.sub_depth      = rospy.Subscriber("/auv/devices/baro", Float32MultiArray, self.callback_depth)
         self.pub_thrusters  = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
-        self.pub_depth      = rospy.Publisher("auv/devices/setDepth", Float64, queue_size=10)               # Is it necessary?
-        self.pub_rel_depth  = rospy.Publisher("auv/devices/setRelativeDepth", Float64, queue_size=10)
         self.pub_mode       = rospy.Publisher("auv/status/mode", String, queue_size=10)
         self.pub_button     = rospy.Publisher("/mavros/manual_control/send", mavros_msgs.msg.ManualControl, queue_size=10)
         self.pub_ang_vel    = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel_unstamped", geometry_msgs.msg.Twist, queue_size=10)
@@ -113,49 +111,6 @@ class RobotControl:
 
         # Wait for the topics to run
         time.sleep(1)
-
-    def get_callback_compass(self,msg):
-        def _callback_compass(msg):
-            """Get the compass heading from /auv/devices/compass topic"""
-            self.compass = msg.data
-
-        def _callback_compass_dvl(msg):
-            """Get the compass heading from dvl"""
-            self.compass = msg.data
-            self.dvl.compass_rad = math.radians(msg.data)
-
-        # If DVL return compass data from the DVL, else from the compass
-        if self.dvl:
-            return _callback_compass_dvl
-        else:
-            return _callback_compass
-    
-    def calibrate_depth(self, sample_time=3):
-        """
-        To calibrate the depth data
-
-        Args:
-            sample_time (int): The number of seconds taken to calibrate the data        
-        """
-        print("\n[depth_calib] Starting Depth Calibration...")
-        samples = []
-
-        # Wait for depth data
-        while self.depth == None:
-            pass
-
-        prevDepth = self.depth
-        start_time = time.time()
-
-        # Collect data for sample_time seconds, then calculate the mean
-        while time.time() - start_time < sample_time:
-            if self.depth == prevDepth:
-                continue
-            samples.append(self.depth)
-            prevDepth = self.depth
-
-        self.depth_calib = math.mean(samples)
-        print(f"[depth_calib] Finished. Surface is: {self.depth_calib}")
         
 
     def set_depth(self, depth): 
