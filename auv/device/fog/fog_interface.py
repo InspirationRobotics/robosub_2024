@@ -56,7 +56,7 @@ class FOG:
             stopbits=serial.STOPBITS_ONE, 
             bytesize=serial.EIGHTBITS)
     
-    def start_read(self, func = None):
+    def start(self, func = None):
         """Wipes parameters, sets boolean self.readData to True,
         initializes a thread of self._read_fog and starts running it"""
         # Threads exist to allow multiple processes to run simultaneously,
@@ -90,7 +90,7 @@ class FOG:
     def calibrate(self):
         print("Calibrating FOG... DO NOT TOUCH")
         self.reset_params()
-        self.start_read(self._cal_fog_angle_data)
+        self.start(self._cal_fog_angle_data)
         time.sleep(self.cal_time)
         self.bias = self.cal_sum/(self.cal_count + 0.00001)
         self.stop_read()
@@ -235,7 +235,7 @@ if __name__ == "__main__":
     fog.calibrate()
 
     # --------- Calibration metrics for 60 seconds ------------
-    # fog.start_read()
+    # fog.start()
     
     # startTime = time.time()
     # startTime2 = time.time()
@@ -261,7 +261,7 @@ if __name__ == "__main__":
 
     print("Now just running for 30 seconds")
 
-    fog.start_read()
+    fog.start()
 
     startTime = time.time()
     for i in range(30):
