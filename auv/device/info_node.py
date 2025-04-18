@@ -59,6 +59,8 @@ class AUV(RosHandler):
     Creates a class for the sub, inheriting from ROSHandler (all of the functions from RosHandler are now in AUV)
     """
     def __init__(self):
+        self.connect("info_node", rate=60)  # Change rate to 10 if issues arise
+        
         # Accessing the device configurations
         self.config = config
 
@@ -336,5 +338,5 @@ signal.signal(signal.SIGINT, onExit)
 if __name__ == "__main__":
     """For running the script directly"""
     auv = AUV()
-    auv.connect("info_node", rate=60)  # Change rate to 10 if issues arise
+    
     
