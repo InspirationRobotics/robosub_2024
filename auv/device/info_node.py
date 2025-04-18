@@ -264,11 +264,11 @@ class AUV(RosHandler):
         # TODO test whether the compass offset is consistant
         """
         Get compass heading from mavros and publish it to the AUV compass topic
-        Topic: /mavros/global_position/compass_hdg
+        Topic: /mavros/global_position/compass_hdg  3Hz
         msg: std_msgs.msg.Float64
 
-        publish: /auv/devices/compass
-        msg: std_msgs.msg.Float64
+        publish: /auv/devices/compass               3Hz
+        msg: std_msgs.msg.Float64       
         """
         data = msg
         self.AUV_COMPASS.set_data(data)
