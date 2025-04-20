@@ -114,7 +114,7 @@ class AUV(RosHandler):
         # Create custom ROS topics so other nodes can easily access the data
         self.AUV_COMPASS        = TopicService("/auv/devices/compass", std_msgs.msg.Float64)
         self.AUV_IMU            = TopicService("/auv/devices/imu", sensor_msgs.msg.Imu)
-        self.AUV_BARO           = TopicService("/auv/devices/baro", std_msgs.msg.Float32MultiArray)
+        self.AUV_BARO           = TopicService("/auv/devices/baro", std_msgs.msg.Float64)
         self.AUV_GET_THRUSTERS  = TopicService("/auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn)
         self.AUV_GET_DEPTH      = TopicService("/auv/devices/setDepth", std_msgs.msg.Float64)
         self.AUV_GET_REL_DEPTH  = TopicService("/auv/devices/setRelativeDepth", std_msgs.msg.Float64)
@@ -281,7 +281,7 @@ class AUV(RosHandler):
         msg: mavros_msgs.msg.Mavlink        120Hz
 
         publish: /auv/devices/baro
-        msg: std_msgs.msg.Float32MultiArray 2Hz
+        msg:  std_msgs.msg.Float64          2Hz   TODO test this again
         """
         try:
             # If the barometric data message has the right ID
@@ -304,11 +304,8 @@ class AUV(RosHandler):
                         self.depth_calib = mean(self.depth_samples)
                         print(f"[depth_calib] Finished. Surface is: {self.depth_calib}")
 
-                # TODO maybe we can just pubish a float 64/32
                 # Publish the barometric data
-                baro_data = std_msgs.msg.Float32MultiArray()
-                baro_data.data = [self.depth, press_diff]
-                self.AUV_BARO.set_data(baro_data)
+                self.AUV_BARO.set_data(self.depth)
                 self.topic_publisher(topic=self.AUV_BARO)
 
                 time.sleep(1/20) # Attempt 20Hz
