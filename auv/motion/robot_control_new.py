@@ -15,7 +15,8 @@ import std_msgs
 from std_msgs.msg import Float64, Float32MultiArray, String
 import geometry_msgs.msg
 from geometry_msgs.msg import PoseStamped
-
+import threading
+from auv.utils import arm, disarm
 
 # Import the PID controller
 from simple_pid import PID
@@ -43,8 +44,8 @@ class RobotControl:
             enable_dvl (bool): Flag to enable or disable DVL
         """
 
-        # Initialize the configuration of the devices, depth of the sub, compass of the sub, DVL
-        
+        # Initialize the node
+        rospy.init_node("robot_control", anonymous=True)
         # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
         self.config     = deviceHelper.variables            
 
@@ -59,8 +60,10 @@ class RobotControl:
         self.pub_mode       = rospy.Publisher("auv/status/mode", String, queue_size=10)
         self.pub_button     = rospy.Publisher("/mavros/manual_control/send", mavros_msgs.msg.ManualControl, queue_size=10)
 
-        # TODO: reset pix standalone depth Integration param 
-
+        # Arm the robot
+        arm.arm()
+        # store desire point
+        self.desired_point = {"x":None,"y":None,"z":None,"heading":None}
         # A set of PIDs (Proportional - Integral - Derivative) to handle the movement of the sub
         """
         PIDs work by continously computing the error between the desired setpoint (desired yaw angle, forward velocity, etc.) and the 
@@ -108,6 +111,35 @@ class RobotControl:
         # Wait for the topics to run
         time.sleep(1)
 
+        # Run thread
+        self.thread = threading.Thread(target=self.publisherThread)
+        self.thread.daemon = True
+        self.thread.start()
+
+    def publisherThread(self):
+        """
+        Publisher to publish the thruster values
+        """
+        while not rospy.is_shutdown():
+            # Publish the thruster values
+            self.pub_thrusters.publish(self.pwm)
+            # Get desire x,y,z
+            x = self.desired_point["x"] if self.desired_point["x"] is not None else self.pose.pose.position.x
+            y = self.desired_point["y"] if self.desired_point["y"] is not None else self.pose.pose.position.y
+            z = self.desired_point["z"] if self.desired_point["z"] is not None else self.pose.pose.position.z
+            heading = self.desired_point["heading"] if self.desired_point["heading"] is not None else self.pose.pose.orientation.z
+            # Calculate error
+            x_error = x - self.pose.pose.position.x
+            y_error = y - self.pose.pose.position.y
+            z_error = z - self.pose.pose.position.z
+            heading_error = heading - self.pose.pose.orientation.z
+
+            # Calculate PWM needed using pid
+            self.PIDs["lateral"].setpoint = x
+            self.PIDs["surge"].setpoint = y
+            self.PIDs["depth"].setpoint = z
+            time.sleep(0.1) # 10hz
+
     def modeCallback(self, msg):
         """
         Callback function to handle the mode of the robot
@@ -147,8 +179,8 @@ class RobotControl:
         # TODO Handle timeout of the pixhawk
         """
         # swtich to manual/stablize mode if not in alt hold mode
-        if self.mode != "ALT_HOLD":
-            self.pub_mode.publish(String("MANUAL"))  
+
+        self.pub_mode.publish(String("STASILIZE"))  
 
         # Create a message to send to the thrusters
         pwm = mavros_msgs.msg.OverrideRCIn()
@@ -164,16 +196,9 @@ class RobotControl:
         pwm.channels = channels
 
         # Publish PWMs to /auv/devices/thrusters
-        if vertical!=0: self.set_relative_depth(vertical)
         self.pub_thrusters.publish(pwm)
 
-    def depth_hold(self):
-        """
-        Hold current depth
-        """
-        self.pub_mode.publish(String("ALTCTL"))
-
-    def set_absolute_depth(self, depth):
+    def set_absolute_z(self, depth):
         """
         Set the depth of the robot
 
@@ -182,28 +207,41 @@ class RobotControl:
         """
         # Clear the PID error
         self.PIDs["depth"].clear()
+        self.desired_point["z"] = depth
+    
+    def set_absolute_x(self, x):
+        """
+        Set the x position of the robot
 
-        # Get the current depth
-        if self.pose is None:
-            rospy.logwarn("Pose is not set")
-            return
+        Args:
+            x (float): X position to set the robot to
+        """
+        # Clear the PID error
+        self.PIDs["lateral"].clear()
+        self.desired_point["x"] = x
 
-        # Change mode to stablize
-        self.setMode("STABILIZE")
+    def set_absolute_y(self, y):
+        """
+        Set the y position of the robot
 
-        # Get the current depth
-        current_depth = self.pose.pose.position.z
+        Args:
+            y (float): Y position to set the robot to
+        """
+        # Clear the PID error
+        self.PIDs["surge"].clear()
+        self.desired_point["y"] = y
 
-        # Calculate the error
-        error = depth - current_depth
+    def set_absolute_heading(self, heading):
+        """
+        Set the heading of the robot
 
-        # Calculate the currect pwm
-        pwm = int(self.PIDs["depth"].setpoint(error))
-
-        # Set thruster pwm
-        self.movement(vertical=pwm)
-
-    def set_relative_deph(self, depth):
+        Args:
+            heading (float): Heading to set the robot to
+        """
+        # Clear the PID error
+        self.PIDs["yaw"].clear()
+        self.desired_point["heading"] = heading
+    def set_relative_z(self, depth):
         """
         Set the depth of the robot relative to the current depth
 
@@ -212,20 +250,56 @@ class RobotControl:
         """
         # Clear the PID error
         self.PIDs["depth"].clear()
-        
-        # Get the current depth
-        if self.pose is None:
-            rospy.logwarn("Pose is not set")
-            return
+        self.desired_point["z"] = depth + self.pose.pose.position.z
 
-        # Change mode to stablize
-        self.setMode("STABILIZE")
+    def set_relative_x(self, x):
+        """
+        Set the x position of the robot relative to the current position
 
-        # Calculate the currect pwm
-        pwm = int(self.PIDs["depth"].setpoint(depth))
+        Args:
+            x (float): Relative x position to set the robot to (-2 means left, 2 means right)
+        """
+        # Clear the PID error
+        self.PIDs["lateral"].clear()
+        self.desired_point["x"] = x + self.pose.pose.position.x
 
-        # Set thruster pwm
+    def set_relative_y(self, y):
+        """
+        Set the y position of the robot relative to the current position
+
+        Args:
+            y (float): Relative y position to set the robot to (-2 means left, 2 means right)
+        """
+        # Clear the PID error
+        self.PIDs["surge"].clear()
+        self.desired_point["y"] = y + self.pose.pose.position.y
+
+    def set_relative_heading(self, heading):
+        """
+        Set the heading of the robot relative to the current heading
+
+        Args:
+            heading (float): Relative heading to set the robot to (-2 means left, 2 means right)
+        """
+        # Clear the PID error
+        self.PIDs["yaw"].clear()
+        self.desired_point["heading"] = heading + self.pose.pose.orientation.z
+
+    def exit(self):
+        """
+        Exit the robot control
+        """
+        # Stop the robot
         self.movement()
+        # Stop the thread
+        self.thread.join()
+        # Stop the node
+        disarm.disarm()
+        # Exit the node
+        rospy.signal_shutdown("Exiting robot control")
+
+    
+    
 
 
 
