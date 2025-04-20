@@ -54,7 +54,7 @@ class Pose:
 
         with self.lock:
             # Use sensor data to estimate pose
-            pose.pose.orientation = self.orientation
+            pose.pose.orientation.z = self.heading
             pose.pose.position.z = self.depth
             # Assuming heading is used for yaw (simplified example)
             pose.pose.position.x = 0.0  # Placeholder

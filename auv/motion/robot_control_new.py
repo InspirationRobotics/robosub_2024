@@ -135,9 +135,19 @@ class RobotControl:
             heading_error = heading - self.pose.pose.orientation.z
 
             # Calculate PWM needed using pid
-            self.PIDs["lateral"].setpoint = x
-            self.PIDs["surge"].setpoint = y
-            self.PIDs["depth"].setpoint = z
+            self.PIDs["lateral"].setpoint = x_error
+            self.PIDs["surge"].setpoint = y_error
+            self.PIDs["depth"].setpoint = z_error
+            self.PIDs["yaw"].setpoint = heading_error
+
+            # Get the PWM values
+            lateral_pwm = self.PIDs["lateral"](x_error)
+            surge_pwm = self.PIDs["surge"](y_error)
+            depth_pwm = self.PIDs["depth"](z_error)
+            yaw_pwm = self.PIDs["yaw"](heading_error)
+            # Set the PWM values
+            self.movement(lateral=lateral_pwm, forward=surge_pwm, vertical=depth_pwm, yaw=yaw_pwm)
+            
             time.sleep(0.1) # 10hz
 
     def modeCallback(self, msg):
