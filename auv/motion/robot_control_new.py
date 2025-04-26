@@ -103,7 +103,6 @@ class RobotControl:
                 self.config.get("DEPTH_PID_I", 0.1),
                 self.config.get("DEPTH_PID_D", 0.1),
                 setpoint=0,
-                output_limits=(-0.5, 0.5),
             ),  
             
         }
@@ -135,16 +134,16 @@ class RobotControl:
             heading_error = heading - self.pose.pose.orientation.z
 
             # Calculate PWM needed using pid
-            self.PIDs["lateral"].setpoint = x_error
-            self.PIDs["surge"].setpoint = y_error
-            self.PIDs["depth"].setpoint = z_error
-            self.PIDs["yaw"].setpoint = heading_error
+            self.PIDs["lateral"].setpoint = y
+            self.PIDs["surge"].setpoint = x
+            self.PIDs["depth"].setpoint = z
+            self.PIDs["yaw"].setpoint = heading
 
             # Get the PWM values
-            lateral_pwm = self.PIDs["lateral"](x_error)
-            surge_pwm = self.PIDs["surge"](y_error)
-            depth_pwm = self.PIDs["depth"](z_error)
-            yaw_pwm = self.PIDs["yaw"](heading_error)
+            lateral_pwm = self.PIDs["lateral"](self.pose.pose.position.y)
+            surge_pwm = self.PIDs["surge"](self.pose.pose.position.x)
+            depth_pwm = self.PIDs["depth"](self.pose.pose.position.z)
+            yaw_pwm = self.PIDs["yaw"](self.pose.pose.orientation.z)
             # Set the PWM values
             self.movement(lateral=lateral_pwm, forward=surge_pwm, vertical=depth_pwm, yaw=yaw_pwm)
             
