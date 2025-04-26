@@ -16,7 +16,6 @@ class Pose:
         self.baro_sub       = rospy.Subscriber('/auv/devices/baro', Float64, self.depth_callback)
         self.fog_sub        = rospy.Subscriber('/auv/devices/fog', Float64, self.depth_callback)
         self.dvl_sub        = rospy.Subscriber('/auv/devices/dvl', Float64, self.depth_callback)
-        self.localize _sub  = rospy.Subscriber()
         # Publisher
         self.pose_pub       = rospy.Publisher('/auv/status/pose', PoseStamped, queue_size=10)
 
