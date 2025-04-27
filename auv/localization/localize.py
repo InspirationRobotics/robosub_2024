@@ -1,7 +1,6 @@
-import geometry_msgs.msg
 import rospy
 import std_msgs
-import sensor_msgs.msg
+import sensor_msgs
 import geometry_msgs
 import time
 
@@ -77,9 +76,14 @@ class Localize:
             pose = geometry_msgs.msg.PoseStamped()
             pose.header.stamp = rospy.Time.now()  # In ROS 1
             pose.header.frame_id = "map" 
-            pose.position.x = self.imu_pos_x
-            pose.position.y = self.imu_pos_y
-            pose.position.z = self.imu_pos_z
+            pose.pose.position.x = self.imu_pos_x
+            pose.pose.position.y = self.imu_pos_y
+            pose.pose.position.z = self.imu_pos_z
+            pose.pose.orientation.x = 0.0
+            pose.pose.orientation.y = 0.0
+            pose.pose.orientation.z = 0.0
+            pose.pose.orientation.w = 1.0
+
             # TODO add orientation in pose
             self.pub_pos.publish(pose)
 
