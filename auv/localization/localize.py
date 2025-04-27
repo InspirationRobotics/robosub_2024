@@ -13,7 +13,11 @@ class Localize:
         # define subscribers, publishers
         self.sub_heading    = rospy.Subscriber('/auv/devices/compass', std_msgs.msg.Float32, self.heading_callback)
         self.sub_imu        = rospy.Subscriber('/auv/devices/imu',std_msgs.msg.Imu)
-        
+        self.pub_vel        = rospy.Publisher('/auv/devices/twist',geometry_msgs.TwistStamped, queue_size=10) 
+        self.pub_pos        = rospy.Publisher('/auv/devices/pose',geometry_msgs.PoseStamped, queue_size=10)
+
+
+
         self.imu_last_time = None
 
         self.acc_x = None
@@ -24,9 +28,9 @@ class Localize:
         self.vel_y:float = None
         self.vel_z:float = None
 
-        self.pos_x:float = None
-        self.pos_y:float = None
-        self.pos_z:float = None
+        self.imu_pos_x:float = None
+        self.imu_pos_y:float = None
+        self.imu_pos_z:float = None
         
     
     def imuCallback(self, msg):
@@ -44,17 +48,17 @@ class Localize:
         # X-axis
         prev_vel = self.vel_x
         self.vel_x += (self.acc_x + msg.linear_acceleration.x) * dt / 2
-        self.pos_x += positionCallback(prev_vel, self.vel_x, dt)
+        self.imu_pos_x += positionCallback(prev_vel, self.vel_x, dt)
 
         # Y-axis
         prev_vel = self.vel_y
         self.vel_y += (self.acc_y + msg.linear_acceleration.y) * dt / 2
-        self.pos_y += positionCallback(prev_vel, self.vel_y, dt)
+        self.imu_pos_y += positionCallback(prev_vel, self.vel_y, dt)
 
         # Z-axis
         prev_vel = self.vel_z
         self.vel_z += (self.acc_z + msg.linear_acceleration.z) * dt / 2
-        self.pos_z += positionCallback(prev_vel, self.vel_z, dt)
+        self.imu_pos_z += positionCallback(prev_vel, self.vel_z, dt)
 
         # Update last acceleration and time
         self.acc_x = msg.linear_acceleration.x
@@ -63,9 +67,19 @@ class Localize:
         self.imu_last_time = current_time
 
 
+
     def run(self):
         while not rospy.is_shutdown():
             # update position data to pose
-            
-            last_time = time.time()  # update last_time
+            pose = geometry_msgs.msg.PoseStamped()
+            pose.header.stamp = rospy.Time.now()  # In ROS 1
+            pose.header.frame_id = "map" 
+            pose.position.x = self.imu_pos_x
+            pose.position.y = self.imu_pos_y
+            pose.position.z = self.imu_pos_z
+            # TODO add orientation in pose
+            self.pub_pos.publish(pose)
+
+            twist = geometry_msgs.msg.TwistStamped()
+
             self.rate.sleep()
