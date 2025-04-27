@@ -1,23 +1,21 @@
 import rospy
-import std_msgs
-import sensor_msgs
-import geometry_msgs
+from std_msgs.msg import Float32
+from sensor_msgs.msg import Imu
+from geometry_msgs.msg import TwistStamped, PoseStamped
 import time
 
 def positionCallback(prev, curr, dt):
     return ((prev + curr) / 2) * dt
+
 class Localize:
     def __init__(self):
         rospy.init_node('localize', anonymous=True)
         self.rate = rospy.Rate(10)  # 10 Hz
         
         # define subscribers, publishers
-        #self.sub_heading    = rospy.Subscriber('/auv/devices/compass', std_msgs.msg.Float32, self.heading_callback)
-        self.sub_imu        = rospy.Subscriber('/auv/devices/imu',sensor_msgs.msg.Imu,self.imuCallback)
-        self.pub_vel        = rospy.Publisher('/auv/devices/twist',geometry_msgs.msg.TwistStamped, queue_size=10) 
-        self.pub_pos        = rospy.Publisher('/auv/devices/pose',geometry_msgs.msg.PoseStamped, queue_size=10)
-
-
+        self.sub_imu = rospy.Subscriber('/auv/devices/imu', Imu, self.imuCallback)
+        self.pub_vel = rospy.Publisher('/auv/devices/twist', TwistStamped, queue_size=10)
+        self.pub_pos = rospy.Publisher('/auv/devices/pose', PoseStamped, queue_size=10)
 
         self.imu_last_time = None
 
@@ -33,8 +31,6 @@ class Localize:
         self.imu_pos_y: float = 0.0
         self.imu_pos_z: float = 0.0
 
-        
-    
     def imuCallback(self, msg):
         current_time = msg.header.stamp.to_sec()
 
@@ -68,29 +64,33 @@ class Localize:
         self.acc_z = msg.linear_acceleration.z
         self.imu_last_time = current_time
 
-
-
     def run(self):
         while not rospy.is_shutdown():
             # update position data to pose
-            pose = geometry_msgs.msg.PoseStamped()
-            pose.header.stamp = rospy.Time.now()  # In ROS 1
-            pose.header.frame_id = "map" 
+            pose = PoseStamped()
+            pose.header.stamp = rospy.Time.now()
+            pose.header.frame_id = "map"
             pose.pose.position.x = self.imu_pos_x
             pose.pose.position.y = self.imu_pos_y
             pose.pose.position.z = self.imu_pos_z
+
             pose.pose.orientation.x = 0.0
             pose.pose.orientation.y = 0.0
             pose.pose.orientation.z = 0.0
             pose.pose.orientation.w = 1.0
 
-            # TODO add orientation in pose
             self.pub_pos.publish(pose)
 
-            #twist = geometry_msgs.msg.TwistStamped()
+            # Also publish velocity if you want
+            twist = TwistStamped()
+            twist.header.stamp = rospy.Time.now()
+            twist.header.frame_id = "map"
+            twist.twist.linear.x = self.imu_vel_x
+            twist.twist.linear.y = self.imu_vel_y
+            twist.twist.linear.z = self.imu_vel_z
+            self.pub_vel.publish(twist)
 
             self.rate.sleep()
-
 
 if __name__ == "__main__":
     localize = Localize()
