@@ -9,7 +9,7 @@ def positionCallback(prev, curr, dt):
 
 class Localize:
     def __init__(self):
-        rospy.init_node('localize', anonymous=True)
+        rospy.init_node('localize_node', anonymous=True)
         self.rate = rospy.Rate(10)  # 10 Hz
         
         # define subscribers, publishers
@@ -95,6 +95,7 @@ class Localize:
 if __name__ == "__main__":
     localize = Localize()
     try:
+        rospy.loginfo("Localization node running")
         localize.run()
     except rospy.ROSInterruptException:
         pass
