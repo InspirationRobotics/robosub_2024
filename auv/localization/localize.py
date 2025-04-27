@@ -1,5 +1,6 @@
 import rospy
 import std_msgs
+import sensor_msgs.msg
 import geometry_msgs
 import time
 
@@ -12,7 +13,7 @@ class Localize:
         
         # define subscribers, publishers
         #self.sub_heading    = rospy.Subscriber('/auv/devices/compass', std_msgs.msg.Float32, self.heading_callback)
-        self.sub_imu        = rospy.Subscriber('/auv/devices/imu',std_msgs.msg.Imu,self.imuCallback)
+        self.sub_imu        = rospy.Subscriber('/auv/devices/imu',sensor_msgs.msg.Imu,self.imuCallback)
         self.pub_vel        = rospy.Publisher('/auv/devices/twist',geometry_msgs.TwistStamped, queue_size=10) 
         self.pub_pos        = rospy.Publisher('/auv/devices/pose',geometry_msgs.PoseStamped, queue_size=10)
 
