@@ -9,7 +9,7 @@
 
 #include <Servo.h>
 const int servoPins[] = {4,5,6,7,8,9,10,11};
-const int numServos = sizeof(seroPins) / sizeof(servoPins[0]);
+const int numServos = sizeof(servoPins) / sizeof(servoPins[0]);
 
 Servo servos[numServos];
 // twelve servo objects can be created on most boards
@@ -17,7 +17,7 @@ Servo servos[numServos];
 int pos = 0;    // variable to store the servo position
 
 void setup() {
-  Serial.begin(9600)
+  Serial.begin(9600);
 
   for(int i=0; i<numServos;i++){
     servos[i].attach(servoPins[i]);
