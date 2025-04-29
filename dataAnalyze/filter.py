@@ -3,6 +3,9 @@ import queue
 import time
 import threading
 import matplotlib.pyplot as plt
+from scipy.signal import butter, lfilter
+
+
 
 class FilteredData:
     def __init__(self, size: int):
@@ -46,6 +49,27 @@ def highpass_filter(alpha: float, filtered: FilteredData, incoming: float, previ
     Apply highpass filter: removes slow (low-frequency) variations.
     """
     return alpha * (filtered.get(-1) + incoming - previous)
+
+def butter_lowpass(cutoff, fs, order=2):
+    nyq = 0.5 * fs
+    norm_cutoff = cutoff / nyq
+    b, a = butter(order, norm_cutoff, btype='low', analog=False)
+    return b, a
+
+def lowpass_filter_cutoff(data, cutoff=1.5, fs=10.0, order=2):
+    b, a = butter_lowpass(cutoff, fs, order)
+    return lfilter(b, a, data)
+
+def butter_highpass(cutoff, fs, order=2):
+    nyq = 0.5 * fs
+    norm_cutoff = cutoff / nyq
+    b, a = butter(order, norm_cutoff, btype='high', analog=False)
+    return b, a
+
+def highpass_filter_cutoff(data, cutoff=0.1, fs=10.0, order=2):
+    b, a = butter_highpass(cutoff, fs, order)
+    data = np.array(data)
+    return lfilter(b, a, data)
 
 def rolling_mean(df: np.ndarray, window_size: int) -> np.ndarray:
     """
@@ -112,6 +136,10 @@ def apply_filter(df: np.ndarray, mode: str) -> tuple[np.ndarray, np.ndarray]:
             filtered_value = lowpass_filter(alpha=0.1, filtered=fdata, incoming=msg)
             filtered.append(filtered_value)
             fdata.add(filtered_value)
+        elif mode == "highpass cutoff":
+            filtered_value = highpass_filter_cutoff(data=[fdata.get(-1),msg])
+            filtered.append(filtered_value)
+            fdata.add(filtered_value)
 
         else:
             raise ValueError(f"Unsupported filter mode: {mode}")
@@ -135,8 +163,8 @@ def plot(data: list[np.ndarray], titles: list[str]):
     plt.show()                  # Show the plot in its own window
 
 if __name__ == "__main__":
-    file_path = r"C:\Users\chase\Downloads\2025-04-27_17-28-16_imu_data.csv"
+    file_path = r"\\dohome2.pusd.dom\Home2$\Student2\1914840\Chrome Downloads\2025-04-27_17-28-16_imu_data.csv"
     df = np.loadtxt(file_path, delimiter=",", skiprows=1)
     print(df.shape)
-    filtered, raw = apply_filter(df=df[:,3], mode="lowpass + kalman")
+    filtered, raw = apply_filter(df=df[:,3], mode="highpass cutoff")
     plot(data=[filtered, raw], titles=["Filtered", "Raw"])
