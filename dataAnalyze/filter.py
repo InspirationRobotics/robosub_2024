@@ -22,6 +22,9 @@ class FilteredData:
     
     def remove(self,index:int):
         self.data.pop(index)
+
+    def length(self)->int:
+        return len(self.data)
     
     def to_numpy(self) -> np.ndarray:
         return np.array(self.data)
@@ -69,13 +72,19 @@ def butter_highpass(cutoff, fs, order=2):
 def highpass_filter_cutoff(data, cutoff=0.1, fs=10.0, order=2):
     b, a = butter_highpass(cutoff, fs, order)
     data = np.array(data)
-    return lfilter(b, a, data)
+    return lfilter(b=b, a=a, x=data)
 
-def rolling_mean(df: np.ndarray, window_size: int) -> np.ndarray:
+def rolling_mean(df: FilteredData, window_size: int, datain: float) -> float:
     """
     Apply a rolling mean (moving average) filter to the signal.
     """
-    return np.convolve(df[:, 1], np.ones(window_size)/window_size, mode='valid')
+    window = min(10,window_size,df.length())
+    ss =0
+    for i in range(window):
+        ss += df.get(-1-i)
+        
+    return sum(ss,datain)/(window+1)
+    
 
 def kalman_filter(filtered: FilteredData, incoming: float, P: float, Q: float, R: float) -> tuple[float, float]:
     """
@@ -140,7 +149,10 @@ def apply_filter(df: np.ndarray, mode: str) -> tuple[np.ndarray, np.ndarray]:
             filtered_value = highpass_filter_cutoff(data=[fdata.get(-1),msg])
             filtered.append(filtered_value)
             fdata.add(filtered_value)
-
+        elif mode == "rolling mean":
+            filtered_value = rolling_mean(df=fdata,window_size=3,datain=msg)
+            filtered.append(filtered_value)
+            fdata.add(filtered_value)
         else:
             raise ValueError(f"Unsupported filter mode: {mode}")
 
@@ -166,5 +178,5 @@ if __name__ == "__main__":
     file_path = r"\\dohome2.pusd.dom\Home2$\Student2\1914840\Chrome Downloads\2025-04-27_17-28-16_imu_data.csv"
     df = np.loadtxt(file_path, delimiter=",", skiprows=1)
     print(df.shape)
-    filtered, raw = apply_filter(df=df[:,3], mode="highpass cutoff")
+    filtered, raw = apply_filter(df=df[:,1], mode="rolling mean")
     plot(data=[filtered, raw], titles=["Filtered", "Raw"])
