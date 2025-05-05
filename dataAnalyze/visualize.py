@@ -7,7 +7,8 @@ def plot_data(x, y, title='Data Plot', xlabel='Time (s)', ylabel='Value'):
 
     Args:
         x (list): X-axis data (e.g., time).
-        y (list): Y-axis data (e.g., sensor values).
+        
+                        y (list): Y-axis data (e.g., sensor values).
         title (str): The title of the plot.
         xlabel (str): The label for the x-axis.
         ylabel (str): The label for the y-axis.
@@ -24,7 +25,7 @@ def plot_data(x, y, title='Data Plot', xlabel='Time (s)', ylabel='Value'):
 
 
 if __name__ == "__main__":
-    filename = "/home/chaser/fog_data.csv"
+    filename = "/home/chaser/Documents/VectorNav-VN100-Rugged/imu_data_20250504_194609.csv"
     data = pd.read_csv(filename)
 
     time = data.iloc[:, 0]  # First column is assumed to be timestamp
