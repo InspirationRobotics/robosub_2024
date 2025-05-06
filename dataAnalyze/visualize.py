@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-def plot_data(x, y, title='Data Plot', xlabel='Time (s)', ylabel='Value'):
+def plot_data(data):
     """
     Plot the given data using matplotlib.
 
@@ -13,22 +13,28 @@ def plot_data(x, y, title='Data Plot', xlabel='Time (s)', ylabel='Value'):
         xlabel (str): The label for the x-axis.
         ylabel (str): The label for the y-axis.
     """
-    plt.figure(figsize=(10, 6))
-    plt.scatter(x, y, label=title, color='blue', marker='o')
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.grid(True)
-    plt.legend()
-    plt.tight_layout()
+    x = data.iloc[:,0]
+    
+    xlabel = "time"
+    
+    for column in data.columns[1:]:
+        title = f'{column} vs Time'
+        ylabel = column
+        plt.figure(figsize=(10, 6))
+        plt.scatter(x, data[column], label=ylabel, color='blue', marker='o')
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
     plt.show()
 
 
 if __name__ == "__main__":
-    filename = "/home/chaser/Documents/VectorNav-VN100-Rugged/imu_data_20250504_194609.csv"
+    filename = r"\\dohome2.pusd.dom\Home2$\Student2\1914840\Chrome Downloads\2025-04-27_17-28-16_imu_data.csv"
     data = pd.read_csv(filename)
 
     time = data.iloc[:, 0]  # First column is assumed to be timestamp
 
-    for column in data.columns[1:]:  # Skip the first column (time)
-        plot_data(time, data[column], title=f'{column} vs Time', ylabel=column)
+    plot_data(data)
