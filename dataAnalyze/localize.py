@@ -11,9 +11,22 @@ class stimulator:
         pass
         self.data = data
         self.columns = self.data.columns
-        self.localization:list
+        self.localization = {}
+        self.imu_last_time = None
+                
         self.imu_last_time = None
 
+        self.acc_x = None
+        self.acc_y = None
+        self.acc_z = None
+
+        self.imu_vel_x: float = 0.0
+        self.imu_vel_y: float = 0.0
+        self.imu_vel_z: float = 0.0
+
+        self.imu_pos_x: float = 0.0
+        self.imu_pos_y: float = 0.0
+        self.imu_pos_z: float = 0.0
 
 
     def imuCallback(self, df:pd.DataFrame):
@@ -24,6 +37,11 @@ class stimulator:
             self.acc_x = df["AccX"]
             self.acc_y = df["AccY"]
             self.acc_z = df["AccZ"]
+
+            self.localization["time"] = []
+            self.localization["x"] = []
+            self.localization["y"] = []
+            self.localization["z"] = []
             return
 
         dt = current_time - self.imu_last_time
@@ -49,13 +67,29 @@ class stimulator:
         self.acc_z = df["AccZ"]
         
         self.imu_last_time = current_time
+
+        self.localization["time"].apppend(self.imu_last_time)
+        self.localization["x"].apppend(self.imu_pos_x)
+        self.localization["y"].apppend(self.imu_pos_y)
+        self.localization["z"].apppend(self.imu_pos_z)
         
 
     def run(self):
         for i in range(self.data.shape[0]):
-            self.imuCallback(self.data[i,:]) # pass in a row
+            self.imuCallback(self.data.iloc[i])  # correct Pandas row access
 
-        plot_data(self.localization)
+        loc = pd.DataFrame(data=self.localization)
+        plot_data(loc)
+
+
+
+if __name__ == "__main__":
+    path = r"\\dohome2.pusd.dom\Home2$\Student2\1914840\Chrome Downloads\2025-04-27_17-28-16_imu_data.csv"
+    data = pd.read_csv(path)
+
+    ss = stimulator(data=data)
+
+    ss.run()
         
         
     
