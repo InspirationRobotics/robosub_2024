@@ -113,6 +113,8 @@ def dataFromConfig(name):
         usbID = variables.get("teensy_port")
     elif name == "fog":
         usbID = variables.get("fog_port")
+    elif name == "vectornav":
+        usbID = variables.get("vectornav_port")
     else:
         data = variables.get(name)
         if data == None:
