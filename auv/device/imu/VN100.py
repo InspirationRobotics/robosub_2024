@@ -8,7 +8,7 @@ from auv.utils import deviceHelper
 rospy.init_node("vectornav_api_node")
 
 class VN100:
-    def __init__(self,port:str = deviceHelper.dataFromConfig("vectornav_port")):
+    def __init__(self,port:str = deviceHelper.dataFromConfig("vectornav")):
         self.__port = port
         self.__bps = 115200
         self.__ser = Serial(port=self.__port,baudrate=self.__bps, timeout=1)
