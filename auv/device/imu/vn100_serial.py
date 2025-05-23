@@ -51,7 +51,7 @@ if __name__ == "__main__":
             # them for the first iteration
             if imu_angle_records is None:
                 pass
-            elif abs(sensor.roll - imu_angle_records[0]) < 5 or abs(sensor.pitch - imu_angle_records[1]) < 5 or abs(sensor.yaw - imu_angle_records[2]) < 5:
+            elif abs(sensor.roll - imu_angle_records[0]) > 5 or abs(sensor.pitch - imu_angle_records[1]) > 5 or abs(sensor.yaw - imu_angle_records[2]) > 5:
                 imu_sample.append(imu_counter)
                 imu_counter = 0
                 print(imu_sample)
