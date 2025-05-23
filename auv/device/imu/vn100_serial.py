@@ -61,6 +61,10 @@ if __name__ == "__main__":
         except AttributeError:
             print("No data yet")
             time.sleep(1)
+        except ValueError:
+            print("Bad data")
+        except Exception:
+            print("Unanticipated event")
         except KeyboardInterrupt:
             print("Exiting")
             exit()
