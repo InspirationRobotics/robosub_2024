@@ -4,7 +4,7 @@ from serial import Serial
 import rospy
 import sensor_msgs.msg
 from auv.utils import deviceHelper
-from tf.transformations import euler_from_quaternion
+from tf_transformations import euler_from_quaternion
 
 rospy.init_node("vectornav_api_node")
 
