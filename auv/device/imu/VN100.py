@@ -3,6 +3,7 @@ import threading
 from serial import Serial
 import rospy
 import sensor_msgs.msg
+import math
 from auv.utils import deviceHelper
 from transforms3d.euler import quat2euler
 
@@ -21,9 +22,12 @@ class VN100:
     
     def get_orientation(self, msg):
         """Parses quaternion orientation to Euler angles (roll, pitch, yaw)"""
+        # Get quaternion orientation
         quat_orient = msg.orientation
         orientation_list = [quat_orient.x, quat_orient.y, quat_orient.z, quat_orient.w]
+        # Parse to euler angles, convert to degrees
         (roll, pitch, yaw) = quat2euler(orientation_list)
+        (roll, pitch, yaw) = (math.degrees(roll), math.degrees(pitch), math.degrees(yaw))
         print(f"Roll: {roll}\nPitch:{pitch}\nYaw:{yaw}")
 
 
