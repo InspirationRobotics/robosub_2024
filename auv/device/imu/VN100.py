@@ -18,7 +18,6 @@ class VN100:
         self.rate = rospy.Rate(1)
         while not rospy.is_shutdown():
             self.rate.sleep()
-            time.sleep(0.25)
     
     def get_orientation(self, msg):
         """Parses quaternion orientation to Euler angles (roll, pitch, yaw)"""
@@ -29,6 +28,7 @@ class VN100:
         (roll, pitch, yaw) = quat2euler(orientation_list)
         (roll, pitch, yaw) = (math.degrees(roll), math.degrees(pitch), math.degrees(yaw))
         print(f"Roll: {roll}\nPitch:{pitch}\nYaw:{yaw}")
+        time.sleep(0.25)
 
 
     
