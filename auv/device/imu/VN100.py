@@ -31,7 +31,7 @@ class VN100:
         #     angle = math.degrees(angle) % 360
         (roll, pitch, yaw) = (math.degrees(roll), math.degrees(pitch), math.degrees(yaw))
         print(f"Roll: {roll}\nPitch:{pitch}\nYaw:{yaw}")
-        time.sleep(0.25)
+        time.sleep(1)
 
 
     
