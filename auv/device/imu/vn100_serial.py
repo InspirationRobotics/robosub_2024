@@ -34,7 +34,7 @@ if __name__ == "__main__":
     sensor = VN100()
     # Collect data every second
     while True:
-        sensor.get_orientation
+        sensor.get_orientation()
         print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
         time.sleep(1)
 
