@@ -4,7 +4,7 @@ from serial import Serial
 import rospy
 import sensor_msgs.msg
 from auv.utils import deviceHelper
-from tf_transformations import euler_from_quaternion
+from transforms3d.euler import quat2euler
 
 rospy.init_node("vectornav_api_node")
 
@@ -23,7 +23,7 @@ class VN100:
         """Parses quaternion orientation to Euler angles (roll, pitch, yaw)"""
         quat_orient = msg.orientation
         orientation_list = [quat_orient.x, quat_orient.y, quat_orient.z, quat_orient.w]
-        (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
+        (roll, pitch, yaw) = quat2euler(orientation_list)
         print(f"Roll: {roll}\nPitch:{pitch}\nYaw:{yaw}")
 
 
