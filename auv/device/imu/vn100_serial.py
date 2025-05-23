@@ -16,7 +16,7 @@ class VN100:
         self.__bps = 115200
         self.__ser = Serial(port=self.__port,baudrate=self.__bps, timeout=1)
     
-    def get_orientation(self, msg):
+    def get_orientation(self):
         """Parses roll, pitch, and yaw from the serial line"""
         # The format of a packet is first $YNYMR, then the yaw, pitch, roll;
         # then magnetometer, accelerometer, and gyroscope;
