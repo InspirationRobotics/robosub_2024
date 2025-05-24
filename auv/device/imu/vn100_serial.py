@@ -1,14 +1,9 @@
 import time
 import threading
 from serial import Serial
-import rospy
-# import sensor_msgs.msg
 import math
 from auv.utils import deviceHelper
 import threading
-
-
-rospy.init_node("vectornav_api_node")
 
 class VN100:
     def __init__(self,port:str = deviceHelper.dataFromConfig("vectornav")):
@@ -28,11 +23,14 @@ class VN100:
         # Do a while statement to make the loop run forever
         while True:
             try:
-                print("thread run")
+                # print("thread run")
+                # Read data
                 data_line = self.__ser.readline().decode()
+
                 # I'll split it by commas to make accessing the data a bit easier
-            
                 data_list = data_line.split(',')
+
+                # Populate yaw, pitch, roll
                 self.yaw, self.pitch, self.roll = float(data_list[1]), float(data_list[2]), float(data_list[3])
             except IndexError:
                 print("Bad data")
@@ -42,7 +40,6 @@ class VN100:
     
 if __name__ == "__main__":
     sensor = VN100()
-    init_time = time.time()
     # Print utilizing a time.sleep() statement to prevent
     # overwhelming with two while loops
     while True:
