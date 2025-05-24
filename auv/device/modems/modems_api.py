@@ -154,7 +154,7 @@ class Modem:
         self.ser.write(buffer.encode()) # Convert the string of data into bytes
         out = b""
         time.sleep(0.1)
-        while self.ser.inWaiting() > 0:
+        while self.ser.in_waiting > 0:
             out += self.ser.read(1)
         # If there is an actual response message from the other sub, then decode it(change from bytes back to strings).
         if out != b"": 
