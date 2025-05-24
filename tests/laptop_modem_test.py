@@ -10,7 +10,7 @@ modem_conn = serial.Serial(port=port,
                            bytesize=serial.EIGHTBITS)
 role = None
 
-while role != "sender" or role != "receiver":
+while role != "sender" and role != "receiver":
     role = input("Sender or receiver?\n").lower()
 
 if role == "sender":
