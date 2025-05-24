@@ -30,14 +30,19 @@ class VN100:
         (roll, pitch, yaw) = quat2euler(orientation_list)
         # for angle in (roll, pitch, yaw):
         #     angle = math.degrees(angle) % 360
-        (roll, pitch, yaw) = (math.degrees(roll), math.degrees(pitch), math.degrees(yaw))
-        print(f"Roll: {roll}\nPitch:{pitch}\nYaw:{yaw}")
-        time.sleep(1)
+        (self.roll, self.pitch, self.yaw) = (math.degrees(roll), math.degrees(pitch), math.degrees(yaw))
+
 
 
     
     
 if __name__ == "__main__":
-    vectornav_sensor = VN100()    
+    sensor = VN100()
+    init_time = time.time()
+    # Print angles every second
+    if time.time() - init_time > 1:
+        init_time = time.time()
+        print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
+
 
 
