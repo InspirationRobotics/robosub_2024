@@ -10,7 +10,7 @@ from transforms3d.euler import quat2euler
 rospy.init_node("vectornav_api_node")
 
 class VN100:
-    def __init__(self,port:str = deviceHelper.dataFromConfig("vectornav")):
+    def __init__(self):
         """Initializes a connection to the /vectornav/IMU ros node. There's
         unused infrastructure for a serial connection, seen in vn100_serial.py.
         I tore down the serial infrastructure because having multiple connections

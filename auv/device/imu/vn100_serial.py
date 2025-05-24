@@ -5,16 +5,19 @@ import rospy
 # import sensor_msgs.msg
 import math
 from auv.utils import deviceHelper
+import threading
 
 
 rospy.init_node("vectornav_api_node")
 
 class VN100:
     def __init__(self,port:str = deviceHelper.dataFromConfig("vectornav")):
-        """Makes a serial connection to the VN100 IMU utilizing deviceHelper"""
+        """Makes a serial connection to the VN100 IMU utilizing deviceHelper and starts reading"""
         self.__port = port
         self.__bps = 115200
         self.__ser = Serial(port=self.__port,baudrate=self.__bps, timeout=1)
+        self.read_thread = threading.Thread(target=self.get_orientation, daemon=True)
+        self.read_thread.start()
     
     def get_orientation(self):
         """Parses roll, pitch, and yaw from the serial line"""
@@ -40,7 +43,6 @@ if __name__ == "__main__":
     # but print every second only
     while True:
         try:
-            sensor.get_orientation()
             if time.time() - init_time > 0.5:
                 init_time = time.time()
                 print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
