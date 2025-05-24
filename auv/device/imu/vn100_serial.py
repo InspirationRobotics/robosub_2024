@@ -24,14 +24,17 @@ class VN100:
         # The format of a packet is first $YNYMR, then the yaw, pitch, roll;
         # then magnetometer, accelerometer, and gyroscope;
         # each in X, Y, then Z
-        try:
-            data_line = self.__ser.readline().decode()
-            # I'll split it by commas to make accessing the data a bit easier
+
+        # Do a while statement to make the loop run forever
+        while True:
+            try:
+                data_line = self.__ser.readline().decode()
+                # I'll split it by commas to make accessing the data a bit easier
             
-            data_list = data_line.split(',')
-            self.yaw, self.pitch, self.roll = float(data_list[1]), float(data_list[2]), float(data_list[3])
-        except IndexError:
-            print("Bad data")
+                data_list = data_line.split(',')
+                self.yaw, self.pitch, self.roll = float(data_list[1]), float(data_list[2]), float(data_list[3])
+            except IndexError:
+                print("Bad data")
 
 
     
