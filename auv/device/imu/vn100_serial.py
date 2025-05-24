@@ -35,36 +35,21 @@ class VN100:
     
 if __name__ == "__main__":
     sensor = VN100()
-
-    # Make some variables to measure how often the IMU is changing its measurements
-    imu_counter = 0
-    imu_sample = []
-    imu_angle_records = None
-    # Collect data every second
+    init_time = time.time()
+    # Collect data very quickly (to prevent building a buffer)
+    # but print every second only
     while True:
         try:
             sensor.get_orientation()
-            print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}\n")
-            # Increment imu_counter
-            imu_counter += 1
-            # Check if any angles changed more than 5 degrees. First case populates
-            # them for the first iteration
-            if imu_angle_records is None:
-                pass
-            elif abs(sensor.roll - imu_angle_records[0]) > 5 or abs(sensor.pitch - imu_angle_records[1]) > 5 or abs(sensor.yaw - imu_angle_records[2]) > 5:
-                imu_sample.append(imu_counter)
-                imu_counter = 0
-                print(imu_sample)
-            # Populate angles
-            imu_angle_records = [sensor.roll, sensor.pitch, sensor.yaw]
-            time.sleep(1)
+            if time.time() - init_time > 0.5:
+                init_time = time.time()
+                print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
         except AttributeError:
             print("No data yet")
-            time.sleep(1)
         except ValueError:
             print("Bad data")
         except Exception:
-            print("Unanticipated event")
+            print("Generic exception caught")
         except KeyboardInterrupt:
             print("Exiting")
             exit()
