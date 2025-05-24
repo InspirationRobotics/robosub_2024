@@ -28,6 +28,7 @@ class VN100:
         # Do a while statement to make the loop run forever
         while True:
             try:
+                print("thread run")
                 data_line = self.__ser.readline().decode()
                 # I'll split it by commas to make accessing the data a bit easier
             
