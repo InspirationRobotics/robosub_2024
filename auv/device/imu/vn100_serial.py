@@ -43,13 +43,12 @@ class VN100:
 if __name__ == "__main__":
     sensor = VN100()
     init_time = time.time()
-    # Collect data very quickly (to prevent building a buffer)
-    # but print every second only
+    # Print utilizing a time.sleep() statement to prevent
+    # overwhelming with two while loops
     while True:
         try:
-            if time.time() - init_time > 0.5:
-                init_time = time.time()
-                print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
+            time.sleep(0.5)
+            print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
         except AttributeError:
             print("No data yet")
         except ValueError:
