@@ -1,8 +1,9 @@
 import serial
 import time
 
+port = input("Give file path of your USB port: ")
 
-modem_conn = serial.Serial(port="/dev/ttyUSB0",
+modem_conn = serial.Serial(port=port,
                            baudrate=9600,
                            parity=serial.PARITY_NONE,
                            stopbits=serial.STOPBITS_ONE,
