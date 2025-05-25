@@ -42,7 +42,7 @@ from ..utils.rospyHandler import RosHandler
 from ..utils.topicService import TopicService
 
 # Import IMU
-from imu.vn100_serial import VN100
+from auv.device.imu.vn100_serial import VN100
 
 # Different modes/states of travel (predefined modes used by the Pixhawk)
 MODE_MANUAL = "MANUAL"
