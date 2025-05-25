@@ -28,6 +28,8 @@ class VN100:
                 # I'll split it by commas to make accessing the data a bit easier
                 data_list = data_line.split(',')
 
+                print(data_list)
+
                 # Populate yaw, pitch, roll
                 self.yaw, self.pitch, self.roll = (float(data_list[1]) + 90) % 360, float(data_list[2]), float(data_list[3])
             except IndexError:
