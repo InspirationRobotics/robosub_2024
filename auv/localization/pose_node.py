@@ -53,6 +53,7 @@ class Pose:
 
         with self.lock:
             # Use sensor data to estimate pose
+            # TODO: Correct between quaternion orientation and euler angles using transforms3d library
             pose.pose.orientation.z = self.heading
             pose.pose.position.z = self.depth
             # Assuming heading is used for yaw (simplified example)
