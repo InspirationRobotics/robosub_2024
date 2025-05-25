@@ -41,6 +41,9 @@ from ..utils import statusLed, deviceHelper
 from ..utils.rospyHandler import RosHandler
 from ..utils.topicService import TopicService
 
+# Import IMU
+from imu.vn100_serial import VN100
+
 # Different modes/states of travel (predefined modes used by the Pixhawk)
 MODE_MANUAL = "MANUAL"
 MODE_STABILIZE = "STABILIZE"
@@ -91,6 +94,9 @@ class AUV(RosHandler):
         self.depth_pid = PID(*self.depth_pid_params, setpoint=0.5) # Go to depth at 0.5 m
         self.depth_pid.output_limits = (-self.depth_pid_params[0], self.depth_pid_params[0]) # Output limits of PID controller
 
+        # Add VN100 IMU
+        self.vectornav = VN100()
+
         # Initialize topics from Pixhawk (through MAVROS)
         self.TOPIC_STATE        = TopicService("/mavros/state"      , mavros_msgs.msg.State)
         self.SERVICE_ARM        = TopicService("/mavros/cmd/arming" , mavros_msgs.srv.CommandBool)
@@ -113,6 +119,7 @@ class AUV(RosHandler):
         # Custom ROS topics
         self.AUV_COMPASS = TopicService("/auv/devices/compass", std_msgs.msg.Float64)
         self.AUV_IMU = TopicService("/auv/devices/imu", sensor_msgs.msg.Imu)
+        self.AUV_VECTORNAV = TopicService("/auv/devices/vectornav", geometry_msgs.msg.Vector3)
         self.AUV_BARO = TopicService("/auv/devices/baro", std_msgs.msg.Float32MultiArray)
         self.AUV_GET_THRUSTERS = TopicService("/auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn)
         self.AUV_GET_DEPTH = TopicService("/auv/devices/setDepth", std_msgs.msg.Float64)
@@ -364,6 +371,18 @@ class AUV(RosHandler):
                 self.AUV_COMPASS.set_data(comp_data)
                 # Publish the data
                 self.topic_publisher(topic=self.AUV_COMPASS)
+            if hasattr(self.vectornav, "yaw"):
+                # Vector3 objects have x, y, and z
+                # x --> Pitch
+                # y --> Roll
+                # z --> Yaw
+                vectornav_data = geometry_msgs.msg.Vector3(self.vectornav.pitch,
+                                                           self.vectornav.roll,
+                                                           self.vectornav.yaw)
+                
+                self.AUV_VECTORNAV.set_data(vectornav_data)
+                self.topic_publisher(topic=self.AUV_VECTORNAV)
+            
         # Handle exceptions
         except Exception as e:
             print("publish sensors failed")

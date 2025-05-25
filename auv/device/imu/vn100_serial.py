@@ -1,9 +1,7 @@
 import time
 import threading
 from serial import Serial
-import math
 from auv.utils import deviceHelper
-import threading
 
 class VN100:
     def __init__(self,port:str = deviceHelper.dataFromConfig("vectornav")):
@@ -34,6 +32,8 @@ class VN100:
                 self.yaw, self.pitch, self.roll = float(data_list[1]), float(data_list[2]), float(data_list[3])
             except IndexError:
                 print("Bad data")
+            except Exception:
+                pass
 
 
     
