@@ -45,6 +45,11 @@ class RobotControl:
         self.depth = self.config.get("INIT_DEPTH", 0.0)
         self.compass = None
 
+        # Initialize vectornav variables
+        self.vectornav_pitch = None
+        self.vectornav_roll = None
+        self.vectornav_yaw = None
+
         # dvl sensor setup (both subs)
         if enable_dvl:
             self.dvl = dvl.DVL()
@@ -58,6 +63,7 @@ class RobotControl:
 
         # Establish thruster and depth publishers
         self.sub_compass = rospy.Subscriber("/auv/devices/compass", Float64, self.get_callback_compass)
+        self.vectornav = rospy.Subscriber("/auv/devices/vectornav", geometry_msgs.msg.Vector3, self.callback_vectornav)
         self.sub_fog = rospy.Subscriber("/auv/devices/fog", Float64, self.get_callback_fog)
         self.sub_depth = rospy.Subscriber("/auv/devices/baro", Float32MultiArray, self.callback_depth)
         self.pub_thrusters = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
@@ -123,6 +129,11 @@ class RobotControl:
             return _callback_compass_dvl
         else:
             return _callback_compass
+    
+    def callback_vectornav(self, msg):
+        self.vectornav_pitch = msg.x
+        self.vectornav_roll = msg.y
+        self.vectornav_yaw = msg.z
     
     def get_callback_fog(self, msg):
         """Get the compass heading from /auv/devices/fog topic"""
@@ -207,7 +218,7 @@ class RobotControl:
         if vertical!=0: self.set_relative_depth(vertical)
         self.pub_thrusters.publish(pwm)
 
-    def set_heading(self, target: int, fog = False):
+    def set_heading(self, target: int, heading_sensor="pix_compass"):
         """
         Yaw to the target heading; target heading is absolute (not relative)
         This is a blocking function
@@ -222,18 +233,28 @@ class RobotControl:
         print(f"[INFO] Setting heading to {target}")
 
         while not rospy.is_shutdown():
-            if fog:
+            if heading_sensor == "fog":
                 if self.fog == False:
                     print("[WARN] FOG not ready")
                     time.sleep(0.5)
                     continue
                 error = heading_error(self.fog, target)
-            else:
+            elif heading_sensor == "pix_compass":
                 if self.compass is None:
                     print("[WARN] Compass not ready")
                     time.sleep(0.5)
                     continue
                 error = heading_error(self.compass, target)
+            elif heading_sensor == "vectornav_imu":
+                if self.vectornav_yaw is None:
+                    print("[WARN] Vectornav IMU Not ready")
+                    time.sleep(0.5)
+                    continue
+                error = heading_error(self.vectornav_yaw, target)
+            else:
+                print("[WARN] Unknown sensor specified")
+
+                
 
             # Break the function if the error hasn't changed 
             # by 3 degrees over 3 secs - prevents the AUV from getting
@@ -261,10 +282,17 @@ class RobotControl:
 
         print(f"[INFO] Finished setting heading to {target}")
     
-    def get_heading(self) -> int:
+    def get_heading(self, sensor="pix_compass") -> int:
         """Returns a compass heading. This may be helpful if you need
         to save a heading to re-orient the sub later"""
-        return self.compass
+        if sensor == "pix_compass":
+            return self.compass
+        elif sensor == "vectornav_imu":
+            return self.vectornav_yaw
+        elif sensor == "fog":
+            return self.fog
+        else:
+            print("[WARN] Unknown sensor specified")
 
     def setHeadingOld(self, target: int):
         """
