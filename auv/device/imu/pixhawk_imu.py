@@ -7,15 +7,15 @@ import math
 from auv.utils import deviceHelper
 from transforms3d.euler import quat2euler
 
-rospy.init_node("vectornav_api_node")
+rospy.init_node("pixhawk_api_node")
 
-class VN100:
+class PixHawk:
     def __init__(self):
         """Initializes a connection to the /vectornav/IMU ros node. There's
         unused infrastructure for a serial connection, seen in vn100_serial.py.
         I tore down the serial infrastructure because having multiple connections
         to the IMU might cause issues with properly getting the data."""
-        self.vectornav_subscriber = rospy.Subscriber("/vectornav/IMU", sensor_msgs.msg.Imu, self.get_orientation)
+        self.vectornav_subscriber = rospy.Subscriber("/auv/devices/imu", sensor_msgs.msg.Imu, self.get_orientation)
         self.rate = rospy.Rate(1)
         while not rospy.is_shutdown():
             self.rate.sleep()
@@ -36,7 +36,7 @@ class VN100:
     
     
 if __name__ == "__main__":
-    sensor = VN100()
+    sensor = PixHawk()
     init_time = time.time()
     # Print angles every second
     if time.time() - init_time > 1:
