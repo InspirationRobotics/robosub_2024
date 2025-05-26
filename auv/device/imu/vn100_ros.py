@@ -25,7 +25,6 @@ class VN100:
         # Get quaternion orientation
         quat_orient = msg.orientation
         orientation_list = [quat_orient.x, quat_orient.y, quat_orient.z, quat_orient.w]
-        print(orientation_list)
         # Parse to euler angles, convert to degrees
         (roll, pitch, yaw) = quat2euler(orientation_list)
         for angle in (roll, pitch, yaw):
