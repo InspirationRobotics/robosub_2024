@@ -39,7 +39,7 @@ if __name__ == "__main__":
     init_time = time.time()
     while True:
         # Print angles every second
-        if time.time() - init_time > 1:
+        if time.time() - init_time > 1 and hasattr(sensor, "roll"):
             init_time = time.time()
             print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
 
