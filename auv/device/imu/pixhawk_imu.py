@@ -29,6 +29,7 @@ class PixHawk:
         (roll, pitch, yaw) = quat2euler(orientation_list)
         for angle in (roll, pitch, yaw):
             angle = math.degrees(angle) % 360
+        print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
 
 
 
