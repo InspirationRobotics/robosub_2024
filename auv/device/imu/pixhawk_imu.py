@@ -37,10 +37,11 @@ class PixHawk:
 if __name__ == "__main__":
     sensor = PixHawk()
     init_time = time.time()
-    # Print angles every second
-    if time.time() - init_time > 1:
-        init_time = time.time()
-        print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
+    while True:
+        # Print angles every second
+        if time.time() - init_time > 1:
+            init_time = time.time()
+            print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
 
 
 
