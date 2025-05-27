@@ -16,7 +16,7 @@ class VN100:
         I tore down the serial infrastructure because having multiple connections
         to the IMU might cause issues with properly getting the data."""
         self.vectornav_subscriber = rospy.Subscriber("/vectornav/IMU", sensor_msgs.msg.Imu, self.get_orientation)
-        self.rate = rospy.Rate(1)
+        self.rate = rospy.Rate(40)
         while not rospy.is_shutdown():
             self.rate.sleep()
     
