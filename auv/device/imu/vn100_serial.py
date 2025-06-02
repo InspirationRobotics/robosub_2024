@@ -39,21 +39,45 @@ class VN100:
     
     
 if __name__ == "__main__":
+    import time
+    import csv
+    from datetime import datetime
     sensor = VN100()
-    # Print utilizing a time.sleep() statement to prevent
-    # overwhelming with two while loops
-    while True:
-        try:
-            time.sleep(0.5)
-            print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
-        except AttributeError:
-            print("No data yet")
-        except ValueError:
-            print("Bad data")
-        except Exception:
-            print("Generic exception caught")
-        except KeyboardInterrupt:
-            print("Exiting")
-            exit()
+
+    # Create a timestamped filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"data_{timestamp}.csv"
+
+    data = []
+    print("Recording... Press Ctrl+C to stop.")
+
+    try:
+        while True:
+            time.sleep(1 / 50)  # 50 Hz
+            data.append({
+                "timestamp": datetime.now().isoformat(),
+                "Roll": sensor.roll,
+                "Pitch": sensor.pitch,
+                "Yaw": sensor.yaw
+            })
+            print(f"Roll: {sensor.roll:.2f}\nPitch: {sensor.pitch:.2f}\nYaw: {sensor.yaw:.2f}\n")
+
+    except KeyboardInterrupt:
+        print("Exiting and saving data to CSV...")
+        fieldnames = ["timestamp", "Roll", "Pitch", "Yaw"]
+
+        with open(filename, mode="w", newline="") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(data)
+
+        print(f"Data saved to {filename}")
+
+    except AttributeError:
+        print("No data yet")
+    except ValueError:
+        print("Bad data")
+    except Exception as e:
+        print(f"Generic exception caught: {e}")
 
 
