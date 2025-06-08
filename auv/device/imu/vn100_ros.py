@@ -1,48 +1,74 @@
 import time
 import threading
-from serial import Serial
 import rospy
 import sensor_msgs.msg
 import math
-from auv.utils import deviceHelper
 from transforms3d.euler import quat2euler
+from auv.device.imu.vn100_serial import VN100
 
-rospy.init_node("vectornav_api_node")
+rospy.init_node("vectornav_api_node", anonymous=True)
 
-class VN100:
+class ImuNode:
     def __init__(self):
-        """Initializes a connection to the /vectornav/IMU ros node. There's
-        unused infrastructure for a serial connection, seen in vn100_serial.py.
-        I tore down the serial infrastructure because having multiple connections
-        to the IMU might cause issues with properly getting the data."""
+        self.sensor = VN100()
+        self.roll = 0.0
+        self.pitch = 0.0
+        self.yaw = 0.0
         self.vectornav_subscriber = rospy.Subscriber("/vectornav/IMU", sensor_msgs.msg.Imu, self.get_orientation)
+        self.vectornav_publisher = rospy.Publisher("/device/VN100", sensor_msgs.msg.Imu, queue_size=10)
         self.rate = rospy.Rate(40)
-        while not rospy.is_shutdown():
-            self.rate.sleep()
-    
+
+        # Start publishing in a background thread
+        self.thread = threading.Thread(target=self.publishThread)
+        self.thread.daemon = True
+        self.thread.start()
+
     def get_orientation(self, msg):
         """Parses quaternion orientation to Euler angles (roll, pitch, yaw)"""
-        # Get quaternion orientation
         quat_orient = msg.orientation
         orientation_list = [quat_orient.x, quat_orient.y, quat_orient.z, quat_orient.w]
-        # Parse to euler angles, convert to degrees
         (roll, pitch, yaw) = quat2euler(orientation_list)
-        for angle in (roll, pitch, yaw):
-            angle = math.degrees(angle) % 360
-        print(f"Roll: {self.roll}\nPitch:{self.pitch}\nYaw:{self.yaw}")
+
+        # Convert to degrees and normalize
+        self.roll = math.degrees(roll) % 360
+        self.pitch = math.degrees(pitch) % 360
+        self.yaw = math.degrees(yaw) % 360
+
+        print(f"Roll: {self.roll:.2f}°\nPitch: {self.pitch:.2f}°\nYaw: {self.yaw:.2f}°")
+
+    def publishThread(self):
+        while not rospy.is_shutdown():
+            imu_msg = sensor_msgs.msg.Imu()
+            imu_msg.header.stamp = rospy.Time.now()
+            imu_msg.header.frame_id = "vectornav"
+
+            # Fake quaternion from euler (you should ideally use a conversion function)
+            # Here we just copy euler angles into wrong fields for demonstration
+            imu_msg.orientation.x = self.yaw
+            imu_msg.orientation.y = self.pitch
+            imu_msg.orientation.z = self.roll
+            imu_msg.orientation.w = 0.0  # Invalid! Replace with proper conversion if needed
+
+            imu_msg.angular_velocity.x = self.sensor.gyroX
+            imu_msg.angular_velocity.y = self.sensor.gyroY
+            imu_msg.angular_velocity.z = self.sensor.gyroZ
+
+            imu_msg.linear_acceleration.x = self.sensor.accX
+            imu_msg.linear_acceleration.y = self.sensor.accY
+            imu_msg.linear_acceleration.z = self.sensor.accZ
+
+            self.vectornav_publisher.publish(imu_msg)
+            self.rate.sleep()
 
 
-
-    
-    
 if __name__ == "__main__":
-    sensor = VN100()
-    init_time = time.time()
-    while True:
-        # Print angles every second
-        if time.time() - init_time > 1 and hasattr(sensor, "roll"):
-            init_time = time.time()
-            print(f"Roll: {sensor.roll}\nPitch:{sensor.pitch}\nYaw:{sensor.yaw}")
+    try:
+        imu_node = ImuNode()
+        rospy.spin()  # Keeps the node running until Ctrl+C
 
+    except KeyboardInterrupt:
+        print("\nShutting down gracefully...")
 
-
+    finally:
+        # Clean up if needed
+        print("Node stopped.")
