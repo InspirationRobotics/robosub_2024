@@ -1,10 +1,10 @@
 import time
 import threading
 from serial import Serial
-#from auv.utils import deviceHelper
+from auv.utils import deviceHelper
 
 class VN100:
-    def __init__(self,port:str = ""): # deviceHelper.dataFromConfig("vectornav")
+    def __init__(self,port:str = deviceHelper.dataFromConfig("vectornav")): # deviceHelper.dataFromConfig("vectornav")
         """Makes a serial connection to the VN100 IMU utilizing deviceHelper and starts reading"""
         self.__port = port
         self.__bps = 115200
