@@ -44,10 +44,10 @@ class VN100:
                 data_list = data_line.split(',')
 
                 # debug
-                # print(data_list, len(data_list))
+                # print(data_list)
         
                 # Populate yaw, pitch, roll
-                self.yaw, self.pitch, self.roll = (float(data_list[1]) + 90) % 360, float(data_list[2]), float(data_list[3])
+                self.yaw, self.pitch, self.roll = (float(data_list[1]) + 90) % 360, float(data_list[3]), float(data_list[2])
                 self.accX, self.accY, self.accZ = float(data_list[4]) , float(data_list[5]), float(data_list[6])
                 self.gyroX, self.gyroY, self.gyroZ = float(data_list[7]) , float(data_list[8]), float(data_list[9])
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     import time
     import csv
     from datetime import datetime
-    sensor = VN100(port="COM7")
+    sensor = VN100()
 
     # Create a timestamped filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -79,15 +79,18 @@ if __name__ == "__main__":
                 "timestamp": datetime.now().isoformat(),
                 "Roll": sensor.roll,
                 "Pitch": sensor.pitch,
-                "Yaw": sensor.yaw
+                "Yaw": sensor.yaw,
+                "AccX": sensor.accX,
+                "AccY": sensor.accY,
+                "AccZ": sensor.accZ
             })
             print(f"YPR: ({sensor.yaw:.2f}, {sensor.pitch:.2f}, {sensor.roll:.2f})")
-            print(f"Acc: ({sensor.accX:.2f}, {sensor.accY:.2f}, {sensor.accZ:.2f})")
-            print(f"Gyro: ({sensor.gyroX:.2f}, {sensor.gyroY:.2f}, {sensor.gyroZ:.2f})")
+            #print(f"Acc: ({sensor.accX:.2f}, {sensor.accY:.2f}, {sensor.accZ:.2f})")
+            #print(f"Gyro: ({sensor.gyroX:.2f}, {sensor.gyroY:.2f}, {sensor.gyroZ:.2f})")
 
     except KeyboardInterrupt:
         print("Exiting and saving data to CSV...")
-        fieldnames = ["timestamp", "Roll", "Pitch", "Yaw"]
+        fieldnames = ["timestamp", "Roll", "Pitch", "Yaw", "AccX","AccY","AccZ"]
 
         with open(filename, mode="w", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
