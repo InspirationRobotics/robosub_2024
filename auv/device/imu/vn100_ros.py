@@ -15,7 +15,7 @@ class ImuNode:
         self.pitch = 0.0
         self.yaw = 0.0
         self.vectornav_subscriber = rospy.Subscriber("/vectornav/IMU", sensor_msgs.msg.Imu, self.get_orientation)
-        self.vectornav_publisher = rospy.Publisher("/device/VN100", sensor_msgs.msg.Imu, queue_size=10)
+        self.vectornav_publisher = rospy.Publisher("/auv/device/VN100", sensor_msgs.msg.Imu, queue_size=10)
         self.rate = rospy.Rate(40)
 
         # Start publishing in a background thread

@@ -35,6 +35,7 @@ class VN100:
 
         # Do a while statement to make the loop run forever
         while True:
+            time.sleep(1/100)
             try:
                 # print("thread run")
                 # Read data
@@ -74,7 +75,7 @@ if __name__ == "__main__":
 
     try:
         while True:
-            time.sleep(1 / 50)  # 50 Hz
+            # time.sleep(1 / 50)  # 50 Hz
             data.append({
                 "timestamp": datetime.now().isoformat(),
                 "Roll": sensor.roll,
