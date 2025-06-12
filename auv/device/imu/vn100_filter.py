@@ -6,6 +6,7 @@ from scipy.signal import iirdesign, sosfiltfilt
 from collections import deque
 import csv
 from datetime import datetime
+from auv.utils import deviceHelper
 
 # === FILTER SETTINGS (match MATLAB) ===
 SAMPLE_RATE = 40      # Hz
@@ -21,7 +22,7 @@ ws = FSB / (SAMPLE_RATE / 2)
 sos = iirdesign(wp, ws, GPASS, GSTOP, ftype='butter', output='sos')
 
 class VN100:
-    def _init_(self, port: str = "COM3"):
+    def _init_(self, port: str = deviceHelper.dataFromConfig("vectornav")):
         self.__port = port
         self.__bps = 115200
         self._ser = Serial(port=self.port, baudrate=self._bps, timeout=1)
