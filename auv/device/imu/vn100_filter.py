@@ -25,7 +25,7 @@ class VN100:
     def __init__(self, port: str = deviceHelper.dataFromConfig("vectornav")):
         self.__port = port
         self.__bps = 115200
-        self._ser = Serial(port=self.port, baudrate=self._bps, timeout=1)
+        self.__ser = Serial(port=self.__port, baudrate=self.__bps, timeout=1)
 
         self.yaw = 0.0
         self.pitch = 0.0
@@ -86,7 +86,7 @@ class VN100:
             else:
                 return self.yaw, self.pitch, self.roll
 
-if __name__ == "_main_":
+if __name__ == "__main__":
     sensor = VN100()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
