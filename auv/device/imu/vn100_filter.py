@@ -85,7 +85,7 @@ class VN100:
             else:
                 return self.yaw, self.pitch, self.roll
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     sensor = VN100()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
