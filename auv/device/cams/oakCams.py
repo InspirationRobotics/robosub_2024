@@ -314,6 +314,36 @@ class oakCamera:
         self.kill() # Kill all other models/streams than may be running
         self.start(modelName) # Start the model
 
+    def debugRunner(self):
+        qcam = self.device.getOutputQueue(name="rgb", maxSize=4, blocking=False) # Get the RGB camera output (maxSize == 4 represents the largest queue possible)
+        #   If there is an actual model to be run, then get the device's neural network output queue
+
+
+        while not self.rospy.is_shutdown() and not self.isKilled:
+            try:
+                frame1 = qcam.get().getCvFrame()
+                # Add "DEBUG" text
+                cv2.putText(
+                    frame1,
+                    "DEBUG",                  # text
+                    (500, 500),                 # position (x, y)
+                    cv2.FONT_HERSHEY_SIMPLEX,  # font
+                    1.0,                      # font scale
+                    (0, 0, 255),              # color (B, G, R) — red
+                    5,                        # thickness
+                    cv2.LINE_AA               # line type
+                )
+                # Publish the frame that was used as a ROS Image in the correct topic
+                msg = self.br.cv2_to_imgmsg(frame1)
+                self.pubFrame.publish(msg)
+
+                # If three seconds have elapsed since a new CV output frame was received, then move to camera view (simulated webcam)
+                if time.time() - self.time > 3:  
+                    self.sendFakeFrame(frame1)
+            except:
+                pass
+
+            self.loop_rate.sleep()
     def runner(self):
         """
         Deals with running a ML (neural network) model on the OAK-D data. This is what actually retrieves the results from the data processing by the model.
@@ -323,6 +353,7 @@ class oakCamera:
         # If there is an actual model to be run, then get the device's neural network output queue
         if self.modelPath != "raw":
             qDet = self.device.getOutputQueue(name="nn", maxSize=4, blocking=False)
+            frame1 = qcam.get().getCvFrame()
 
         while not self.rospy.is_shutdown() and not self.isKilled:
             try:
@@ -394,7 +425,7 @@ class oakCamera:
         self.rospy.loginfo(f"Killed Camera {str(self.id)} Stream...")
         pass  # todo
 
-    def start(self, modelPath="raw"):
+    def start(self, modelPath="raw",debug:bool=True):
         """
         For starting a model to run on the OAK-D data. This function creates the Depth AI pipeline based on the model path, 
         and begins a thread to run the model.
@@ -407,6 +438,12 @@ class oakCamera:
         self.createPipeline(self.modelSelect(modelPath)) # Create the pipeline based on the model path
         self.isKilled = False
         self.rospy.loginfo(f"Starting Camera {str(self.id)} Stream...")
-        self.oakThread = threading.Timer(0, self.runner)
-        self.oakThread.daemon = True
-        self.oakThread.start()
+        if not debug:
+            self.oakThread = threading.Timer(0, self.runner)
+            self.oakThread.daemon = True
+            self.oakThread.start()
+        else:
+            self.oakThread = threading.Timer(0, self.debugRunner)
+            self.oakThread.daemon = True
+            self.oakThread.start()
+
