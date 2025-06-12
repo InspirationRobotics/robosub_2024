@@ -22,7 +22,7 @@ ws = FSB / (SAMPLE_RATE / 2)
 sos = iirdesign(wp, ws, GPASS, GSTOP, ftype='butter', output='sos')
 
 class VN100:
-    def _init_(self, port: str = deviceHelper.dataFromConfig("vectornav")):
+    def __init__(self, port: str = deviceHelper.dataFromConfig("vectornav")):
         self.__port = port
         self.__bps = 115200
         self._ser = Serial(port=self.port, baudrate=self._bps, timeout=1)
@@ -44,7 +44,7 @@ class VN100:
 
         self.read_thread = threading.Thread(target=self.read, daemon=True)
         self.read_thread.start()
-        time.sleep(2) # Give buffer time to fill
+        time.sleep(5) # Give buffer time to fill
 
     def read(self):
         while True:
