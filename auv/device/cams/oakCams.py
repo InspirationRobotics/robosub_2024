@@ -425,7 +425,7 @@ class oakCamera:
         self.rospy.loginfo(f"Killed Camera {str(self.id)} Stream...")
         pass  # todo
 
-    def start(self, modelPath="raw",debug:bool=True):
+    def start(self, modelPath="raw",debug:bool=False):
         """
         For starting a model to run on the OAK-D data. This function creates the Depth AI pipeline based on the model path, 
         and begins a thread to run the model.
