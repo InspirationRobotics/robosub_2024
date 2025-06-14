@@ -218,6 +218,21 @@ class RobotControl:
         if vertical!=0: self.set_relative_depth(vertical)
         self.pub_thrusters.publish(pwm)
 
+    def movementWithHeadingControl(self, desired_heading, movement_type, power = 2, time = 5):
+        duration = time.time()
+        self.PIDs["yaw"].reset()
+        self.PIDs["yaw"].setpoint = desired_heading
+        while((time.time() - duration) < time):
+            self.current_heading = self.get_heading(sensor = "vectornav_imu")
+            if movement_type == "forward":
+                self.power = power
+                self.movement(forward = power, yaw = self.PIDs["yaw"](self.current_heading))
+            elif movement_type == "lateral":
+                self.power = power
+                self.movement(lateral = power, yaw = self.PIDs["yaw"](self.current_heading))
+            
+        
+    
     def set_heading(self, target: int, heading_sensor="pix_compass"):
         """
         Yaw to the target heading; target heading is absolute (not relative)
