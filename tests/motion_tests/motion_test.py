@@ -15,7 +15,7 @@ rc.set_depth(0.5)
 #first_time = time.time()
 
 time.sleep(3.0)
-current_heading = rc.get_heading()
+current_heading = rc.get_heading("vectornav_imu")
 #rc.set_heading(current_heading + 90)
 print(current_heading)
 
