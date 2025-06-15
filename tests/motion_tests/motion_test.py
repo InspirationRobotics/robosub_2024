@@ -15,6 +15,8 @@ rc.set_depth(0.5)
 #first_time = time.time()
 
 time.sleep(3.0)
+current_heading = rc.get_heading()
+rc.set_heading(current_heading + 90)
 
 #first_time = time.time()
 #while time.time() - first_time < 5:
@@ -41,9 +43,9 @@ time.sleep(3.0)
 #while time.time() - first_time < 1:
     #rc.movement(lateral = -2)
 
-first_time = time.time()
-while time.time() - first_time < 1.1:
-    rc.movement(yaw = 2)
+# first_time = time.time()
+# while time.time() - first_time < 1.1:
+#     rc.movement(yaw = 2)
 
 #first_time = time.time()
 #while time.time() - first_time < 2:
