@@ -14,14 +14,15 @@ rc.set_depth(0.5)
 # rc.set_mode("MANUAL")
 #first_time = time.time()
 
+time.sleep(3.0)
 
-first_time = time.time()
-while time.time() - first_time < 3:
-    rc.movement(forward = 2)
+#first_time = time.time()
+#while time.time() - first_time < 5:
+   # rc.movement(forward = 2)
 
-first_time = time.time()
-while time.time() - first_time < 3:
-    rc.movement(forward = -2)
+#first_time = time.time()
+#while time.time() - first_time < 1:
+    #rc.movement(forward = -2)
 
 #rc.set_relative_depth(0.1)
 
@@ -29,25 +30,38 @@ while time.time() - first_time < 3:
 
 #rc.set_relative_depth(-0.1)
 
-time.sleep(5)
+#time.sleep(5)
 # rc.button_press(256)
 
-first_time = time.time()
-while time.time() - first_time < 3:
-    rc.movement(lateral = 2)
+#first_time = time.time()
+#while time.time() - first_time < 3:
+    #rc.movement(lateral = -2)
+
+#first_time = time.time()
+#while time.time() - first_time < 1:
+    #rc.movement(lateral = -2)
 
 first_time = time.time()
-while time.time() - first_time < 3:
-    rc.movement(lateral = -2)
-
-first_time = time.time()
-while time.time() - first_time < 3:
+while time.time() - first_time < 1.1:
     rc.movement(yaw = 2)
 
-first_time = time.time()
-while time.time() - first_time < 3:
-    rc.movement(yaw = -2)
+#first_time = time.time()
+#while time.time() - first_time < 2:
+     #rc.movement(yaw = -2)
 
-time.sleep(1.0)
+#first_time = time.time()
+#while time.time() - first_time < 3:
+     #rc.movement(forward = 2)
+
+#first_time = time.time()
+#while time.time() - first_time < 2:
+     #rc.movement(forward = 2)
+
+#first_time = time.time()
+#while time.time() - first_time < 15:
+    #rc.movement(forward = 2)
+
+#time.sleep(1.0)
 
 disarm.disarm()
+
