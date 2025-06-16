@@ -17,18 +17,18 @@ rc.set_depth(0.5)
 time.sleep(3.0)
 
 first_time = time.time()
-while time.time() - first_time < 18:
+while time.time() - first_time < 20:
    rc.movement(forward = 2)
 
 first_time = time.time()
-while time.time() - first_time < 3:
+while time.time() - first_time < 5:
     rc.movement(lateral = -2)
 
 first_time = time.time()
 while time.time() - first_time < 18:
    rc.movement(forward = -2)
 
-   
+
 #current_heading = rc.get_heading("vectornav_imu")
 #print(current_heading)
 #rc.set_heading(current_heading + 90, "vectornav_imu")
