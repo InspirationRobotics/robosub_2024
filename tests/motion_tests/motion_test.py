@@ -21,7 +21,7 @@ while time.time() - first_time < 20:
    rc.movement(forward = 2)
 
 first_time = time.time()
-while time.time() - first_time < 5:
+while time.time() - first_time < 4:
     rc.movement(lateral = -2)
 
 first_time = time.time()
