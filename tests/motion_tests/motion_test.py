@@ -8,6 +8,11 @@ rospy.init_node("MotionTest", anonymous=True)
 rc = robot_control.RobotControl(enable_dvl=False)
 
 time.sleep(60.0)
+initial_time = time.time()
+while( initial_time - time.time < 57.0):
+    print(initial_time - time.time())
+print("Starting Now...")
+    
 arm.arm()
 time.sleep(3.0)
 
