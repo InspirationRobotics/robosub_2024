@@ -10,10 +10,10 @@ rc = robot_control.RobotControl(enable_dvl=False)
 arm.arm()
 time.sleep(3.0)
 
-rc.set_depth(0.5)
+rc.set_depth(0.8)
 # rc.set_mode("MANUAL")
 #first_time = time.time()
-time.sleep(3.0)
+time.sleep(5.0)
 
 first_time = time.time()
 while time.time() - first_time < 21:
