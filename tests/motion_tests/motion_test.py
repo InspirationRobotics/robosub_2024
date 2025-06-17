@@ -77,6 +77,6 @@ while time.time() - first_time < 18:
     #rc.movement(forward = 2)
 
 #time.sleep(1.0)
-
+rc.set_depth(0.0)
 disarm.disarm()
 
