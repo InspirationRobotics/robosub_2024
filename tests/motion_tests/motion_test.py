@@ -10,21 +10,21 @@ rc = robot_control.RobotControl(enable_dvl=False)
 arm.arm()
 time.sleep(3.0)
 
-rc.set_depth(0.8)
+rc.set_depth(0.5)
 # rc.set_mode("MANUAL")
 #first_time = time.time()
 time.sleep(3.0)
 
 first_time = time.time()
-while time.time() - first_time < 21:
+while time.time() - first_time < 20:
    rc.movement(forward = 2)
 
 first_time = time.time()
-while time.time() - first_time < 13:
-    rc.movement(lateral = -1)
+while time.time() - first_time < 2.5:
+    rc.movement(lateral = -2)
 
 first_time = time.time()
-while time.time() - first_time < 23:
+while time.time() - first_time < 18:
    rc.movement(forward = -2)
 
 
