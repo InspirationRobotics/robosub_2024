@@ -34,7 +34,7 @@ while time.time() - first_time < 6:
     rc.movement(forward =-2)
 
 first_time = time.time()
-while time.time() - first_time < 3:
+while time.time() - first_time < 5:
     rc.movement(lateral = 2)
 
 first_time = time.time()
