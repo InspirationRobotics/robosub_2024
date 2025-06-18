@@ -22,7 +22,7 @@ rc.set_depth(0.8)
 time.sleep(5.0)
 
 first_time = time.time()
-while time.time() - first_time < 27:
+while time.time() - first_time < 26:
    rc.movement(forward = 2)
 
 first_time = time.time()
