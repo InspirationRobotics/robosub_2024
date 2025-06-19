@@ -23,15 +23,15 @@ time.sleep(5.0)
 
 #current_heading = rc.get_heading()
 #target_heading = current_heading + 90
-rc.set_heading(90, "vectornav_imu")
+#rc.set_heading(90, "vectornav_imu")
 
 #first_time = time.time()
 #while time.time() - first_time < 26:
  #  rc.movement(forward = 2)
 
-#first_time = time.time()
-#while time.time() - first_time < 4.5:
- #   rc.movement(lateral = -2)
+first_time = time.time()
+while time.time() - first_time < 4.5:
+    rc.movement(lateral = -2)
 
 #first_time = time.time()
 #while time.time() - first_time < 6:
