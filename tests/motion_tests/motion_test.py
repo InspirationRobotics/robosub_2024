@@ -9,7 +9,7 @@ rc = robot_control.RobotControl(enable_dvl=False)
 
 arm.arm()
 time.sleep(3.0)
-print("This is the start")
+print("[INFO}This is the start")
 rc.set_depth(0.8)
 # rc.set_mode("MANUAL")
 #first_time = time.time()
@@ -27,7 +27,7 @@ if rc.vectornav_yaw is None:
 else:
     rc.set_heading(90, "vectornav_imu")
 
-
+print("[INFO]rc.setHeading function executed")
 #current_heading = rc.get_heading()
 #target_heading = current_heading + 90
 #rc.set_heading(90, "vectornav_imu")
