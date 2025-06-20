@@ -81,7 +81,7 @@ class RobotControl:
         actual value. Based on this error, PIDs generate control signals to adjust the robot's actuators (in this case thrusters) to 
         minimize the desired setpoint. 
 
-        Video: https://www.youtube.com/watch?v=wkfEZmsQqiA
+        Video:  
 
         These definitions "tune" the PID controller for the necessities of the sub -- Proportional is tuned up high, which means greater 
         response to the current error but possible overshooting and oscillation
@@ -218,21 +218,6 @@ class RobotControl:
         if vertical!=0: self.set_relative_depth(vertical)
         self.pub_thrusters.publish(pwm)
 
-    def movementWithHeadingControl(self, desired_heading, movement_type, power = 2, time = 5):
-        duration = time.time()
-        self.PIDs["yaw"].reset()
-        self.PIDs["yaw"].setpoint = desired_heading
-        while((time.time() - duration) < time):
-            self.current_heading = self.get_heading(sensor = "vectornav_imu")
-            if movement_type == "forward":
-                self.power = power
-                self.movement(forward = power, yaw = self.PIDs["yaw"](self.current_heading))
-            elif movement_type == "lateral":
-                self.power = power
-                self.movement(lateral = power, yaw = self.PIDs["yaw"](self.current_heading))
-            
-        
-    
     def set_heading(self, target: int, heading_sensor="pix_compass"):
         """
         Yaw to the target heading; target heading is absolute (not relative)
@@ -274,14 +259,14 @@ class RobotControl:
             # Break the function if the error hasn't changed 
             # by 3 degrees over 3 secs - prevents the AUV from getting
             # stuck at an "incorrect" heading
-            if time.time() - time_check > 3:
-                time_check = time.time()
-                if self.prev_error is None:
-                    self.prev_error = error
-                elif abs(error - self.prev_error) < 3:
-                    break
-                else:
-                    self.prev_error = error
+                if time.time() - time_check > 3:
+                    time_check = time.time()
+                    if self.prev_error is None:
+                        self.prev_error = error
+                    elif abs(error - self.prev_error) < 3:
+                        break
+                    else:
+                        self.prev_error = error
 
             # Normalize error to the range -1 to 1 for the PID controller
             output = self.PIDs["yaw"](-error / 180)
