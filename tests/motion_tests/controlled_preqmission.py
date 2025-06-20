@@ -10,12 +10,12 @@ rc = robot_control.RobotControl(enable_dvl=False)
 arm.arm()
 time.sleep(3.0)
 
-rc.set_depth(0.5)
+rc.set_depth(0.8)
 rc.set_heading(target = 0,  heading_sensor="vectornav_imu") # measure the heading during test
 
-rc.movementWithHeadingControl(desired_heading = 0, time = 10.0, movement_type = "forward", power = 3)
-rc.movementWithHeadingControl(desired_heading = 0, time = 3.0, movement_type = "lateral", power = 3)
-rc.movementWithHeadingControl(desired_heading = 0, time = 10.0, movement_type = "forward", power = -3)
+rc.movementWithHeadingControl(desired_heading = 0, time = 20.0, movement_type = "forward", power = 2)
+rc.movementWithHeadingControl(desired_heading = 0, time = 8.0, movement_type = "lateral", power = -1)
+rc.movementWithHeadingControl(desired_heading = 0, time = 18.0, movement_type = "forward", power = -2)
 
 time.sleep(1.0)
 

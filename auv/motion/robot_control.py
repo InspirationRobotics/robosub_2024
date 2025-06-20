@@ -114,10 +114,11 @@ class RobotControl:
         # Wait for the topics to run
         time.sleep(1)
 
-    def get_callback_compass(self,msg):
+    def get_callback_compass(self, msg):
         def _callback_compass(msg):
             """Get the compass heading from /auv/devices/compass topic"""
             self.compass = msg.data
+            print(self.compass)
 
         def _callback_compass_dvl(msg):
             """Get the compass heading from dvl"""
@@ -227,11 +228,9 @@ class RobotControl:
             target (int): Absolute desired heading 
             fog (boolean): Whether to use FOG (True) or compass (False)
         """
-
         # Mod the target to make sure it is between 0 - 359 degrees
         target = (target) % 360
         print(f"[INFO] Setting heading to {target}")
-
         while not rospy.is_shutdown():
             if heading_sensor == "fog":
                 if self.fog == False:
