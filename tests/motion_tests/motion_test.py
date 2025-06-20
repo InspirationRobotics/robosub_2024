@@ -21,6 +21,19 @@ rc.set_depth(0.8)
 #first_time = time.time()
 time.sleep(5.0)
 
+
+# Wait until vectornav yaw is available
+timeout = time.time() + 10  # Wait up to 10 seconds
+while rc.vectornav_yaw is None and time.time() < timeout and not rospy.is_shutdown():
+    print("[WAITING] VectorNav yaw not ready...")
+    time.sleep(0.1)
+
+if rc.vectornav_yaw is None:
+    print("[ERROR] No VectorNav yaw received. Skipping heading control.")
+else:
+    rc.set_heading(90, "vectornav_imu")
+
+
 #current_heading = rc.get_heading()
 #target_heading = current_heading + 90
 #rc.set_heading(90, "vectornav_imu")
@@ -29,9 +42,9 @@ time.sleep(5.0)
 #while time.time() - first_time < 26:
  #  rc.movement(forward = 2)
 
-first_time = time.time()
-while time.time() - first_time < 4.5:
-    rc.movement(lateral = -2)
+#first_time = time.time()
+#while time.time() - first_time < 4.5:
+ #   rc.movement(lateral = -2)
 
 #first_time = time.time()
 #while time.time() - first_time < 6:
