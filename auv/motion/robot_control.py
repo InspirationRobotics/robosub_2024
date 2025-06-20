@@ -243,7 +243,6 @@ class RobotControl:
             target (int): Absolute desired heading 
             fog (boolean): Whether to use FOG (True) or compass (False)
         """
-	time_check = time.time()
         # Mod the target to make sure it is between 0 - 359 degrees
         target = (target) % 360
         print(f"[INFO] Setting heading to {target}")
