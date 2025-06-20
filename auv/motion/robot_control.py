@@ -232,9 +232,10 @@ class RobotControl:
         target = (target) % 360
         print(f"[INFO] Setting heading to {target}")
         time_check = time.time()
+        self.prev_error = None
         while not rospy.is_shutdown():
             if heading_sensor == "fog":
-                if self.fog == False:
+                if self.fog is None:
                     print("[WARN] FOG not ready")
                     time.sleep(0.5)
                     continue
