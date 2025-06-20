@@ -11,23 +11,23 @@ arm.arm()
 time.sleep(3.0)
 
 rc.set_depth(0.5)
-rc.set_heading(target = 0,  heading_sensor="vectornav_imu") # measure the heading during test
+rc.set_heading(target = 0,  heading_sensor= "vectornav_imu") # measure the heading during test
 
 # unit test each rotation and forward first, comment each out
-first_time = time.time()
-while time.time() - first_time < 2:
-    rc.movement(forward = 4)
+#first_time = time.time()
+#while time.time() - first_time < 2:
+ #   rc.movement(forward = 4)
 
-time.sleep(1.0)
-first_time = time.time()
-while time.time() - first_time < 2:
-    rc.movement(yaw = -4)
+#time.sleep(1.0)
+#first_time = time.time()
+#while time.time() - first_time < 2:
+ #   rc.movement(yaw = -4)
     
-time.sleep(1.0)
-first_time = time.time()
-while time.time() - first_time < 2:
-    rc.movement(forward = -4)
+#time.sleep(1.0)
+#first_time = time.time()
+#while time.time() - first_time < 2:
+ #   rc.movement(forward = -4)
 
-time.sleep(1.0)
+#time.sleep(1.0)
 
 disarm.disarm()

@@ -243,11 +243,10 @@ class RobotControl:
             target (int): Absolute desired heading 
             fog (boolean): Whether to use FOG (True) or compass (False)
         """
-
+	time_check = time.time()
         # Mod the target to make sure it is between 0 - 359 degrees
         target = (target) % 360
         print(f"[INFO] Setting heading to {target}")
-
         while not rospy.is_shutdown():
             if heading_sensor == "fog":
                 if self.fog == False:
@@ -275,14 +274,14 @@ class RobotControl:
             # Break the function if the error hasn't changed 
             # by 3 degrees over 3 secs - prevents the AUV from getting
             # stuck at an "incorrect" heading
-            if time.time() - time_check > 3:
-                time_check = time.time()
-                if self.prev_error is None:
-                    self.prev_error = error
-                elif abs(error - self.prev_error) < 3:
-                    break
-                else:
-                    self.prev_error = error
+            	if time.time() - time_check > 3:
+                	time_check = time.time()
+                	if self.prev_error is None:
+                    		self.prev_error = error
+                	elif abs(error - self.prev_error) < 3:
+                    		break
+                	else:
+                    		self.prev_error = error
 
             # Normalize error to the range -1 to 1 for the PID controller
             output = self.PIDs["yaw"](-error / 180)
