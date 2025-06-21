@@ -17,7 +17,7 @@ time.sleep(5.0)
 
 #1)Roll motion with depth hold test:
 first_time = time.time()
-while time.time() - first_time < 3:
+while time.time() - first_time < 6:
     rc.movement(roll=4)
 
 #2)Yaw control test:
