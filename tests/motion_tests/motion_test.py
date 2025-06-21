@@ -16,9 +16,12 @@ rc.set_depth(0.8)  # Set the depth to 1 meter
 time.sleep(5.0)
 
 #1)Roll motion with depth hold test:
+rc.depth_hold(0.0): # Disable depth hold to allow roll motion
 first_time = time.time()
 while time.time() - first_time < 6:
     rc.movement(roll=5)
+
+rc.depth_hold(0.8)  # Re-enable depth hold at 0.8 meters
 
 #2)Yaw control test:
 ## Wait until vectornav yaw is available
@@ -73,5 +76,6 @@ while time.time() - first_time < 6:
 
 
 print("Reached the end")
+
 rc.set_depth(0.0)
 disarm.disarm()
