@@ -210,8 +210,8 @@ class RobotControl:
         channels[5] = int((lateral * 80) + 1500) if lateral else 1500
 
         # TODO: Implement correct pitch/roll channels w/ QGroundControl
-        channels[6] = int((pitch * 80) + 1500) if pitch else 1500
-        channels[7] = int((roll * 80) + 1500) if roll else 1500
+        channels[0] = int((pitch * 80) + 1500) if pitch else 1500
+        channels[1] = int((roll * 80) + 1500) if roll else 1500
         pwm.channels = channels
 
         # Publish PWMs to /auv/devices/thrusters
