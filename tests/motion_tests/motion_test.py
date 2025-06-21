@@ -67,7 +67,8 @@ while time.time() - first_time < 3:
 
 #rc.set_relative_depth(-0.1)
 
-time.sleep(5)
+#time.sleep(5)
+
 # rc.button_press(256)
 
 
