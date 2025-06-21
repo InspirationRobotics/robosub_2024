@@ -10,15 +10,15 @@ rc = robot_control.RobotControl(enable_dvl=False)
 arm.arm()
 time.sleep(3.0)
 print("[INFO}This is the start")
-rc.set_depth(0.8)
+rc.set_depth(1.0)  # Set the depth to 1 meter
 # rc.set_mode("MANUAL")
 #first_time = time.time()
 time.sleep(5.0)
 
 #1)Roll motion with depth hold test:
 first_time = time.time()
-while time.time() - first_time < 10:
-    rc.movement(roll=2.5)
+while time.time() - first_time < 5:
+    rc.movement(roll=4)
 
 #2)Yaw control test:
 ## Wait until vectornav yaw is available
