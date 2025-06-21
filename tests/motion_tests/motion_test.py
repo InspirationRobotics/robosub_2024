@@ -15,16 +15,21 @@ rc.set_depth(0.8)
 #first_time = time.time()
 time.sleep(5.0)
 
+#1)Roll motion with depth hold test:
+first_time = time.time()
+while time.time() - first_time < 10:
+    rc.movement(roll=2.5)
 
-# Wait until vectornav yaw is available
-timeout = time.time() + 10  # Wait up to 10 second
-rc.set_heading(270, "vectornav_imu")
+#2)Yaw control test:
+## Wait until vectornav yaw is available
+#timeout = time.time() + 10  # Wait up to 10 second
+#rc.set_heading(270, "vectornav_imu")
 
-print("[INFO]rc.setHeading function executed")
-#current_heading = rc.get_heading()
-#target_heading = current_heading + 90
-#rc.set_heading(90, "vectornav_imu")
+#print("[INFO]rc.setHeading function executed")
 
+
+
+#3)Prequal tests:
 #first_time = time.time()
 #while time.time() - first_time < 26:
  #  rc.movement(forward = 2)
@@ -46,10 +51,6 @@ print("[INFO]rc.setHeading function executed")
  #  rc.movement(forward = -2)
 
 
-#current_heading = rc.get_heading("vectornav_imu")
-#print(current_heading)
-#rc.set_heading(current_heading + 90, "vectornav_imu")
-
 
 
 #first_time = time.time()
@@ -69,25 +70,7 @@ print("[INFO]rc.setHeading function executed")
 time.sleep(5)
 # rc.button_press(256)
 
-#first_time = time.time()
-#while time.time() - first_time < 3:
-    #rc.movement(lateral = 2)
 
-#first_time = time.time()
-#while time.time() - first_time < 3:
-    #rc.movement(lateral = -2)
-
-#first_time = time.time()
-#while time.time() - first_time < 3:
-   # rc.movement(yaw = 2)
-
-#first_time = time.time()
-#while time.time() - first_time < 3:
-    #rc.movement(yaw = -2)
-
-time.sleep(1.0)
-
-#time.sleep(1.0)
 print("Reached the end")
 rc.set_depth(0.0)
 disarm.disarm()
