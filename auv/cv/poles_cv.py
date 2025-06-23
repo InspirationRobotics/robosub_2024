@@ -134,3 +134,32 @@ if __name__ == "__main__":
 
     cap.release()
     cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    import cv2
+
+    cv = CV()
+    cap = cv2.VideoCapture(cv.camera)
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        poles, mask = cv.detect_red_poles(frame)
+        movement = cv.movement_calculation(poles)
+
+        # Draw detections on the frame
+        for (x, y, w, h) in poles:
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+
+        cv2.imshow("Detected Poles", frame)
+        cv2.imshow("Red Mask", mask)
+
+        print(f"Movement Command: {movement}")
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
