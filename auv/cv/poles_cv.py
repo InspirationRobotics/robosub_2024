@@ -4,7 +4,7 @@ import time
 import os
 
 class CV:
-    camera = "/auv/camera/videoUSBRaw0" 
+    camera = "/Users/avikaprasad/Downloads/poles_test_2.mp4" 
 
     def __init__(self, **config):
         self.shape = (640, 480)
@@ -44,6 +44,9 @@ class CV:
                 aspect_ratio = h / float(w)
                 if aspect_ratio > 2.5:  # Likely a vertical pole
                     red_poles.append((x, y, w, h))
+
+        if red_poles:
+            print("[DEBUG] ✅ Successfully detected red pole(s)!")
 
         return red_poles, red_mask
 
@@ -102,3 +105,32 @@ class CV:
             "vertical": vertical,
             "end": False  # You could end after N slalom passes if desired
         }, visualized_frame
+
+if __name__ == "__main__":
+    import cv2
+
+    cv = CV()
+    cap = cv2.VideoCapture(cv.camera)
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        poles, mask = cv.detect_red_poles(frame)
+        movement = cv.movement_calculation(poles)
+
+        # Draw detections on the frame
+        for (x, y, w, h) in poles:
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+
+        cv2.imshow("Detected Poles", frame)
+        cv2.imshow("Red Mask", mask)
+
+        print(f"Movement Command: {movement}")
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
