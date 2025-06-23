@@ -4,7 +4,8 @@ import time
 import os
 
 class CV:
-    camera = "/Users/avikaprasad/Downloads/poles_test_2.mp4"  # Change as needed
+    # camera = "/Users/avikaprasad/Downloads/poles_test_2.mp4"  # Change as needed
+    camera = "/auv/camera/videoUSBRaw0"
 
     def __init__(self, target="Left", **config):
         self.shape = (640, 480)
