@@ -98,7 +98,7 @@ class CV:
         lateral = 0
         yaw = 0
 
-        desired_offset = 90  # *** TUNE THIS VALUE ***
+        desired_offset = 120  # *** TUNE THIS VALUE ***
 
         if red_center is not None and white_center is not None:
             center = (red_center + white_center) / 2
@@ -107,10 +107,10 @@ class CV:
             right_thresh = frame_width * 0.75
 
             if center < left_thresh:
-                yaw = 0.4
+                yaw = 1.0
                 print("[INFO] Midpoint left → veer right")
             elif center > right_thresh:
-                yaw = -0.4
+                yaw = -1.0
                 print("[INFO] Midpoint right → veer left")
             else:
                 yaw = 0
@@ -125,10 +125,10 @@ class CV:
                 target_pos = red_center - desired_offset   # Keep red on right, sub on left
 
             if target_pos < self.x_midpoint - self.tolerance:
-                yaw = 0.4
+                yaw = 1.0
                 print(f"[INFO] Red+offset left → veer right (side: {self.side})")
             elif target_pos > self.x_midpoint + self.tolerance:
-                yaw = -0.4
+                yaw = -1.0
                 print(f"[INFO] Red+offset right → veer left (side: {self.side})")
             else:
                 yaw = 0
@@ -156,7 +156,7 @@ class CV:
     def run(self, raw_frame, target, detections):
         red_poles, white_poles, mask_red, mask_white, enhanced = self.detect_poles(raw_frame)
         red_center, white_center = self.get_main_pole_centers(red_poles, white_poles)
-        offset_for_line = 60 if red_center is not None and white_center is None else None
+        offset_for_line = 120 if red_center is not None and white_center is None else None
         frame_drawn = self.draw_poles(
             enhanced.copy(),
             red_poles,
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     # Use side="left" or "right" based on the GATE decision
     cv = CV(side="left")  # Change to "right" if gate chooses that path
     cap = cv2.VideoCapture(cv.camera)
-    desired_offset = 60  # <-- TUNE THIS as needed!
+    desired_offset = 120  # <-- TUNE THIS as needed!
 
     while cap.isOpened():
         ret, frame = cap.read()
