@@ -142,10 +142,10 @@ class CV:
         else:
             forward = 0
             if self.last_seen_side == "left":
-                yaw = 0.5
+                yaw = 1
                 print("[INFO] Lost poles, last left → spin CW")
             elif self.last_seen_side == "right":
-                yaw = -0.5
+                yaw = -1
                 print("[INFO] Lost poles, last right → spin CCW")
             else:
                 yaw = 0
