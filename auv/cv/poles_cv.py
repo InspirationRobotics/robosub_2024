@@ -4,7 +4,8 @@ import time
 import os
 
 class CV:
-    camera = "/Users/avikaprasad/Downloads/poles_test_2.mp4"  # Input video
+    #camera = "/Users/avikaprasad/Downloads/poles_test_2.mp4"  # Input video
+    camera = "/auv/camera/videoUSBRaw0"  # Camera stream for AUV
 
     def __init__(self, side="left", **config):
         self.shape = (640, 480)  # Frame size
