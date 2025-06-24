@@ -1,58 +1,57 @@
+"""
+Mission file for red pole slalom
+"""
+
 import json
 import rospy
-import time
-
 from std_msgs.msg import String
-from ..device import cv_handler
-from ..motion import robot_control
-from ..utils import arm, disarm
+
+from ..device import cv_handler  # For running mission-specific CV scripts
+from ..motion import robot_control  # For running the motors on the sub
+from ..utils import disarm
+
 
 class PoleSlalomMission:
+    cv_files = ["pole_cv"]  # Name of your red pole CV script file (no .py extension)
 
-    def __init__(self, side="left", **config):
+    def __init__(self, target=None, **config):
         """
-        Initialize the slalom pole mission class.
-        Args:
-            side: Which side of the red pipe to pass (left or right)
-            config: Mission-specific parameters
+        Initialize the mission class; configure everything needed in the run function.
         """
-        self.cv_files = ["pole_cv"]
         self.config = config
         self.data = {}
         self.next_data = {}
         self.received = False
-        self.side = side
+
         self.robot_control = robot_control.RobotControl()
         self.cv_handler = cv_handler.CVHandler(**self.config)
 
         for file_name in self.cv_files:
             self.cv_handler.start_cv(file_name, self.callback)
-        self.cv_handler.set_target("pole_cv", self.side)
-        print(f"[INFO] Pole Slalom Mission initialized for {self.side} side")
+
+        self.cv_handler.set_target("pole_cv", target)
+        print("[INFO] Pole Slalom Mission Init")
 
     def callback(self, msg):
-        """
-        Process CV handler output, convert to usable data.
-        """
         file_name = msg._connection_header["topic"].split("/")[-1]
         data = json.loads(msg.data)
         self.next_data[file_name] = data
         self.received = True
+        print(f"[DEBUG] Received data from {file_name}")
 
     def run(self):
         """
-        Run the navigation through the red/white poles.
-        The AUV adjusts based on detected center.
+        Run the pole slalom mission loop.
         """
-        rospy.loginfo("[INFO] Starting Pole Slalom Mission")
-        aligned_counter = 0
+        print("[INFO] Pole Slalom mission running")
+        rate = rospy.Rate(10)  # 10 Hz
 
         while not rospy.is_shutdown():
-            time.sleep(0.01)
             if not self.received:
+                rate.sleep()
                 continue
 
-            for key in self.next_data.keys():
+            for key in self.next_data:
                 if key in self.data:
                     self.data[key].update(self.next_data[key])
                 else:
@@ -61,57 +60,50 @@ class PoleSlalomMission:
             self.received = False
             self.next_data = {}
 
-            motion_data = self.data.get("pole_cv", {})
-            forward = motion_data.get("forward", 0)
-            lateral = motion_data.get("lateral", 0)
-            yaw = motion_data.get("yaw", 0)
-            vertical = motion_data.get("vertical", 0)
-            end = motion_data.get("end", False)
+            cv_data = self.data["pole_cv"]
+            lateral = cv_data.get("lateral", 0)
+            forward = cv_data.get("forward", 0)
+            yaw = cv_data.get("yaw", 0)
+            end = cv_data.get("end", False)
 
-            # Basic success condition: aligned for several frames
-            if abs(yaw) < 0.05:
-                aligned_counter += 1
-            else:
-                aligned_counter = 0
+            print(f"[MOTION] Fwd: {forward}, Lat: {lateral}, Yaw: {yaw}")
 
-            self.robot_control.movement(forward=forward, lateral=lateral, yaw=yaw, vertical=vertical)
-            rospy.loginfo(f"[MOVEMENT] F: {forward}, L: {lateral}, Y: {yaw}, V: {vertical}")
-
-            if aligned_counter > 10:
-                rospy.loginfo("[INFO] AUV aligned through the gate. Mission accomplished.")
+            if end:
+                print("[INFO] Pole slalom mission complete.")
+                self.robot_control.movement(lateral=0, forward=0, yaw=0)
                 break
+            else:
+                self.robot_control.movement(lateral=lateral, forward=forward, yaw=yaw)
 
-        self.robot_control.movement(0, 0, 0, 0)
+            rate.sleep()
+
+        print("[INFO] Pole Slalom mission run complete")
 
     def cleanup(self):
         """
-        Cleanup actions after mission finishes.
+        Clean up after the mission.
         """
         for file_name in self.cv_files:
             self.cv_handler.stop_cv(file_name)
-        self.robot_control.movement(0, 0, 0)
-        print("[INFO] Pole Slalom Mission cleanup complete")
+
+        self.robot_control.movement(lateral=0, forward=0, yaw=0)
+        print("[INFO] Pole Slalom mission terminated")
+
 
 if __name__ == "__main__":
+    import time
     from auv.utils import deviceHelper
-    from auv.motion import robot_control
 
     rospy.init_node("pole_slalom_mission", anonymous=True)
 
     config = deviceHelper.variables
     config.update({
-        # "cv_dummy": ["/Users/avikaprasad/Downloads/poles_test_2.mp4"],  # Uncomment for testing with dummy input
+        # "cv_dummy": ["/somepath/test.mp4"],  # Uncomment for offline video testing
+        "strafe_direction": "right",           # or "left"
+        "red_size_threshold": 12000,
+        "forward_duration": 30
     })
 
-    mission = PoleSlalomMission(side="left", **config)
-    rc = robot_control.RobotControl()
-
-    arm.arm()
-    rc.set_depth(0.5)
-    time.sleep(5)
-
-    try:
-        mission.run()
-    finally:
-        mission.cleanup()
-        disarm.disarm()
+    mission = PoleSlalomMission(**config)
+    mission.run()
+    mission.cleanup()

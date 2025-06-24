@@ -1,128 +1,100 @@
+import time
 import cv2
 import numpy as np
-import time
-import os
 
 class CV:
-    #camera = "/Users/avikaprasad/Downloads/poles_test_2.mp4"  # Input video
-    camera = "/auv/camera/videoOAKdRawForward"  # Camera stream for AUV
+    camera = "/auv/camera/videoOAKdRawForward"
 
-    def __init__(self, side="left", **config):
-        self.shape = (640, 480)  # Frame size
-        self.x_midpoint = self.shape[0] / 2
-        self.y_midpoint = self.shape[1] / 2
-        self.tolerance = 50
-        self.side = side  # "left" or "right"
-        self.last_seen_side = None
+    def __init__(self, **config):
+        self.strafe_direction = config.get("strafe_direction", "right")  # or "left"
+        self.red_size_threshold = config.get("red_size_threshold", 10000)  # pixel area threshold
+        self.forward_duration = config.get("forward_duration", 30)  # frames to move forward after strafe
+        self.state = "approach"
+        self.last_red_seen = None
+        self.forward_counter = 0
+        self.yaw_direction = -1 if self.strafe_direction == "right" else 1
+        self.completed_rows = 0
+        print("[INFO] Slalom CV initialized")
 
-        print(f"[INFO] Pole CV initialized for {self.side}-side navigation")
-
-    def detect_red_white_centers(self, frame):
+    def detect_red_poles(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # Red color mask (two ranges in HSV)
-        lower_red1 = np.array([0, 120, 70])
+        # Red is split around HSV space
+        lower_red1 = np.array([0, 100, 100])
         upper_red1 = np.array([10, 255, 255])
-        lower_red2 = np.array([170, 120, 70])
+        lower_red2 = np.array([160, 100, 100])
         upper_red2 = np.array([180, 255, 255])
 
-        # White color mask
-        lower_white = np.array([0, 0, 200])
-        upper_white = np.array([180, 30, 255])
+        mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+        mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+        mask = cv2.bitwise_or(mask1, mask2)
 
-        red_mask = cv2.inRange(hsv, lower_red1, upper_red1) | cv2.inRange(hsv, lower_red2, upper_red2)
-        white_mask = cv2.inRange(hsv, lower_white, upper_white)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        red_boxes = []
 
-        kernel = np.ones((5, 5), np.uint8)
-        red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_OPEN, kernel)
-        white_mask = cv2.morphologyEx(white_mask, cv2.MORPH_OPEN, kernel)
+        for c in contours:
+            area = cv2.contourArea(c)
+            if area > 300:  # filter noise
+                x, y, w, h = cv2.boundingRect(c)
+                red_boxes.append((x, y, w, h, area))
 
-        red_contours, _ = cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        white_contours, _ = cv2.findContours(white_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        return sorted(red_boxes, key=lambda b: b[4], reverse=True)
 
-        def largest_center(contours):
-            if not contours:
-                return None
-            cnt = max(contours, key=cv2.contourArea)
-            x, y, w, h = cv2.boundingRect(cnt)
-            return x + w / 2
+    def run(self, frame, target, detections):
+        motion = {"lateral": 0, "forward": 0, "end": False}
+        red_boxes = self.detect_red_poles(frame)
 
-        red_center = largest_center(red_contours)
-        white_center = largest_center(white_contours)
+        if self.completed_rows >= 3:
+            motion["end"] = True
+            print("[INFO] All red poles passed. Mission complete.")
+            return motion, frame
 
-        if red_center and white_center:
-            center = (red_center + white_center) / 2
-        else:
-            center = None
+        if self.state == "approach":
+            if red_boxes:
+                target_box = red_boxes[0]
+                x, y, w, h, area = target_box
+                self.last_red_seen = target_box
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+                motion["forward"] = 1  # move forward
 
-        return center, red_mask | white_mask
-
-    def movement_calculation(self, center):
-        forward = 1.5
-        lateral = 0
-        yaw = 0
-
-        if center is not None:
-            frame_width = self.shape[0]
-            left_thresh = frame_width * 0.2
-            right_thresh = frame_width * 0.8
-
-            if center < left_thresh:
-                yaw = 0.4
-                print("[INFO] Center left of frame → veer right")
-            elif center > right_thresh:
-                yaw = -0.4
-                print("[INFO] Center right of frame → veer left")
+                if area > self.red_size_threshold:
+                    print(f"[INFO] Reached red pole with area: {area}. Starting strafe.")
+                    self.state = "strafe"
             else:
-                yaw = 0
-                print("[INFO] Centered → go straight")
+                print("[WARN] Red pole lost. Slowing or stopping.")
+                motion["forward"] = 0
 
-            self.last_seen_side = "left" if center < self.x_midpoint else "right"
-        else:
-            forward = 0
-            if self.last_seen_side == "left":
-                yaw = 0.5  # Clockwise
-                print("[INFO] No poles → last seen left → spin CW")
-            elif self.last_seen_side == "right":
-                yaw = -0.5  # Counter-clockwise
-                print("[INFO] No poles → last seen right → spin CCW")
+        elif self.state == "strafe":
+            motion["lateral"] = 1 if self.strafe_direction == "right" else -1
+            if not red_boxes:
+                print("[INFO] Red pole no longer visible. Starting forward movement.")
+                self.state = "post_strafe_forward"
+                self.forward_counter = 0
+
+        elif self.state == "post_strafe_forward":
+            motion["forward"] = 1
+            self.forward_counter += 1
+            if self.forward_counter > self.forward_duration:
+                print("[INFO] Finished forward motion. Starting yaw to reacquire red pole.")
+                self.state = "yaw"
+                self.forward_counter = 0
+
+        elif self.state == "yaw":
+            motion["lateral"] = 0
+            motion["forward"] = 0
+            frame = self.add_yaw_marker(frame)
+            if red_boxes:
+                print("[INFO] Found next red pole. Resuming approach.")
+                self.completed_rows += 1
+                self.state = "approach"
             else:
-                yaw = 0
-                print("[INFO] No poles detected → holding position")
+                motion["lateral"] = 0
+                motion["yaw"] = self.yaw_direction  # hypothetical command, replace with your actual yaw interface
 
-        print(f"[MOVEMENT] Forward: {forward}, Lateral: {lateral}, Yaw: {yaw}")
-        return forward, lateral, yaw, 0
+        return motion, frame
 
-    def run(self, raw_frame, target, detections):
-        center, mask = self.detect_red_white_centers(raw_frame)
-        visualized_frame = cv2.bitwise_and(raw_frame, raw_frame, mask=mask)
-        forward, lateral, yaw, vertical = self.movement_calculation(center)
-
-        return {
-            "forward": forward,
-            "lateral": lateral,
-            "yaw": yaw,
-            "vertical": vertical,
-            "end": False
-        }, visualized_frame
-
-if __name__ == "__main__":
-    cv = CV(side="left")
-    cap = cv2.VideoCapture(cv.camera)
-
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        center, mask = cv.detect_red_white_centers(frame)
-        movement = cv.movement_calculation(center)
-        
-        cv2.imshow("Red & White Mask", mask)
-        print(f"[FRAME] Movement: {movement}")
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+    def add_yaw_marker(self, frame):
+        h, w, _ = frame.shape
+        center_x = w // 2
+        cv2.line(frame, (center_x, 0), (center_x, h), (255, 255, 0), 2)
+        return frame
