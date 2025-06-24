@@ -3,7 +3,7 @@ import numpy as np
 import time
 
 class CV:
-    camera = "/auv/camera/videoUSBRaw0" # Local video file
+    camera = "/auv/camera/videoOAKdRawForward" # Local video file
 
     def __init__(self, side="left", **config):
         self.shape = (640, 480)
