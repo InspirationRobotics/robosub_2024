@@ -1,53 +1,59 @@
-"""
-Mission file to navigate a slalom course of white and red vertical PVC pipes.
-White pipes are on the left and right, red is in the center.
-The AUV must enter from one side of the red pipe and stay on that side while slaloming.
-"""
-
 import json
 import rospy
-from std_msgs.msg import String
+import time
 
+from std_msgs.msg import String
 from ..device import cv_handler
 from ..motion import robot_control
-from ..utils import disarm
+from ..utils import arm, disarm
 
-class PipeSlalomMission:
-    cv_files = ["poles_cv"]
+class PoleSlalomMission:
 
-    def __init__(self, target=None, **config):
+    def __init__(self, side="left", **config):
+        """
+        Initialize the slalom pole mission class.
+        Args:
+            side: Which side of the red pipe to pass (left or right)
+            config: Mission-specific parameters
+        """
+        self.cv_files = ["pole_cv"]
         self.config = config
         self.data = {}
         self.next_data = {}
         self.received = False
-
+        self.side = side
         self.robot_control = robot_control.RobotControl()
         self.cv_handler = cv_handler.CVHandler(**self.config)
 
         for file_name in self.cv_files:
             self.cv_handler.start_cv(file_name, self.callback)
-
-        self.cv_handler.set_target("pipe_slalom_cv", target)
-        print("[INFO] Pipe Slalom Mission Initialized")
+        self.cv_handler.set_target("pole_cv", self.side)
+        print(f"[INFO] Pole Slalom Mission initialized for {self.side} side")
 
     def callback(self, msg):
+        """
+        Process CV handler output, convert to usable data.
+        """
         file_name = msg._connection_header["topic"].split("/")[-1]
         data = json.loads(msg.data)
         self.next_data[file_name] = data
         self.received = True
 
-        print(f"[DEBUG] Received data from {file_name}")
-
     def run(self):
-        side_locked = False
-        chosen_side = None  # "left" or "right"
+        """
+        Run the navigation through the red/white poles.
+        The AUV adjusts based on detected center.
+        """
+        rospy.loginfo("[INFO] Starting Pole Slalom Mission")
+        aligned_counter = 0
 
         while not rospy.is_shutdown():
+            time.sleep(0.01)
             if not self.received:
                 continue
 
             for key in self.next_data.keys():
-                if key in self.data.keys():
+                if key in self.data:
                     self.data[key].update(self.next_data[key])
                 else:
                     self.data[key] = self.next_data[key]
@@ -55,58 +61,57 @@ class PipeSlalomMission:
             self.received = False
             self.next_data = {}
 
-            cv_data = self.data["poles_cv"]
+            motion_data = self.data.get("pole_cv", {})
+            forward = motion_data.get("forward", 0)
+            lateral = motion_data.get("lateral", 0)
+            yaw = motion_data.get("yaw", 0)
+            vertical = motion_data.get("vertical", 0)
+            end = motion_data.get("end", False)
 
-            forward = cv_data.get("forward", 0)
-            lateral = cv_data.get("lateral", 0)
-            yaw = cv_data.get("yaw", 0)
-            end = cv_data.get("end", False)
-            side = cv_data.get("side", None)  # Optional: which side of red pipe AUV is on
-
-            if not side_locked and side in ["left", "right"]:
-                chosen_side = side
-                side_locked = True
-                print(f"[INFO] Locked on to {chosen_side} side of red pipe")
-
-            # Enforce slalom path rules: stay on same side if locked
-            if side_locked and side != chosen_side:
-                print(f"[WARN] Switching sides! Penalized path.")
-                # Optionally: adjust path or halt
-                lateral = 0  # force correction or stop
-                forward = 0
-
-            if end:
-                print("[INFO] Mission Complete")
-                self.robot_control.movement(forward=0, lateral=0, yaw=0)
-                break
+            # Basic success condition: aligned for several frames
+            if abs(yaw) < 0.05:
+                aligned_counter += 1
             else:
-                self.robot_control.movement(forward=forward, lateral=lateral, yaw=yaw)
-                print(f"[DEBUG] Movement -> Fwd: {forward}, Lat: {lateral}, Yaw: {yaw}")
+                aligned_counter = 0
 
-        print("[INFO] Pipe Slalom Mission Run Complete")
+            self.robot_control.movement(forward=forward, lateral=lateral, yaw=yaw, vertical=vertical)
+            rospy.loginfo(f"[MOVEMENT] F: {forward}, L: {lateral}, Y: {yaw}, V: {vertical}")
+
+            if aligned_counter > 10:
+                rospy.loginfo("[INFO] AUV aligned through the gate. Mission accomplished.")
+                break
+
+        self.robot_control.movement(0, 0, 0, 0)
 
     def cleanup(self):
+        """
+        Cleanup actions after mission finishes.
+        """
         for file_name in self.cv_files:
             self.cv_handler.stop_cv(file_name)
-
-        self.robot_control.movement(forward=0, lateral=0, yaw=0)
-        print("[INFO] Pipe Slalom Mission Terminated")
-
+        self.robot_control.movement(0, 0, 0)
+        print("[INFO] Pole Slalom Mission cleanup complete")
 
 if __name__ == "__main__":
-    import time
     from auv.utils import deviceHelper
+    from auv.motion import robot_control
 
-    rospy.init_node("pipe_slalom_mission", anonymous=True)
+    rospy.init_node("pole_slalom_mission", anonymous=True)
 
     config = deviceHelper.variables
-    config.update(
-        {
-            # Optional: replace with a video for offline testing
-            # "cv_dummy": ["/somepath/slalom_test_video.mp4"],
-        }
-    )
+    config.update({
+        # "cv_dummy": ["/Users/avikaprasad/Downloads/poles_test_2.mp4"],  # Uncomment for testing with dummy input
+    })
 
-    mission = PipeSlalomMission(**config)
-    mission.run()
-    mission.cleanup()
+    mission = PoleSlalomMission(side="left", **config)
+    rc = robot_control.RobotControl()
+
+    arm.arm()
+    rc.set_depth(0.5)
+    time.sleep(5)
+
+    try:
+        mission.run()
+    finally:
+        mission.cleanup()
+        disarm.disarm()
