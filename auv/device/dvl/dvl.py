@@ -325,42 +325,6 @@ class DVL:
             else:
                 ret = self.process_packet(vel_packet)
             self.data_available = ret
-            
-    def csvLog(dvl, filename="dvl_log.csv"):
-        """
-        Logs DVL position and velocity data to a CSV file.
-        """
-        with open(filename, mode="w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(["Time (s)", "vx (m/s)", "vy (m/s)", "vz (m/s)", "X (m)", "Y (m)", "Z (m)", "Valid"])
-
-            try:
-                while True:
-                    time.sleep(0.1)  # sampling delay
-                    vel_packet = dvl.read()
-                    if vel_packet is None or not vel_packet["valid"]:
-                        continue
-
-                    if dvl.enable_compass:
-                        dvl.process_packet_compass(vel_packet)
-                    else:
-                        dvl.process_packet(vel_packet)
-
-                    row = [
-                        dvl.current_time,
-                        vel_packet["vx"],
-                        vel_packet["vy"],
-                        vel_packet["vz"],
-                        dvl.position[0],
-                        dvl.position[1],
-                        dvl.position[2],
-                        vel_packet["valid"],
-                    ]
-                    writer.writerow(row)
-                    print(f"[LOGGING] {row}")
-
-            except KeyboardInterrupt:
-                print("\n[INFO] Logging interrupted. Saving CSV file...")
 
     def start(self):
         # ensure not running
@@ -409,13 +373,49 @@ class DVL:
             self.error[2] + prev_error[2],
         ]
 
+def csvLog(dvl, filename="dvl_log.csv"):
+        """
+        Logs DVL position and velocity data to a CSV file.
+        """
+        with open(filename, mode="w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(["Time (s)", "vx (m/s)", "vy (m/s)", "vz (m/s)", "X (m)", "Y (m)", "Z (m)", "Valid"])
+
+            try:
+                while True:
+                    time.sleep(0.1)  # sampling delay
+                    vel_packet = dvl.read()
+                    if vel_packet is None or not vel_packet["valid"]:
+                        continue
+
+                    if dvl.enable_compass:
+                        dvl.process_packet_compass(vel_packet)
+                    else:
+                        dvl.process_packet(vel_packet)
+
+                    row = [
+                        dvl.current_time,
+                        vel_packet["vx"],
+                        vel_packet["vy"],
+                        vel_packet["vz"],
+                        dvl.position[0],
+                        dvl.position[1],
+                        dvl.position[2],
+                        vel_packet["valid"],
+                    ]
+                    writer.writerow(row)
+                    print(f"[LOGGING] {row}")
+
+            except KeyboardInterrupt:
+                print("\n[INFO] Logging interrupted. Saving CSV file...")
+
 if __name__ == '__main__':
     # Make a new dvl instance
     dvl1 = DVL()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     filename = f"dvl_log_{timestamp}.csv"
-    dvl1.csvLog(dvl1, filename)
+    csvLog(dvl1, filename)
 
     # while True:
     #     time.sleep(1.0)
