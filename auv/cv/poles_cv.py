@@ -3,12 +3,12 @@ import cv2
 import numpy as np
 
 class CV:
-    camera = "/auv/camera/videoOAKdRawForward"
+    camera = "/Users/avikaprasad/Downloads/poles_test_3.mp4"
 
     def __init__(self, **config):
-        self.strafe_direction = config.get("strafe_direction", "right")  # or "left"
-        self.red_size_threshold = config.get("red_size_threshold", 10000)  # pixel area threshold
-        self.forward_duration = config.get("forward_duration", 30)  # frames to move forward after strafe
+        self.strafe_direction = config.get("strafe_direction", "right")
+        self.red_size_threshold = config.get("red_size_threshold", 10000)
+        self.forward_duration = config.get("forward_duration", 30)
         self.state = "approach"
         self.last_red_seen = None
         self.forward_counter = 0
@@ -19,7 +19,6 @@ class CV:
     def detect_red_poles(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # Red is split around HSV space
         lower_red1 = np.array([0, 100, 100])
         upper_red1 = np.array([10, 255, 255])
         lower_red2 = np.array([160, 100, 100])
@@ -34,13 +33,13 @@ class CV:
 
         for c in contours:
             area = cv2.contourArea(c)
-            if area > 300:  # filter noise
+            if area > 300:
                 x, y, w, h = cv2.boundingRect(c)
                 red_boxes.append((x, y, w, h, area))
 
         return sorted(red_boxes, key=lambda b: b[4], reverse=True)
 
-    def run(self, frame, target, detections):
+    def run(self, frame, target=None, detections=None):
         motion = {"lateral": 0, "forward": 0, "end": False}
         red_boxes = self.detect_red_poles(frame)
 
@@ -55,7 +54,7 @@ class CV:
                 x, y, w, h, area = target_box
                 self.last_red_seen = target_box
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
-                motion["forward"] = 1  # move forward
+                motion["forward"] = 1
 
                 if area > self.red_size_threshold:
                     print(f"[INFO] Reached red pole with area: {area}. Starting strafe.")
@@ -89,7 +88,7 @@ class CV:
                 self.state = "approach"
             else:
                 motion["lateral"] = 0
-                motion["yaw"] = self.yaw_direction  # hypothetical command, replace with your actual yaw interface
+                motion["yaw"] = self.yaw_direction
 
         return motion, frame
 
@@ -98,3 +97,29 @@ class CV:
         center_x = w // 2
         cv2.line(frame, (center_x, 0), (center_x, h), (255, 255, 0), 2)
         return frame
+
+
+# -------------- TESTER CODE ------------------
+
+if __name__ == "__main__":
+    tester_video_path = "/Users/avikaprasad/Downloads/poles_test_2.mp4"  # Update path as needed
+    cap = cv2.VideoCapture(tester_video_path)
+
+    cv_instance = CV(strafe_direction="right")
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            print("[INFO] End of video or failed to load frame.")
+            break
+
+        motion, output_frame = cv_instance.run(frame, target=None, detections=None)
+        print("[MOTION OUTPUT]:", motion)
+
+        cv2.imshow("Slalom Detection", output_frame)
+
+        if cv2.waitKey(30) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
