@@ -14,7 +14,10 @@ arm.arm()
 
 time.sleep(5)
 
-rc.forward_dvl(distance = -1)
+rc.forward_dvl(distance = 1)
+rc.lateral_dvl(distance=1)
+rc.forward_dvl(distance=-1)
+rc.lateral_dvl(distance=-1)
 
 time.sleep(2.0)
 
