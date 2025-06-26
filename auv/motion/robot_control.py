@@ -373,7 +373,7 @@ class RobotControl:
 
         if relative_heading:
             # Rotate the vector [x, y] by the current heading (to make the heading relative)
-            x, y = rotate_vector(x, y, self.compass)
+            x, y = rotate_vector(x, y, self.vectornav_yaw if self.vectornav_yaw is not None else self.compass)
 
         # Get the setpoint (target) heading from the relative coordinates
         target_heading = get_heading_from_coords(x, y)
