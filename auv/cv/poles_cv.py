@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 class CV:
-    camera = "/Users/avikaprasad/Downloads/poles_test_3.mp4"
+    camera = "/auv/camera/videoOAKdRawForward"
 
     def __init__(self, **config):
         self.strafe_direction = config.get("strafe_direction", "right")
