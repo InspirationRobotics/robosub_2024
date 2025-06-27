@@ -4,7 +4,7 @@
 Servo myservo;  // create servo object to control a servo
 char command;
 
-
+// niaguri
 
 
 int angle = 0;    // variable to store the servo position
