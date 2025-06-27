@@ -1,49 +1,42 @@
 #include <Servo.h>
 
 
-Servo myServo;
+Servo myservo;  // create servo object to control a servo
 char command;
 
 
-const int home = 180;       // Home position
-const int offset = 50;     // Sweep range
-
+int angle = 0;    // variable to store the servo position
 
 void setup() {
- myServo.attach(9);
- myServo.write(home);     // Move servo to home position
- Serial.begin(9600);
- Serial.println("Send 'q', 'w'");
-}
+  myservo.attach(6);  // attaches the servo on pin 6 to the servo object
+  Serial.begin(9600);
+  Serial.println("Send 'q'");
+  myservo.write(300);   // Move to 0 degrees
 
+}
 
 void loop() {
- if (Serial.available() > 0) {
-   command = Serial.read();
+  if (Serial.available() > 0) {
+    command = Serial.read();
+
+    if (command == 'q') {
+        Serial.println("Launch");
+        myservo.write(400);    
+        delay(100);        // tell servo to go to position in variable 'angle'
+        myservo.write(800);
+        delay(200);  
+        myservo.write(400);
 
 
-   if (command == 'q') {
-     // Sweep from home to home + 50 degrees
-     for (int angle = home; angle <= home + offset; angle++) {
-       myServo.write(angle);
-       delay(10);
-     }
-   } else if (command == 'w') {
-     // Sweep from home to home - 50 degrees
-     for (int angle = home; angle >= home - offset; angle--) {
-       myServo.write(angle);
-       delay(10);
-     }
-     
- 
-
-
-
-
-
-
-   }
- }
-}
-
+    }
+    //else if (command == 'w') {
+    //  Serial.println("Launch");
+      //  myservo.write(700);    
+       // delay(100);        // tell servo to go to position in variable 'angle'
+       // myservo.write(800);
+     //   delay(200);  
+       // myservo.write(800);
+    }
+  } 
+  
 
