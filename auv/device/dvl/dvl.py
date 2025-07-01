@@ -27,7 +27,6 @@ class DVL:
         rospy.init_node("dvl", anonymous=True)
         self.rate = rospy.Rate(10)  # 10 Hz
         
-        
         self.graey_dvl = rospy.Publisher('/auv/devices/a50', String, queue_size=10)
         self.onyx_dvl = rospy.Publisher('/auv/devices/explorer', String, queue_size=10)
         
@@ -335,6 +334,22 @@ class DVL:
                 ret = self.process_packet(vel_packet)
             self.data_available = ret
 
+    def publish_graey(self):
+        """Publish Graey DVL data to ROS topic"""
+        if not self.test:
+            msg = String()
+            msg.data = json.dumps(self.graey_data)
+            self.graey_dvl.publish(msg)
+            print(f"[DEBUG] Published Graey DVL data: {msg.data}")
+    
+    def publish_onyx(self):
+        """Publish Onyx DVL data to ROS topic"""
+        if not self.test:
+            msg = String()
+            msg.data = json.dumps(self.graey_data)
+            self.onyx_dvl.publish(msg)
+            print(f"[DEBUG] Published Onyx DVL data: {msg.data}")
+    
     def start(self):
         # ensure not running
         print("[DEBUG] Started successfully")
@@ -417,7 +432,7 @@ def csvLog(dvl, filename="dvl_log.csv"):
 
             except KeyboardInterrupt:
                 print("\n[INFO] Logging interrupted. Saving CSV file...")
-
+                print(f"[INFO] Data saved to {filename}")
 if __name__ == '__main__':
     # Make a new dvl instance
     dvl1 = DVL()
