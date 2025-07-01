@@ -36,7 +36,7 @@ class Pose:
     def baro_callback(self, msg):
         self.depth = msg.data
 
-    def fog_callback(sefl, msg):
+    def fog_callback(self, msg):
         pass
 
     def dvl_callback(self, msg):

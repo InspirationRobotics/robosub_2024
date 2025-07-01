@@ -69,7 +69,8 @@ def rotate_vector(x, y, heading):
 
 def inv_rotate_vector(x, y, heading):
     """
-    Rotate a vector by the *negative* of the given heading (i.e., inverse rotation).
+    Rotate a vector by the *negative* of the given heading (i.e., inverse rotation)
+    in the clockwise direction.
 
     Args:
         x (float): X-component of the vector

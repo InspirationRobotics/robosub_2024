@@ -1,6 +1,7 @@
 # Documentation for Teledyne available at https://drive.google.com/file/d/1xniDtjYIJhaFOhWaSj4tj6RxBdN5inx2/view
 # See page 93 for specs
 
+import rospy
 import math
 import signal
 import threading
@@ -13,6 +14,7 @@ import csv
 from datetime import datetime
 
 import serial
+from std_msgs.msg import String
 
 from . import dvl_tcp_parser
 from auv.utils import deviceHelper
@@ -20,8 +22,14 @@ from auv.utils import deviceHelper
 
 class DVL:
     """DVL class to enable position estimation"""
-
+    
     def __init__(self, autostart=True, compass=False, test=False):
+        rospy.init_node("dvl", anonymous=True)
+        self.rate = rospy.Rate(10)  # 10 Hz
+        
+        self.graey_dvl = rospy.Publisher('/auv/devices/a50', String, queue_size=10)
+        self.onyx_dvl = rospy.Publisher('/auv/devices/explorer', String, queue_size=10)
+        
         self.test = test
         if not self.test:
             self.dvlPort = deviceHelper.dataFromConfig("dvl")
