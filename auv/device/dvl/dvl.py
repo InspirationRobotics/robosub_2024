@@ -27,6 +27,7 @@ class DVL:
         rospy.init_node("dvl", anonymous=True)
         self.rate = rospy.Rate(10)  # 10 Hz
         
+        
         self.graey_dvl = rospy.Publisher('/auv/devices/a50', String, queue_size=10)
         self.onyx_dvl = rospy.Publisher('/auv/devices/explorer', String, queue_size=10)
         
