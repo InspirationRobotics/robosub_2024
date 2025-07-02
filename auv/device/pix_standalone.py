@@ -28,6 +28,7 @@ import mavros_msgs.msg
 import mavros_msgs.srv
 import sensor_msgs.msg
 import std_msgs.msg
+from dvl_msgs.msg import DVL
 
 # Importing ROS, Numpy, PID controller
 import numpy as np
@@ -120,6 +121,7 @@ class AUV(RosHandler):
         self.AUV_COMPASS = TopicService("/auv/devices/compass", std_msgs.msg.Float64)
         self.AUV_IMU = TopicService("/auv/devices/imu", sensor_msgs.msg.Imu)
         self.AUV_VECTORNAV = TopicService("/auv/devices/vectornav", geometry_msgs.msg.Vector3)
+        self.AUV_A50 = TopicService("/auv/devices/a50", DVL)
         self.AUV_BARO = TopicService("/auv/devices/baro", std_msgs.msg.Float32MultiArray)
         self.AUV_GET_THRUSTERS = TopicService("/auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn)
         self.AUV_GET_DEPTH = TopicService("/auv/devices/setDepth", std_msgs.msg.Float64)
