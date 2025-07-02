@@ -1,125 +1,144 @@
-import time
+"""
+Pole Slalom CV. Detects the red pole, approaches it, aligns based on prior gate direction,
+and repeats the maneuver three times to complete the mission.
+"""
+
 import cv2
+import time
 import numpy as np
+import os
 
 class CV:
     camera = "/auv/camera/videoOAKdRawForward"
 
     def __init__(self, **config):
-        self.strafe_direction = config.get("strafe_direction", "right")
-        self.red_size_threshold = config.get("red_size_threshold", 10000)
-        self.forward_duration = config.get("forward_duration", 30)
-        self.state = "approach"
-        self.last_red_seen = None
-        self.forward_counter = 0
-        self.yaw_direction = -1 if self.strafe_direction == "right" else 1
-        self.completed_rows = 0
-        print("[INFO] Slalom CV initialized")
+        self.shape = (640, 480)
+        self.x_midpoint = self.shape[0] / 2
+        self.tolerance = 50  # Pixel offset for alignment
+        self.row_counter = 0
+        self.max_rows = 3
+        self.config = config
+        self.side = config.get("side", "right")  # "left" or "right", passed from gate mission
+        self.state = "searching"
+        self.red_area_threshold = config.get("red_area_threshold", 20000)
+        self.end = False
+        self.lost_target = False
+        self.depth_time = time.time()
+        print("[INFO] Pole Slalom CV initialized")
 
-    def detect_red_poles(self, frame):
+    def detect_red_pole(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         lower_red1 = np.array([0, 100, 100])
         upper_red1 = np.array([10, 255, 255])
         lower_red2 = np.array([160, 100, 100])
-        upper_red2 = np.array([180, 255, 255])
+        upper_red2 = np.array([179, 255, 255])
 
         mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
         mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
-        mask = cv2.bitwise_or(mask1, mask2)
+        red_mask = cv2.bitwise_or(mask1, mask2)
 
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        red_boxes = []
+        contours, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        for c in contours:
-            area = cv2.contourArea(c)
-            if area > 300:
-                x, y, w, h = cv2.boundingRect(c)
-                red_boxes.append((x, y, w, h, area))
+        red_poles = []
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area > 1000:  # Noise filter
+                x, y, w, h = cv2.boundingRect(cnt)
+                red_poles.append((x, y, w, h, area))
 
-        return sorted(red_boxes, key=lambda b: b[4], reverse=True)
+        if red_poles:
+            red_poles.sort(key=lambda x: x[4], reverse=True)
+            x, y, w, h, area = red_poles[0]
+            return {
+                "status": True,
+                "xmin": x,
+                "xmax": x + w,
+                "ymin": y,
+                "ymax": y + h,
+                "area": area
+            }, red_mask
+        return {"status": False, "xmin": None, "xmax": None, "ymin": None, "ymax": None, "area": 0}, red_mask
 
-    def run(self, frame, target=None, detections=None):
-        motion = {"lateral": 0, "forward": 0, "end": False}
-        red_boxes = self.detect_red_poles(frame)
+    def movement_calculation(self, detection):
+        forward = 0
+        lateral = 0
+        yaw = 0
+        vertical = 0
 
-        if self.completed_rows >= 3:
-            motion["end"] = True
-            print("[INFO] All red poles passed. Mission complete.")
-            return motion, frame
+        if self.row_counter >= self.max_rows:
+            self.end = True
+            return forward, lateral, yaw, vertical
 
-        if self.state == "approach":
-            if red_boxes:
-                target_box = red_boxes[0]
-                x, y, w, h, area = target_box
-                self.last_red_seen = target_box
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
-                motion["forward"] = 1
+        if detection["status"]:
+            x_center = (detection["xmin"] + detection["xmax"]) / 2
+            area = detection["area"]
 
-                if area > self.red_size_threshold:
-                    print(f"[INFO] Reached red pole with area: {area}. Starting strafe.")
-                    self.state = "strafe"
-            else:
-                print("[WARN] Red pole lost. Slowing or stopping.")
-                motion["forward"] = 0
+            if self.state == "searching":
+                yaw = -0.7 if self.side == "right" else 0.7
+                if area > 1000:
+                    self.state = "approaching"
 
-        elif self.state == "strafe":
-            motion["lateral"] = 1 if self.strafe_direction == "right" else -1
-            if not red_boxes:
-                print("[INFO] Red pole no longer visible. Starting forward movement.")
-                self.state = "post_strafe_forward"
-                self.forward_counter = 0
+            elif self.state == "approaching":
+                yaw = 0
+                if area < self.red_area_threshold:
+                    forward = 1.5
+                else:
+                    forward = 0
+                    self.state = "aligning"
 
-        elif self.state == "post_strafe_forward":
-            motion["forward"] = 1
-            self.forward_counter += 1
-            if self.forward_counter > self.forward_duration:
-                print("[INFO] Finished forward motion. Starting yaw to reacquire red pole.")
-                self.state = "yaw"
-                self.forward_counter = 0
+            elif self.state == "aligning":
+                if self.side == "right":
+                    lateral = 0.8
+                    if x_center > self.shape[0]:
+                        self.state = "moving_forward"
+                else:
+                    lateral = -0.8
+                    if x_center < 0:
+                        self.state = "moving_forward"
 
-        elif self.state == "yaw":
-            motion["lateral"] = 0
-            motion["forward"] = 0
-            frame = self.add_yaw_marker(frame)
-            if red_boxes:
-                print("[INFO] Found next red pole. Resuming approach.")
-                self.completed_rows += 1
-                self.state = "approach"
-            else:
-                motion["lateral"] = 0
-                motion["yaw"] = self.yaw_direction
+            elif self.state == "moving_forward":
+                forward = 1.0
+                yaw = -0.5 if self.side == "right" else 0.5
+                self.row_counter += 1
+                self.state = "searching"
 
-        return motion, frame
+        else:
+            if self.state in ["searching", "approaching"]:
+                yaw = -0.7 if self.side == "right" else 0.7
+            elif self.state == "aligning":
+                lateral = 0.8 if self.side == "right" else -0.8
+            elif self.state == "moving_forward":
+                forward = 1.0
+                yaw = -0.5 if self.side == "right" else 0.5
 
-    def add_yaw_marker(self, frame):
-        h, w, _ = frame.shape
-        center_x = w // 2
-        cv2.line(frame, (center_x, 0), (center_x, h), (255, 255, 0), 2)
-        return frame
+        return forward, lateral, yaw, vertical
 
+    def run(self, raw_frame, target, detections):
+        visualized_frame = None
+        detection, mask = self.detect_red_pole(raw_frame)
 
-# -------------- TESTER CODE ------------------
+        if raw_frame is not None:
+            frame = raw_frame.copy()
 
-if __name__ == "__main__":
-    tester_video_path = "/Users/avikaprasad/Downloads/poles_test_2.mp4"  # Update path as needed
-    cap = cv2.VideoCapture(tester_video_path)
+            if detection["status"]:
+                # Draw bounding box and center lines
+                x1, x2 = detection["xmin"], detection["xmax"]
+                y1, y2 = detection["ymin"], detection["ymax"]
+                x_center = int((x1 + x2) / 2)
 
-    cv_instance = CV(strafe_direction="right")
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                cv2.line(frame, (x_center, 0), (x_center, self.shape[1]), (255, 255, 0), 2)
+                cv2.line(frame, (int(self.x_midpoint), 0), (int(self.x_midpoint), self.shape[1]), (0, 255, 0), 1)
 
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            print("[INFO] End of video or failed to load frame.")
-            break
+            # State text
+            cv2.putText(frame, f"State: {self.state}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 255, 200), 2)
+            cv2.putText(frame, f"Row: {self.row_counter}/{self.max_rows}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 255, 200), 2)
 
-        motion, output_frame = cv_instance.run(frame, target=None, detections=None)
-        print("[MOTION OUTPUT]:", motion)
+            visualized_frame = frame
+            cv2.imshow("Pole Detection", frame)
+            cv2.imshow("Red Mask", mask)
 
-        cv2.imshow("Slalom Detection", output_frame)
+        forward, lateral, yaw, vertical = self.movement_calculation(detection)
 
-        if cv2.waitKey(30) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+        return {"lateral": lateral, "forward": forward, "yaw": yaw, "vertical": vertical, "end": self.end}, visualized_frame
