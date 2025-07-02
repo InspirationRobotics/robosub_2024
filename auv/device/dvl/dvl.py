@@ -14,7 +14,7 @@ import csv
 from datetime import datetime
 
 import serial
-from std_msgs.msg import String
+from dvl_msgs.msg import DVL
 
 from . import dvl_tcp_parser
 from auv.utils import deviceHelper
@@ -27,8 +27,8 @@ class DVL:
         rospy.init_node("dvl", anonymous=True)
         self.rate = rospy.Rate(10)  # 10 Hz
         
-        self.graey_dvl = rospy.Publisher('/auv/devices/a50', String, queue_size=10)
-        self.onyx_dvl = rospy.Publisher('/auv/devices/explorer', String, queue_size=10)
+        self.graey_dvl = rospy.Publisher('/auv/devices/a50', DVL, queue_size=10)
+        self.onyx_dvl = rospy.Publisher('/auv/devices/explorer', DVL, queue_size=10)
         
         self.test = test
         if not self.test:
@@ -335,20 +335,33 @@ class DVL:
             self.data_available = ret
 
     def publish_graey(self):
-        """Publish Graey DVL data to ROS topic"""
         if not self.test:
-            msg = String()
-            msg.data = json.dumps(self.graey_data)
+            msg = DVL()
+            msg.header.stamp = rospy.Time.now()
+            msg.header.frame_id = "graey_dvl"
+            msg.time = self.graey_data["time"]
+            msg.vx = self.graey_data["vx"]
+            msg.vy = self.graey_data["vy"]
+            msg.vz = self.graey_data["vz"]
+            msg.position = self.position
+            msg.error = self.graey_data["error"]
+            msg.valid = self.graey_data["valid"]
             self.graey_dvl.publish(msg)
-            print(f"[DEBUG] Published Graey DVL data: {msg.data}")
-    
+
     def publish_onyx(self):
-        """Publish Onyx DVL data to ROS topic"""
         if not self.test:
-            msg = String()
-            msg.data = json.dumps(self.graey_data)
+            msg = DVL()
+            msg.header.stamp = rospy.Time.now()
+            msg.header.frame_id = "onyx_dvl"
+            msg.time = self.current_time
+            msg.vx = self.vel_rot[0]
+            msg.vy = self.vel_rot[1]
+            msg.vz = self.vel_rot[2]
+            msg.position = self.position
+            msg.error = self.dvl_error
+            msg.valid = self.is_valid
             self.onyx_dvl.publish(msg)
-            print(f"[DEBUG] Published Onyx DVL data: {msg.data}")
+
     
     def start(self):
         # ensure not running
