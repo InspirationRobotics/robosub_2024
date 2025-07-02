@@ -35,11 +35,11 @@ import rospy
 from simple_pid import PID
 
 # For turning a status LED (based on a state) on and getting the configuration of a specified device, respectively
-from ..utils import statusLed, deviceHelper
+from auv.device.utils import statusLed, deviceHelper
 
 # For handling ROS topics
-from ..utils.rospyHandler import RosHandler
-from ..utils.topicService import TopicService
+from auv.utils.rospyHandler import RosHandler
+from auv.utils.topicService import TopicService
 
 # Import IMU
 from auv.device.imu.vn100_serial import VN100
@@ -120,12 +120,13 @@ class AUV(RosHandler):
         self.AUV_COMPASS = TopicService("/auv/devices/compass", std_msgs.msg.Float64)
         self.AUV_IMU = TopicService("/auv/devices/imu", sensor_msgs.msg.Imu)
         self.AUV_VECTORNAV = TopicService("/auv/devices/vectornav", geometry_msgs.msg.Vector3)
-        # TopicServices for A50
+        # ROS Topics for A50
         self.AUV_A50_Velocity = TopicService("/auv/devices/a50/velocity", geographic_msgs.msg.Vector3Stamped)
         self.AUV_A50_Position = TopicService("/auv/devices/a50/position", geographic_msgs.msg.PointStamped)
-        # TopicServices for Explorer
+        # ROS Topics for Explorer
         self.AUV_Explorer_Velocity = TopicService("/auv/devices/explorer/velocity", geographic_msgs.msg.Vector3Stamped)
         self.AUV_Explorer_Position = TopicService("/auv/devices/explorer/position", geographic_msgs.msg.PointStamped)
+        # ROS Topic for Barometer
         self.AUV_BARO = TopicService("/auv/devices/baro", std_msgs.msg.Float32MultiArray)
         self.AUV_GET_THRUSTERS = TopicService("/auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn)
         self.AUV_GET_DEPTH = TopicService("/auv/devices/setDepth", std_msgs.msg.Float64)
