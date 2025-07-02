@@ -16,7 +16,7 @@ from datetime import datetime
 import serial
 from geometry_msgs.msg import Vector3Stamped, PointStamped
 
-from . import dvl_tcp_parser
+from auv.device.dvl import dvl_tcp_parser
 from auv.utils import deviceHelper
 
 
