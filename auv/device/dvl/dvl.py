@@ -14,7 +14,7 @@ import csv
 from datetime import datetime
 
 import serial
-from dvl_msgs.msg import DVL
+from geometry_msgs.msg import Vector3Stamped, PointStamped
 
 from . import dvl_tcp_parser
 from auv.utils import deviceHelper
@@ -27,8 +27,10 @@ class DVL:
         rospy.init_node("dvl", anonymous=True)
         self.rate = rospy.Rate(10)  # 10 Hz
         
-        self.graey_dvl = rospy.Publisher('/auv/devices/a50', DVL, queue_size=10)
-        self.onyx_dvl = rospy.Publisher('/auv/devices/explorer', DVL, queue_size=10)
+        self.a50_vel_pub = rospy.Publisher('/auv/devices/a50/velocity', Vector3Stamped, queue_size=10)
+        self.a50_pos_pub = rospy.Publisher('/auv/devices/a50/position', PointStamped, queue_size=10)
+        self.explorer_vel_pub = rospy.Publisher('/auv/devices/explorer/velocity', Vector3Stamped, queue_size=10)
+        self.explorer_pos_pub = rospy.Publisher('/auv/devices/explorer/position', PointStamped, queue_size=10)
         
         self.test = test
         if not self.test:
@@ -335,32 +337,42 @@ class DVL:
             self.data_available = ret
 
     def publish_graey(self):
-        if not self.test:
-            msg = DVL()
-            msg.header.stamp = rospy.Time.now()
-            msg.header.frame_id = "graey_dvl"
-            msg.time = self.graey_data["time"]
-            msg.vx = self.graey_data["vx"]
-            msg.vy = self.graey_data["vy"]
-            msg.vz = self.graey_data["vz"]
-            msg.position = self.position
-            msg.error = self.graey_data["error"]
-            msg.valid = self.graey_data["valid"]
-            self.graey_dvl.publish(msg)
+            if not self.test:
+                now = rospy.Time.now()
+                vel_msg = Vector3Stamped()
+                vel_msg.header.stamp = now
+                vel_msg.header.frame_id = "graey_dvl"
+                vel_msg.vector.x = self.graey_data["vx"]
+                vel_msg.vector.y = self.graey_data["vy"]
+                vel_msg.vector.z = self.graey_data["vz"]
+                self.a50_vel_pub.publish(vel_msg)
+
+                pos_msg = PointStamped()
+                pos_msg.header.stamp = now
+                pos_msg.header.frame_id = "graey_dvl"
+                pos_msg.point.x = self.position[0]
+                pos_msg.point.y = self.position[1]
+                pos_msg.point.z = self.position[2]
+                self.a50_pos_pub.publish(pos_msg)
 
     def publish_onyx(self):
         if not self.test:
-            msg = DVL()
-            msg.header.stamp = rospy.Time.now()
-            msg.header.frame_id = "onyx_dvl"
-            msg.time = self.current_time
-            msg.vx = self.vel_rot[0]
-            msg.vy = self.vel_rot[1]
-            msg.vz = self.vel_rot[2]
-            msg.position = self.position
-            msg.error = self.dvl_error
-            msg.valid = self.is_valid
-            self.onyx_dvl.publish(msg)
+            now = rospy.Time.now()
+            vel_msg = Vector3Stamped()
+            vel_msg.header.stamp = now
+            vel_msg.header.frame_id = "onyx_dvl"
+            vel_msg.vector.x = self.vel_rot[0]
+            vel_msg.vector.y = self.vel_rot[1]
+            vel_msg.vector.z = self.vel_rot[2]
+            self.explorer_vel_pub.publish(vel_msg)
+
+            pos_msg = PointStamped()
+            pos_msg.header.stamp = now
+            pos_msg.header.frame_id = "onyx_dvl"
+            pos_msg.point.x = self.position[0]
+            pos_msg.point.y = self.position[1]
+            pos_msg.point.z = self.position[2]
+            self.explorer_pos_pub.publish(pos_msg)
 
     
     def start(self):
