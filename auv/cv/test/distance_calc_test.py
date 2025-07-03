@@ -1,6 +1,6 @@
 
 
-# these measurements are for the USD low-light camera
+# these measurements are for the USB low-light camera
 
 focal_length = 2.97 # 2.75 mm
 real_pole_width = 25.4 # mm
