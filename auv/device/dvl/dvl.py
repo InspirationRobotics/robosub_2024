@@ -335,9 +335,14 @@ class DVL:
             else:
                 ret = self.process_packet(vel_packet)
             self.data_available = ret
+            
+            # publish the rostopic
+            self.__thread_pub = threading.Thread(target=self.publish_graey, daemon=True)
+            self.__thread_pub.start()
+
 
     def publish_graey(self):
-        while not rospy.is_shuutdown():
+        while not rospy.is_shutdown():
             now = rospy.Time.now()
             vel_msg = Vector3Stamped()
             vel_msg.header.stamp = now
@@ -463,10 +468,10 @@ if __name__ == '__main__':
     # Make a new dvl instance
     try:
         dvl1 = DVL()
-        rospy.spin()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"dvl_log_{timestamp}.csv"
         csvLog(dvl1, filename)
+        rospy.spin()
     
     except KeyboardInterrupt:
         print("\n[INFO] DVL stopped by user.")
