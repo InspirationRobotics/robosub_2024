@@ -50,7 +50,7 @@ class Polulu:
         self.torpedo_state = {0: (2, 2400), 1: (2, 1700), 2: (2, 1300)}
         self.dropper_state = {0: (1, 1600), 1: (1, 1200), 2: (1, 700)}
         self.gripper_state = {0: (0, 1500), 1: (0, 1550), 2: (0, 1450)}
-
+    
         # Open the USB serial connection
         if not self.USB.isOpen():
             self.USB.open()
@@ -364,14 +364,25 @@ class Servo:
             self.ballState = 0
         # Drop the first ball by setting the PWM to 1200
         elif ball == 1: 
-            self.setPwm(1, 1200)
-        # Drop the second ball by setting the PWM to 700
+            self.setPwm(1, 100)
+            time.sleep(.1)
+            self.setPwm (1, 200)
+            time.sleep(.2)
+            self.setPwm (1,100)
+            self.dropper(0)
+        # Drop the second ball by setting the PWM to 700    
         elif ball == 2: 
-            self.dropper(1)  # In case dropper(1) has not been called before -- this allows for both balls to be dropped without collision
-            time.sleep(0.5)
-            self.setPwm(1, 700)
+            self.dropper(2)  # In case dropper(1) has not been called before -- this allows for both balls to be dropped without collision
+            time.sleep(0.1)
+            self.setPwm(1, 100)
             time.sleep(1)
-            self.dropper(0)  # Reset to load position now that the dropper is empty
+            self.setPwm (1, 200)
+            time.sleep(.2)
+            self.setPwm (1,100)
+            self.dropper(1)  # Reset to load position now that the dropper is empty
+
+    
+
         # Default state is load
         elif ball == -1:
             self.ballState += 1
