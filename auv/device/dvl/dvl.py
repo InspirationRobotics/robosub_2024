@@ -337,23 +337,24 @@ class DVL:
             self.data_available = ret
 
     def publish_graey(self):
-            if not self.test:
-                now = rospy.Time.now()
-                vel_msg = Vector3Stamped()
-                vel_msg.header.stamp = now
-                vel_msg.header.frame_id = "graey_dvl"
-                vel_msg.vector.x = self.graey_data["vx"]
-                vel_msg.vector.y = self.graey_data["vy"]
-                vel_msg.vector.z = self.graey_data["vz"]
-                self.a50_vel_pub.publish(vel_msg)
+        while not rospy.is_shuutdown():
+            now = rospy.Time.now()
+            vel_msg = Vector3Stamped()
+            vel_msg.header.stamp = now
+            vel_msg.header.frame_id = "graey_dvl"
+            vel_msg.vector.x = self.graey_data["vx"]
+            vel_msg.vector.y = self.graey_data["vy"]
+            vel_msg.vector.z = self.graey_data["vz"]
+            self.a50_vel_pub.publish(vel_msg)
 
-                pos_msg = PointStamped()
-                pos_msg.header.stamp = now
-                pos_msg.header.frame_id = "graey_dvl"
-                pos_msg.point.x = self.position[0]
-                pos_msg.point.y = self.position[1]
-                pos_msg.point.z = self.position[2]
-                self.a50_pos_pub.publish(pos_msg)
+            pos_msg = PointStamped()
+            pos_msg.header.stamp = now
+            pos_msg.header.frame_id = "graey_dvl"
+            pos_msg.point.x = self.position[0]
+            pos_msg.point.y = self.position[1]
+            pos_msg.point.z = self.position[2]
+            self.a50_pos_pub.publish(pos_msg)
+            self.rate.sleep()
 
     def publish_onyx(self):
         if not self.test:
