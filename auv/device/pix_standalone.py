@@ -120,12 +120,9 @@ class AUV(RosHandler):
         self.AUV_COMPASS = TopicService("/auv/devices/compass", std_msgs.msg.Float64)
         self.AUV_IMU = TopicService("/auv/devices/imu", sensor_msgs.msg.Imu)
         self.AUV_VECTORNAV = TopicService("/auv/devices/vectornav", geometry_msgs.msg.Vector3)
-        # ROS Topics for A50
-        self.AUV_A50_Velocity = TopicService("/auv/devices/a50/velocity", geometry_msgs.msg.Vector3Stamped)
-        self.AUV_A50_Position = TopicService("/auv/devices/a50/position", geometry_msgs.msg.PointStamped)
-        # ROS Topics for Explorer
-        self.AUV_Explorer_Velocity = TopicService("/auv/devices/explorer/velocity", geometry_msgs.msg.Vector3Stamped)
-        self.AUV_Explorer_Position = TopicService("/auv/devices/explorer/position", geometry_msgs.msg.PointStamped)
+        # ROS Topics for DVL
+        self.AUV_DVL_Velocity = TopicService("/auv/devices/dvl/velocity", geometry_msgs.msg.Vector3Stamped)
+        self.AUV_DVL_Position = TopicService("/auv/devices/dvl/position", geometry_msgs.msg.PointStamped)
         # ROS Topic for Barometer
         self.AUV_BARO = TopicService("/auv/devices/baro", std_msgs.msg.Float32MultiArray)
         self.AUV_GET_THRUSTERS = TopicService("/auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn)

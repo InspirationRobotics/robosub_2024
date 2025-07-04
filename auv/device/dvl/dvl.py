@@ -27,10 +27,8 @@ class DVL:
         rospy.init_node("dvl", anonymous=True)
         self.rate = rospy.Rate(10)  # 10 Hz
         
-        self.a50_vel_pub = rospy.Publisher('/auv/devices/a50/velocity', Vector3Stamped, queue_size=10)
-        self.a50_pos_pub = rospy.Publisher('/auv/devices/a50/position', PointStamped, queue_size=10)
-        self.explorer_vel_pub = rospy.Publisher('/auv/devices/explorer/velocity', Vector3Stamped, queue_size=10)
-        self.explorer_pos_pub = rospy.Publisher('/auv/devices/explorer/position', PointStamped, queue_size=10)
+        self.vel_pub = rospy.Publisher('/auv/devices/dvl/velocity', Vector3Stamped, queue_size=10)
+        self.pos_pub = rospy.Publisher('/auv/devices/dvl/position', PointStamped, queue_size=10)
         
         self.test = test
         if not self.test:
@@ -341,48 +339,28 @@ class DVL:
             self.data_available = ret
             self.rate.sleep()
 
-
-
-    def publish_graey(self):
+    def publish_dvl(self, frame_id: str):
+        """Publish DVL data to rostopics
+        Args:
+            - frame_id (str): Frame ID containing name of AUV"""
         while not rospy.is_shutdown():
             now = rospy.Time.now()
             vel_msg = Vector3Stamped()
             vel_msg.header.stamp = now
-            vel_msg.header.frame_id = "graey_dvl"
-            vel_msg.vector.x = self.graey_data["vx"]
-            vel_msg.vector.y = self.graey_data["vy"]
-            vel_msg.vector.z = self.graey_data["vz"]
-            self.a50_vel_pub.publish(vel_msg)
-
-            pos_msg = PointStamped()
-            pos_msg.header.stamp = now
-            pos_msg.header.frame_id = "graey_dvl"
-            pos_msg.point.x = self.position[0]
-            pos_msg.point.y = self.position[1]
-            pos_msg.point.z = self.position[2]
-            self.a50_pos_pub.publish(pos_msg)
-            self.rate.sleep()
-
-    def publish_onyx(self):
-        while not rospy.is_shutdown():
-            now = rospy.Time.now()
-            vel_msg = Vector3Stamped()
-            vel_msg.header.stamp = now
-            vel_msg.header.frame_id = "onyx_dvl"
+            vel_msg.header.frame_id = id
             vel_msg.vector.x = self.vel_rot[0]
             vel_msg.vector.y = self.vel_rot[1]
             vel_msg.vector.z = self.vel_rot[2]
-            self.explorer_vel_pub.publish(vel_msg)
+            self.vel_pub.publish(vel_msg)
 
             pos_msg = PointStamped()
             pos_msg.header.stamp = now
-            pos_msg.header.frame_id = "onyx_dvl"
+            pos_msg.header.frame_id = frame_id
             pos_msg.point.x = self.position[0]
             pos_msg.point.y = self.position[1]
             pos_msg.point.z = self.position[2]
-            self.explorer_pos_pub.publish(pos_msg)
+            self.pos_pub.publish(pos_msg)
             self.rate.sleep()
-
     
     def start(self):
         # ensure not running
@@ -397,9 +375,9 @@ class DVL:
 
         # Add publisher thread depending on sub
         if self.sub == "graey":
-            self.__thread_pub = threading.Thread(target=self.publish_graey, daemon=True)
+            self.__thread_pub = threading.Thread(target=self.publish, args=("graey_dvl"), daemon=True)
         elif self.sub == "onyx":
-            self.__thread_pub = threading.Thread(target=self.publish_onyx, daemon=True)
+            self.__thread_pub = threading.Thread(target=self.publish, args=("onyx_dvl"), daemon=True)
         else:
             raise ValueError(f"[ERROR] Unknown sub: {self.sub}")
 
