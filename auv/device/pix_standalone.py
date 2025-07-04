@@ -35,7 +35,7 @@ import rospy
 from simple_pid import PID
 
 # For turning a status LED (based on a state) on and getting the configuration of a specified device, respectively
-from auv.device.utils import statusLed, deviceHelper
+from auv.utils import statusLed, deviceHelper
 
 # For handling ROS topics
 from auv.utils.rospyHandler import RosHandler
