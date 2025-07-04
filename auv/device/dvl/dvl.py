@@ -490,6 +490,7 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("\n[INFO] DVL stopped by user.")
         dvl1.stop()
+        rospy.shutdown()
         
     finally:
         print("Node exited.")
