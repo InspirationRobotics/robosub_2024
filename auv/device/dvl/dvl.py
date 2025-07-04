@@ -461,11 +461,19 @@ def csvLog(dvl, filename="dvl_log.csv"):
                 print(f"[INFO] Data saved to {filename}")
 if __name__ == '__main__':
     # Make a new dvl instance
-    dvl1 = DVL()
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    try:
+        dvl1 = DVL()
+        rospy.spin()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"dvl_log_{timestamp}.csv"
+        csvLog(dvl1, filename)
     
-    filename = f"dvl_log_{timestamp}.csv"
-    csvLog(dvl1, filename)
+    except KeyboardInterrupt:
+        print("\n[INFO] DVL stopped by user.")
+        dvl1.stop()
+        
+    finally:
+        print("Node exited.")
 
     # while True:
     #     time.sleep(1.0)
