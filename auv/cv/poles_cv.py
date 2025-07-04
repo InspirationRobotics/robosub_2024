@@ -133,10 +133,8 @@ class CV:
 
                 elif self.state == "realign":
                     yaw = -self.slanted_yaw
-                    if abs(x_center - self.x_midpoint) < self.tolerance:
-                        yaw = 0
-                        self.state = "strafing"
-                        self.strafe_start_time = time.time()
+                    self.state = "strafing"
+                    self.strafe_start_time = time.time()
 
                 elif self.state == "strafing":
                     lateral = 0.8 if self.side == "right" else -0.8
@@ -161,8 +159,14 @@ class CV:
                 lateral = 0.8 if self.side == "right" else -0.8
             elif self.state == "moving_forward":
                 forward = 1.0
+                
+            if self.row_counter >= self.max_rows:
+                self.end = True
+                print("[INFO] Pole Slalom Mission complete")           
+            
+            return forward, lateral, yaw, vertical
 
-        return forward, lateral, yaw, vertical
+
 
     def run(self, raw_frame, target, detections):
         detection, mask = self.detect_red_pole(raw_frame)
@@ -187,4 +191,3 @@ class CV:
 
         return {
             "lateral": lateral, "forward": forward, "yaw": yaw, "vertical": vertical, "end": self.end}, frame
-x
