@@ -36,9 +36,9 @@ class DVL:
         if not self.test:
             self.dvlPort = deviceHelper.dataFromConfig("dvl")
             print(self.dvlPort)
-            sub = deviceHelper.variables.get("sub")
-            print(f"[DEBUG] Sub is {sub}")
-            if sub == "onyx":
+            self.sub = deviceHelper.variables.get("sub")
+            print(f"[DEBUG] Sub is {self.sub}")
+            if self.sub == "onyx":
                 self.ser = serial.Serial(
                     port=self.dvlPort,
                     baudrate=115200,
@@ -57,12 +57,12 @@ class DVL:
                 time.sleep(2)
                 self.read = self.read_onyx
 
-            elif sub == "graey":
+            elif self.sub == "graey":
                 # autostart = False
                 self.read = self.read_graey
                 self.dvl_rot = math.radians(0)
             else:
-                raise ValueError(f"Invalid sub {sub}")
+                raise ValueError(f"Invalid sub {self.sub}")
 
         self.enable_compass = compass
 
@@ -323,22 +323,24 @@ class DVL:
         self.position = [0, 0, 0]
         self.error = [0, 0, 0]
 
-    def update(self):
+    def update(self): 
         """Update DVL data (runs in a thread)"""
-        print("[DEBUG] Called update()")
-        while self.__running:
+        print("[DEBUG] DVL update() loop started")
+
+        while self.__running and not rospy.is_shutdown():
             vel_packet = self.read()
+
             if vel_packet is None:
                 continue
+
             if self.enable_compass:
                 ret = self.process_packet_compass(vel_packet)
             else:
                 ret = self.process_packet(vel_packet)
+
             self.data_available = ret
-            
-            # publish the rostopic
-            self.__thread_pub = threading.Thread(target=self.publish_graey, daemon=True)
-            self.__thread_pub.start()
+            self.rate.sleep()
+
 
 
     def publish_graey(self):
@@ -362,7 +364,7 @@ class DVL:
             self.rate.sleep()
 
     def publish_onyx(self):
-        if not self.test:
+        while not rospy.is_shutdown():
             now = rospy.Time.now()
             vel_msg = Vector3Stamped()
             vel_msg.header.stamp = now
@@ -379,6 +381,7 @@ class DVL:
             pos_msg.point.y = self.position[1]
             pos_msg.point.z = self.position[2]
             self.explorer_pos_pub.publish(pos_msg)
+            self.rate.sleep()
 
     
     def start(self):
@@ -391,6 +394,17 @@ class DVL:
         self.__running = True
         self.__thread_vel = threading.Thread(target=self.update, daemon=True)
         self.__thread_vel.start()
+
+        # Add publisher thread depending on sub
+        if self.sub == "graey":
+            self.__thread_pub = threading.Thread(target=self.publish_graey, daemon=True)
+        elif self.sub == "onyx":
+            self.__thread_pub = threading.Thread(target=self.publish_onyx, daemon=True)
+        else:
+            raise ValueError(f"[ERROR] Unknown sub: {self.sub}")
+
+        self.__thread_pub.start()
+
 
     def stop(self):
         self.__running = False
