@@ -1,7 +1,11 @@
+
+import rospy
 import time
 import threading
 from serial import Serial
 from auv.utils import deviceHelper
+from geometry_msgs.msg import Vector3Stamped
+
 
 class VN100:
     def __init__(self,port:str = deviceHelper.dataFromConfig("vectornav")): # deviceHelper.dataFromConfig("vectornav")
@@ -20,10 +24,14 @@ class VN100:
         self.gyroX = 0.0
         self.gyroY = 0.0
         self.gyroZ = 0.0
+        self.vectornav_pub = rospy.Publisher('/auv/devices/vectornav')
 
         # start thread
         self.read_thread = threading.Thread(target=self.read, daemon=True)
         self.read_thread.start()
+
+        self.publish_thread = threading.Thread(target=self.publish_data, daemon=True)
+        self.publish_thread.start()
 
         time.sleep(2) # sleep for 2s and wait for one iteration in thread
     
@@ -56,6 +64,16 @@ class VN100:
                 print("Bad data")
             except Exception:
                 pass
+    
+    def publish_data(self):
+        """Published the IMU data to /auv/devices/vectornav"""
+        vn_data = Vector3Stamped()
+        vn_data.header.stamp = rospy.Time.now()
+        vn_data.header.frame_id = "vectornav_orientation"
+        vn_data.vector.x = self.pitch
+        vn_data.vector.y = self.roll
+        vn_data.vector.z = self.yaw
+        self.vectornav_pub.publish(vn_data)
 
 
     

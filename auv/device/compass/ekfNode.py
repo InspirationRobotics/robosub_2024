@@ -22,7 +22,7 @@ class SensorFuse:
 
         # Create subscriber for imu and dvl
         # TODO: Fix IMU rostopic architecture
-        self.imu_sub = rospy.Subscriber("/auv/device/vectornav", Vector3, self.imu_callback)
+        self.imu_sub = rospy.Subscriber("/auv/device/vectornav", Vector3Stamped, self.imu_callback)
         self.imu_data = {"ax": 0, "ay": 0, "az": 0}  # store one line of IMU data for ekf predict
         self.imu_array = None # used for passing into the ekf
 
@@ -39,17 +39,17 @@ class SensorFuse:
         self.last_time = time.time()
 
     def imu_callback(self,msg):
-        self.imu_data["ax"] = msg.linear_acceleration.x
-        self.imu_data["ay"] = msg.linear_acceleration.y
-        self.imu_data["az"] = msg.linear_acceleration.z
+        self.imu_data["ax"] = msg.vector.x
+        self.imu_data["ay"] = msg.vector.y
+        self.imu_data["az"] = msg.vector.z
         self.imu_array = np.array([self.imu_data["ax"], self.imu_data["ay"], self.imu_data["az"]])
         # update state
         self.update_state()
 
     def dvl_callback(self,msg):
-        self.dvl_data["vx"] = msg.twist.linear.x
-        self.dvl_data["vy"] = msg.twist.linear.y
-        self.dvl_data["vz"] = msg.twist.linear.z
+        self.dvl_data["vx"] = msg.vector.x
+        self.dvl_data["vy"] = msg.vector.y
+        self.dvl_data["vz"] = msg.vector.z
         self.dvl_array = np.array([self.dvl_data["vx"], self.dvl_data["vy"], self.dvl_data["vz"]])
         # update filter
         self.update_filter()

@@ -28,6 +28,8 @@ class DVL:
         self.rate = rospy.Rate(10)  # 10 Hz
         
         self.vel_pub = rospy.Publisher('/auv/devices/dvl/velocity', Vector3Stamped, queue_size=10)
+
+        # TODO: Review if we need a position publisher
         self.pos_pub = rospy.Publisher('/auv/devices/dvl/position', PointStamped, queue_size=10)
         
         self.test = test
