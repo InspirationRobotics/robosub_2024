@@ -27,3 +27,4 @@ testing_data/
 
 # virtualenv
 venv
+.venv/

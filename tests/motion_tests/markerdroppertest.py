@@ -43,10 +43,15 @@ class MiniMaestro:
 if __name__ == "__main__":
     # Change port based on your system (e.g., "COM3" on Windows, "/dev/ttyUSB0" on Linux/Mac)
     # maestro = MiniMaestro(port="/dev/ttyUSB0")
-    maestro = MiniMaestro(port="/dev/ttyACM2")
+    maestro = MiniMaestro(port="COM16")
 
     # Move servos to new positions
-    maestro.set_pwm(1, 1600)  # Move servo on channel 0
+    maestro.set_pwm(0, 1600)  # Move servo on channel 0
+    time.sleep(2)
+
+    print("it works")
+
+    maestro.set_pwm(0, 1500)  # Move servo on channel 0
     time.sleep(2)
 
     # print("ball launched")
