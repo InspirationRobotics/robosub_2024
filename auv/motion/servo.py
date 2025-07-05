@@ -350,13 +350,15 @@ class Servo:
         else:
             print("Invalid Arg in [torpedoLauncher]")
 
-    def dropper(self, ball=-1):  
-        """
-        Controls the dropper servo
+class Dropper_Emma(Polulu):
+    def __init__(self):
+        def dropper_emma(self, ball=-1):  
+            """
+            Controls the dropper servo
 
-        Args:
-            ball (int): The ball to drop (0: load, 1: ball 1, 2: ball 2) -> default is load state
-        """
+            Args:
+                ball (int): The ball to drop (0: load, 1: ball 1, 2: ball 2) -> default is load state
+            """
 
         # Load the balls
         if ball == 0:
