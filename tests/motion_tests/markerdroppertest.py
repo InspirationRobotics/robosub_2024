@@ -1,31 +1,74 @@
 import serial
 import time
 
-myservo = None  # Placeholder for servo object
-command = ''
+class MiniMaestro:
+    def __init__(self, port, baudrate=9600):
+        """
+        Initializes the serial connection to the Mini Maestro Servo Controller.
 
-angle = 0  # variable to store the servo position
+        Args:
+            - port (str): The COM port (e.g., "COM3" for Windows or "/dev/ttyUSB0" for Linux/Mac).
+            - baudrate (int): Communication speed (default is 9600).
+        """
+        self.serial_conn = serial.Serial(port, baudrate, timeout=1)
+        time.sleep(2)  # Allow time for the connection to establish
 
-def setup():
-    global myservo
-    myservo = Servo(6)  # attaches the servo on pin 6 to the servo object
-    ser = serial.Serial('COM_PORT', 9600)  # Replace 'COM_PORT' with the actual port
-    ser.write(b"Send 'q'\n")
-    myservo.write(300)  # Move to 0 degrees
+        # Default servo states
+        self.racquetball_launcher_state = {"stop": (1, 1500), "run": (1, 1800), "back": (1,1450)}
 
-def loop():
-    global command
-    ser = serial.Serial('COM_PORT', 9600)  # Replace 'COM_PORT' with the actual port
-    while True:
-        if ser.in_waiting > 0:
-            command = ser.read().decode('utf-8')
+        ## Set default positions
+        self.set_pwm(*self.racquetball_launcher_state["stop"])
+       
+        #self.set_pwm(*self.gripper_state[0])
 
-            if command == 'q':
-                ser.write(b"Launch\n")
-                myservo.write(400)
-                time.sleep(0.1)  # tell servo to go to position in variable 'angle'
-                myservo.write(800)
-                time.sleep(0.2)
-                myservo.write(400)
+    def set_pwm(self, channel, target):
+        """
+        Sends a command to set the PWM signal for a servo.
+        Args:
+            - channel (int): The servo channel (0-5 for Mini Maestro 6).
+            - target (int): PWM value (in microseconds, typically 500-2500).
+        """
+        target = target * 4  # Convert to Maestro format
+        lsb = target & 0x7F  # Lower 7 bits
+        msb = (target >> 7) & 0x7F  # Upper 7 bits
+        command = bytes([0x84, channel, lsb, msb])  # Compact binary command
+        self.serial_conn.write(command)
 
-# Note: The Servo class and its methods need to be defined or imported from a library that supports servo control in Python.
+    def close(self):
+        """Closes the serial connection."""
+        if self.serial_conn.is_open:
+            self.serial_conn.close()
+
+# Example usage:
+if __name__ == "__main__":
+    # Change port based on your system (e.g., "COM3" on Windows, "/dev/ttyUSB0" on Linux/Mac)
+    # maestro = MiniMaestro(port="/dev/ttyUSB0")
+    maestro = MiniMaestro(port="/dev/ttyACM2")
+
+    # Move servos to new positions
+    maestro.set_pwm(1, 1600)  # Move servo on channel 0
+    time.sleep(2)
+
+    # print("ball launched")
+    # maestro.set_pwm(1, 1800)  # Move servo on channel 0   
+    # time.sleep(0.35)
+    
+    # maestro.set_pwm(1, 1500)  # Move servo on channel 0
+    # time.sleep(2)    
+    # print("finished launching")
+
+    # maestro.set_pwm(1, 1500)  # Move servo on channel 1
+    # print("water gun")
+    # time.sleep(2)
+    # maestro.set_pwm(1, 1800)  # Move servo on channel 1   
+
+    # time.sleep(2)
+    # maestro.set_pwm(1, 1500)  # Move servo on channel 1
+    # time.sleep(2)
+    # print("finished")
+
+    # maestro.set_pwm(1, 1200)  # Move servo on channel 1
+    # maestro.set_pwm(2, 1800)  # Move servo on channel 2
+
+    # Close connection when done
+    maestro.close()
