@@ -351,43 +351,44 @@ class Servo:
             print("Invalid Arg in [torpedoLauncher]")
 
 class Dropper_Emma(Polulu):
-    def __init__(self):
-        def dropper_emma(self, ball=-1):  
-            """
-            Controls the dropper servo
+    def __init__(self, ball):
+        self.ball = ball
+    def dropper_emma(self, ball=-1):  
+        """
+        Controls the dropper servo
 
-            Args:
-                ball (int): The ball to drop (0: load, 1: ball 1, 2: ball 2) -> default is load state
-            """
+        Args:
+            ball (int): The ball to drop (0: load, 1: ball 1, 2: ball 2) -> default is load state
+        """
 
-        # Load the balls
-        if ball == 0:
-            self.setPwm(1, 1600)
-            self.ballState = 0
-        # Drop the first ball by setting the PWM to 1200
-        elif ball == 1: 
-            self.setPwm(1, 100)
-            time.sleep(.1)
-            self.setPwm (1, 200)
-            time.sleep(.2)
-            self.setPwm (1,100)
-            self.dropper(0)
-        # Drop the second ball by setting the PWM to 700    
-        elif ball == 2: 
-            self.dropper(2)  # In case dropper(1) has not been called before -- this allows for both balls to be dropped without collision
-            time.sleep(0.1)
-            self.setPwm(1, 100)
-            time.sleep(1)
-            self.setPwm (1, 200)
-            time.sleep(.2)
-            self.setPwm (1,100)
-            self.dropper(1)  # Reset to load position now that the dropper is empty
+    # Load the balls
+    if ball == 0:
+        self.setPwm(1, 1600)
+        self.ballState = 0
+    # Drop the first ball by setting the PWM to 1200
+    elif ball == 1: 
+        self.setPwm(1, 100)
+        time.sleep(.1)
+        self.setPwm (1, 200)
+        time.sleep(.2)
+        self.setPwm (1,100)
+        self.dropper(0)
+    # Drop the second ball by setting the PWM to 700    
+    elif ball == 2: 
+        self.dropper(2)  # In case dropper(1) has not been called before -- this allows for both balls to be dropped without collision
+        time.sleep(0.1)
+        self.setPwm(1, 100)
+        time.sleep(1)
+        self.setPwm (1, 200)
+        time.sleep(.2)
+        self.setPwm (1,100)
+        self.dropper(1)  # Reset to load position now that the dropper is empty
 
-    
 
-        # Default state is load
-        elif ball == -1:
-            self.ballState += 1
-            self.dropper(self.ballState)
-        else:
-            print("Invalid Arg in [dropper]")
+
+    # Default state is load
+    elif ball == -1:
+        self.ballState += 1
+        self.dropper(self.ballState)
+    else:
+        print("Invalid Arg in [dropper]")
