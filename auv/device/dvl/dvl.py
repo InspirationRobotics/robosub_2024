@@ -349,7 +349,7 @@ class DVL:
             now = rospy.Time.now()
             vel_msg = Vector3Stamped()
             vel_msg.header.stamp = now
-            vel_msg.header.frame_id = id
+            vel_msg.header.frame_id = frame_id
             vel_msg.vector.x = self.vel_rot[0]
             vel_msg.vector.y = self.vel_rot[1]
             vel_msg.vector.z = self.vel_rot[2]
