@@ -56,10 +56,11 @@ class BuoyMission:
         Here should be all the code required to approach the buoy.
         This could be a loop, a finite state machine, etc.
         """
-
+        print("[INFO] before entering the loop")
         while not rospy.is_shutdown():
             time.sleep(0.01)
             if not self.received:
+                print("[INFO] skip one iteration")
                 continue
 
             # Merge self.next_data, which contains the updated CV handler output, with self.data, which contains the previous CV handler output.
@@ -85,7 +86,8 @@ class BuoyMission:
                 break
             else:
                 self.robot_control.movement(lateral = lateral, forward = forward, yaw = yaw, vertical = vertical)
-                # print(forward, lateral, yaw) 
+                print(forward, lateral, yaw) 
+                
             
         print("[INFO] Buoy mission finished running")
         

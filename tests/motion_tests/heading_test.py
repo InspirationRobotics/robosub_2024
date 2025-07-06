@@ -16,7 +16,7 @@ time.sleep(5)
 
 heading = rc.get_heading()
 print(f"[DEBUG]: Heading is {heading}")
-#rc.set_heading(heading + 180)
+rc.set_heading(heading + 90, heading_sensor="vectornav_imu")
 
 time.sleep(2.0)
 

@@ -81,7 +81,7 @@ class RobotControl:
         actual value. Based on this error, PIDs generate control signals to adjust the robot's actuators (in this case thrusters) to 
         minimize the desired setpoint. 
 
-        Video: https://www.youtube.com/watch?v=wkfEZmsQqiA
+        Video:  
 
         These definitions "tune" the PID controller for the necessities of the sub -- Proportional is tuned up high, which means greater 
         response to the current error but possible overshooting and oscillation
@@ -114,10 +114,11 @@ class RobotControl:
         # Wait for the topics to run
         time.sleep(1)
 
-    def get_callback_compass(self,msg):
+    def get_callback_compass(self, msg):
         def _callback_compass(msg):
             """Get the compass heading from /auv/devices/compass topic"""
             self.compass = msg.data
+            print(self.compass)
 
         def _callback_compass_dvl(msg):
             """Get the compass heading from dvl"""
@@ -209,8 +210,8 @@ class RobotControl:
         channels[5] = int((lateral * 80) + 1500) if lateral else 1500
 
         # TODO: Implement correct pitch/roll channels w/ QGroundControl
-        channels[6] = int((pitch * 80) + 1500) if pitch else 1500
-        channels[7] = int((roll * 80) + 1500) if roll else 1500
+        channels[0] = int((pitch * 80) + 1500) if pitch else 1500
+        channels[1] = int((roll * 80) + 1500) if roll else 1500
         pwm.channels = channels
 
         # Publish PWMs to /auv/devices/thrusters
@@ -227,14 +228,14 @@ class RobotControl:
             target (int): Absolute desired heading 
             fog (boolean): Whether to use FOG (True) or compass (False)
         """
-
         # Mod the target to make sure it is between 0 - 359 degrees
         target = (target) % 360
         print(f"[INFO] Setting heading to {target}")
-
+        time_check = time.time()
+        self.prev_error = None
         while not rospy.is_shutdown():
             if heading_sensor == "fog":
-                if self.fog == False:
+                if self.fog is None:
                     print("[WARN] FOG not ready")
                     time.sleep(0.5)
                     continue
@@ -251,8 +252,8 @@ class RobotControl:
                     time.sleep(0.5)
                     continue
                 error = heading_error(self.vectornav_yaw, target)
-            else:
-                print("[WARN] Unknown sensor specified")
+            # else:
+            #     print("[WARN] Unknown sensor specified")
 
                 
 
@@ -372,7 +373,7 @@ class RobotControl:
 
         if relative_heading:
             # Rotate the vector [x, y] by the current heading (to make the heading relative)
-            x, y = rotate_vector(x, y, self.compass)
+            x, y = rotate_vector(x, y, self.vectornav_yaw if self.vectornav_yaw is not None else self.compass)
 
         # Get the setpoint (target) heading from the relative coordinates
         target_heading = get_heading_from_coords(x, y)

@@ -10,7 +10,7 @@ import os
 
 
 class CV:
-    camera = "/auv/camera/videoUSBRaw0" 
+    camera = "/auv/camera/videoOAKdRawForward" 
 
     def __init__(self, **config):
         self.aligned = False
