@@ -2,9 +2,13 @@
 import rospy
 import time
 import threading
+
 from serial import Serial
+from transforms3d import euler2quat
+
 from auv.utils import deviceHelper
 from geometry_msgs.msg import Vector3Stamped
+from sensor_msgs.msg import Imu
 
 
 class VN100:
@@ -24,7 +28,7 @@ class VN100:
         self.gyroX = 0.0
         self.gyroY = 0.0
         self.gyroZ = 0.0
-        self.vectornav_pub = rospy.Publisher('/auv/devices/vectornav')
+        self.vectornav_pub = rospy.Publisher('/auv/devices/vectornav', Imu, queue_size=10)
 
         # start thread
         self.read_thread = threading.Thread(target=self.read, daemon=True)
@@ -57,6 +61,9 @@ class VN100:
         
                 # Populate yaw, pitch, roll
                 self.yaw, self.pitch, self.roll = (float(data_list[1]) + 90) % 360, float(data_list[3]), float(data_list[2])
+                self.get_orientation()
+
+                # Populate accelerometer and gyroscope
                 self.accX, self.accY, self.accZ = float(data_list[4]) , float(data_list[5]), float(data_list[6])
                 self.gyroX, self.gyroY, self.gyroZ = float(data_list[7]) , float(data_list[8]), float(data_list[9])
 
@@ -65,16 +72,33 @@ class VN100:
             except Exception:
                 pass
     
+    def get_orientation(self):
+        """Converts Euler angles to quaternion form
+        - self.quat_orient: A quaternion orientation in w, x, y, z format"""
+        self.quat_orient = euler2quat(self.pitch, self.roll, self.yaw)
+    
     def publish_data(self):
         """Published the IMU data to /auv/devices/vectornav"""
         while not rospy.is_shutdown():
-            vn_data = Vector3Stamped()
-            vn_data.header.stamp = rospy.Time.now()
-            vn_data.header.frame_id = "vectornav_orientation"
-            vn_data.vector.x = self.pitch
-            vn_data.vector.y = self.roll
-            vn_data.vector.z = self.yaw
-            self.vectornav_pub.publish(vn_data)
+
+            imu_msg = Imu()
+            imu_msg.header.stamp = rospy.Time.now()
+            imu_msg.header.frame_id = "vectornav"
+
+            imu_msg.orientation.w = self.quat_orient[0]
+            imu_msg.orientation.x = self.quat_orient[1]
+            imu_msg.orientation.y = self.quat_orient[2]
+            imu_msg.orientation.z = self.quat_orient[3]
+
+            imu_msg.angular_velocity.x = self.gyroX
+            imu_msg.angular_velocity.y = self.gyroY
+            imu_msg.angular_velocity.z = self.gyroZ
+
+            imu_msg.linear_acceleration.x = self.accX
+            imu_msg.linear_acceleration.y = self.accY
+            imu_msg.linear_acceleration.z = self.accZ
+
+            self.vectornav_pub.publish(imu_msg)
 
 
     
