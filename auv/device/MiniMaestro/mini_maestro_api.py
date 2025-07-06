@@ -10,10 +10,8 @@ class MiniMaestro:
             - port (str): The COM port (e.g., "COM3" for Windows or "/dev/ttyUSB0" for Linux/Mac).
             - baudrate (int): Communication speed (default is 9600).
         """
-        self.serial_conn = serial.Serial(port, baudrate, timeout=1)
+        self.__serial_conn = serial.Serial(port, baudrate, timeout=1)
         time.sleep(2)  # Allow time for the connection to establish
-     
-        ## Set default positions
 
     def set_pwm(self, channel, target):
         """
@@ -26,12 +24,12 @@ class MiniMaestro:
         lsb = target & 0x7F  # Lower 7 bits
         msb = (target >> 7) & 0x7F  # Upper 7 bits
         command = bytes([0x84, channel, lsb, msb])  # Compact binary command
-        self.serial_conn.write(command)
+        self.__serial_conn.write(command)
 
     def close(self):
         """Closes the serial connection."""
-        if self.serial_conn.is_open:
-            self.serial_conn.close()
+        if self.__serial_conn.is_open:
+            self.__serial_conn.close()
 
 # Example usage:
 if __name__ == "__main__":
