@@ -377,9 +377,9 @@ class DVL:
 
         # Add publisher thread depending on sub
         if self.sub == "graey":
-            self.__thread_pub = threading.Thread(target=self.publish, args=("graey_dvl"), daemon=True)
+            self.__thread_pub = threading.Thread(target=self.publish_dvl, args=("graey_dvl"), daemon=True)
         elif self.sub == "onyx":
-            self.__thread_pub = threading.Thread(target=self.publish, args=("onyx_dvl"), daemon=True)
+            self.__thread_pub = threading.Thread(target=self.publish_dvl, args=("onyx_dvl"), daemon=True)
         else:
             raise ValueError(f"[ERROR] Unknown sub: {self.sub}")
 

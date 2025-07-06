@@ -67,13 +67,14 @@ class VN100:
     
     def publish_data(self):
         """Published the IMU data to /auv/devices/vectornav"""
-        vn_data = Vector3Stamped()
-        vn_data.header.stamp = rospy.Time.now()
-        vn_data.header.frame_id = "vectornav_orientation"
-        vn_data.vector.x = self.pitch
-        vn_data.vector.y = self.roll
-        vn_data.vector.z = self.yaw
-        self.vectornav_pub.publish(vn_data)
+        while not rospy.is_shutdown():
+            vn_data = Vector3Stamped()
+            vn_data.header.stamp = rospy.Time.now()
+            vn_data.header.frame_id = "vectornav_orientation"
+            vn_data.vector.x = self.pitch
+            vn_data.vector.y = self.roll
+            vn_data.vector.z = self.yaw
+            self.vectornav_pub.publish(vn_data)
 
 
     
