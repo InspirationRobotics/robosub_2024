@@ -6,13 +6,13 @@ import json
 import rospy
 from std_msgs.msg import String
 
-from ..device import cv_handler  # For running mission-specific CV scripts
-from ..motion import robot_control  # For running the motors on the sub
-from ..utils import disarm
+from auv.device import cv_handler  # For running mission-specific CV scripts
+from auv.motion import robot_control  # For running the motors on the sub
+from auv.utils import disarm
 
 
 class PoleSlalomMission:
-    cv_files = ["pole_cv"]  # Name of your red pole CV script file (no .py extension)
+    cv_files = ["poles_cv"]  # Name of your red pole CV script file (no .py extension)
 
     def __init__(self, target=None, **config):
         """
@@ -29,7 +29,7 @@ class PoleSlalomMission:
         for file_name in self.cv_files:
             self.cv_handler.start_cv(file_name, self.callback)
 
-        self.cv_handler.set_target("pole_cv", target)
+        self.cv_handler.set_target("poles_cv", target)
         print("[INFO] Pole Slalom Mission Init")
 
     def callback(self, msg):
@@ -60,7 +60,7 @@ class PoleSlalomMission:
             self.received = False
             self.next_data = {}
 
-            cv_data = self.data["pole_cv"]
+            cv_data = self.data["poles_cv"]
             lateral = cv_data.get("lateral", 0)
             forward = cv_data.get("forward", 0)
             yaw = cv_data.get("yaw", 0)
