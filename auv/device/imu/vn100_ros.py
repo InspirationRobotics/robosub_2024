@@ -6,7 +6,7 @@ import math
 from transforms3d.euler import quat2euler
 from auv.device.imu.vn100_serial import VN100
 
-rospy.init_node("vectornav_api_node", anonymous=True)
+rospy.init_node("vectornav_ros_api", anonymous=True)
 
 class ImuNode:
     def __init__(self):
