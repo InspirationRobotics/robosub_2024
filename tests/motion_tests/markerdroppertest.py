@@ -5,6 +5,7 @@ class MiniMaestro:
     def __init__(self, port, baudrate=9600):
         """
         Initializes the serial connection to the Mini Maestro Servo Controller.
+        Mini Maestro set to USB Chained Mode in Control center
 
         Args:
             - port (str): The COM port (e.g., "COM3" for Windows or "/dev/ttyUSB0" for Linux/Mac).
@@ -18,10 +19,6 @@ class MiniMaestro:
         # Default servo states
         self.racquetball_launcher_state = {"stop": (1, 1500), "run": (1, 1800), "back": (1,1450)}
 
-        ## Set default positions
-        # self.set_pwm(*self.racquetball_launcher_state["stop"])
-       
-        #self.set_pwm(*self.gripper_state[0])
 
     def set_pwm(self, channel, target):
         """
