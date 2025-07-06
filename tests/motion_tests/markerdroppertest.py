@@ -11,13 +11,15 @@ class MiniMaestro:
             - baudrate (int): Communication speed (default is 9600).
         """
         self.serial_conn = serial.Serial(port, baudrate, timeout=1)
+        if self.serial_conn.is_open:
+            print(f"Serial port {port} opened successfully.")
         time.sleep(2)  # Allow time for the connection to establish
 
         # Default servo states
         self.racquetball_launcher_state = {"stop": (1, 1500), "run": (1, 1800), "back": (1,1450)}
 
         ## Set default positions
-        self.set_pwm(*self.racquetball_launcher_state["stop"])
+        # self.set_pwm(*self.racquetball_launcher_state["stop"])
        
         #self.set_pwm(*self.gripper_state[0])
 
@@ -43,15 +45,15 @@ class MiniMaestro:
 if __name__ == "__main__":
     # Change port based on your system (e.g., "COM3" on Windows, "/dev/ttyUSB0" on Linux/Mac)
     # maestro = MiniMaestro(port="/dev/ttyUSB0")
-    maestro = MiniMaestro(port="COM16")
+    maestro = MiniMaestro(port="/dev/ttyACM0")
 
     # Move servos to new positions
-    maestro.set_pwm(0, 1600)  # Move servo on channel 0
+    maestro.set_pwm(0, 1450)  # Move servo on channel 0
     time.sleep(2)
 
     print("it works")
 
-    maestro.set_pwm(0, 1500)  # Move servo on channel 0
+    maestro.set_pwm(0, 1800)  # Move servo on channel 0
     time.sleep(2)
 
     # print("ball launched")
