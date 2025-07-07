@@ -13,6 +13,8 @@ import mavros_msgs.srv
 import rospy
 from std_msgs.msg import Float64, Float32MultiArray, String
 import geometry_msgs.msg
+from geometry_msgs.msg import PointStamped, TwistStamped, Vector3Stamped, PoseStamped 
+
 
 # Import the PID controller
 from simple_pid import PID
@@ -50,6 +52,9 @@ class RobotControl:
         self.vectornav_roll = None
         self.vectornav_yaw = None
 
+        self.position = {'x':0,'y':0,'z':0}
+        self.orientation = {'x':0,'y':0,'z':0,'w':0}
+
         # dvl sensor setup (both subs)
         if enable_dvl:
             self.dvl = dvl.DVL()
@@ -66,6 +71,7 @@ class RobotControl:
         self.vectornav = rospy.Subscriber("/auv/devices/vectornav", geometry_msgs.msg.Vector3, self.callback_vectornav)
         self.sub_fog = rospy.Subscriber("/auv/devices/fog", Float64, self.get_callback_fog)
         self.sub_depth = rospy.Subscriber("/auv/devices/baro", Float32MultiArray, self.callback_depth)
+        self.sub_pose = rospy.Subscriber("/auv/state/position", PoseStamped, self.callback_pose)
         self.pub_thrusters = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
         self.pub_depth = rospy.Publisher("auv/devices/setDepth", Float64, queue_size=10)
         self.pub_rel_depth = rospy.Publisher("auv/devices/setRelativeDepth", Float64, queue_size=10)
@@ -172,7 +178,26 @@ class RobotControl:
         press = mavros_msgs.msg.ManualControl()
         press.buttons = button
         self.pub_button.publish(press)
-    
+
+    def callback_pose(self, msg):
+        # Extract position
+        x = msg.pose.position.x
+        y = msg.pose.position.y
+        z = msg.pose.position.z
+
+        # Extract orientation (quaternion)
+        qx = msg.pose.orientation.x
+        qy = msg.pose.orientation.y
+        qz = msg.pose.orientation.z
+        qw = msg.pose.orientation.w
+        self.position['x'] = x
+        self.position['y'] = y
+        self.position['z'] = z
+
+        self.orientation['x'] = qx
+        self.orientation['y'] = qy
+        self.orientation['z'] = qz
+        self.orientation['w'] = qw
 
     def movement(
         self,
@@ -731,3 +756,18 @@ class RobotControl:
         roll_cmd.angular.x = roll_vel
         self.pub_ang_vel.publish(roll_cmd)
 
+    def waypointNav(self,x:float,y:float, error:float=1.0):
+        err_x = x - self.position['x']
+        err_y = y - self.position['y']
+        #err_z = z - self.position['z']
+
+        # 1 m of error
+        while(err_x > error or err_y > error):
+            forwardPWM = self.PIDs['forward'](-err_y)
+            lateralPWM = self.PIDs['lateral'](-err_x)
+            #self.set_depth(z)
+            self.movement(forward=forwardPWM, lateral=lateralPWM)
+
+            time.sleep(0.1) # 10 Hz
+
+        
