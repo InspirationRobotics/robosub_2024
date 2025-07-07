@@ -56,7 +56,7 @@ class FOG:
             stopbits=serial.STOPBITS_ONE, 
             bytesize=serial.EIGHTBITS)
     
-    def start_read(self, func = None):
+    def start(self, func = None):
         """Wipes parameters, sets boolean self.readData to True,
         initializes a thread of self._read_fog and starts running it"""
         # Threads exist to allow multiple processes to run simultaneously,
@@ -90,7 +90,7 @@ class FOG:
     def calibrate(self):
         print("Calibrating FOG... DO NOT TOUCH")
         self.reset_params()
-        self.start_read(self._cal_fog_angle_data)
+        self.start(self._cal_fog_angle_data)
         time.sleep(self.cal_time)
         self.bias = self.cal_sum/(self.cal_count + 0.00001)
         self.stop_read()
@@ -151,9 +151,10 @@ class FOG:
         if self.count >= self.samples:
             angle_mv = (self.angle_sum/self.samples)*(2.5/(2**23)) # Converts to mV
             angle_deg_sec = angle_mv*self.integration_factor
-            self.integrated_sum += angle_deg_sec/(time.time() - self.prev_time)
+            self.integrated_sum += angle_deg_sec*(time.time() - self.prev_time)
             self.parsed_data["angle_deg"] = self.integrated_sum
-            self.publish_reading(self.integrated_sum)
+            self.pub_fog.publish(self.integrated_sum)
+            print(self.integrated_sum)
             time.sleep(0.1)
             self.prev_time = time.time()
             self.angle_sum = 0
@@ -234,7 +235,7 @@ if __name__ == "__main__":
     fog.calibrate()
 
     # --------- Calibration metrics for 60 seconds ------------
-    # fog.start_read()
+    # fog.start()
     
     # startTime = time.time()
     # startTime2 = time.time()
@@ -260,34 +261,12 @@ if __name__ == "__main__":
 
     print("Now just running for 30 seconds")
 
-    fog.start_read()
+    fog.start()
 
     startTime = time.time()
-    while time.time() - startTime < 1200:
-        print(fog.parsed_data["angle_deg"] if "angle_deg" in fog.parsed_data.keys() else "No data")
-        time.sleep(0.25)
-
+    for i in range(30):
+        print(i+1)
+        time.sleep(1)
+    fog.stop_read()
+    print("Stopping read thread")
     fog.close()
-
-    def yaw(current_yaw, fog_heading):
-        #Normalize the yaw values to the range [0, 360):
-        current_yaw = current_yaw % 360
-        fog_heading = fog_heading % 360
-
-        #Calculate the raw yaw difference:
-        yaw_diff = fog_heading - current_yaw
-
-        #Adjust for minimal rotation:
-        if yaw_diff > 180:
-            yaw_diff -= 360
-        elif yaw_diff < -180:
-            yaw_diff += 360
-        print(f"Change in yaw: {yaw_diff}")
-
-        #Update the current yaw:
-        new_yaw = current_yaw + yaw_diff
-
-        #Normalize the new yaw to the range [0, 360)
-        new_yaw = new_yaw % 360
-
-        return new_yaw

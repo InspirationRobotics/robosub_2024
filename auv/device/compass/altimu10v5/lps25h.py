@@ -56,3 +56,19 @@ class LPS25H(I2C):
             raise (Exception("Barometer is not enabled"))
 
         return self.read_1d_sensor(LPS25H_ADDR, self.barometer_registers)
+    
+if __name__ == "__main__":
+    # Collect raw barometer data
+    barometer = LPS25H()
+    barometer.enable()
+    try:
+        while True:
+            # Get barometer data
+            barometer_data = barometer.get_barometer_raw()
+            print(barometer_data)
+            barometer.log_sensor_data("Barometer", barometer_data,"Barometer-LPS25H.csv")
+            
+
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt, killing program")
+        del(barometer)

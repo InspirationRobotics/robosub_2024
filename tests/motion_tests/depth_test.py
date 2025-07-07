@@ -4,7 +4,7 @@ import time
 from auv.motion import robot_control
 from auv.utils import arm, disarm
 
-rospy.init_node("Depth test", anonymous=True)
+rospy.init_node("Depth_test", anonymous=True)
 rc = robot_control.RobotControl()
 
 arm.arm()

@@ -5,6 +5,9 @@ This class has helper methods for I2C SMBus access on a Raspberry PI.
 """
 
 from smbus import SMBus
+import time
+import csv
+import os
 
 
 class I2C(object):
@@ -82,3 +85,26 @@ class I2C(object):
         z_val = self.combine_signed_lo_hi(z_low, z_hi)
 
         return [x_val, y_val, z_val]
+
+    def log_sensor_data(self, sensor_name, data, log_file="sensor_log.csv"):
+        """
+        Log sensor data with timestamp to a CSV file.
+        sensor_name: string, name of the sensor (e.g. 'magnetometer')
+        data: single value (int/float) or list of values
+        log_file: path to the log file
+        """
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+
+        if not isinstance(data, list):
+            data = [data]
+
+        row = [timestamp, sensor_name] + data
+
+        # Create file with headers if it doesn't exist
+        file_exists = os.path.isfile(log_file)
+        with open(log_file, "a", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            if not file_exists:
+                header = ["timestamp", "sensor"] + [f"value{i+1}" for i in range(len(data))]
+                writer.writerow(header)
+            writer.writerow(row)

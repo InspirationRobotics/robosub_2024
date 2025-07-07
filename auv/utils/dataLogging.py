@@ -9,7 +9,7 @@ This allows for saving data and playing back data synchronously (since a ROS Bag
 import os
 import signal
 import threading
-import time
+
 from datetime import datetime
 
 import rosbag

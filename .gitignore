@@ -26,4 +26,5 @@ testing_data/
 .pytest_cache
 
 # virtualenv
-venv
+venv/
+.venv/

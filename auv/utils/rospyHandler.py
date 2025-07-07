@@ -77,8 +77,8 @@ class RosHandler:
         """
         try:
             # Get the name, type, and data from the ROS topic 
-            srv = service.get_name()
-            typ = service.get_type()
+            srv  = service.get_name()
+            typ  = service.get_type()
             data = service.get_data()
 
             # Wait for the ROS service

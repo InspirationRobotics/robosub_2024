@@ -22,14 +22,33 @@ void loop() {
   Serial.println(sensorState);
   if (sensorState == LOW) {  // Magnet detected
     Serial.println("Magnet detected! Signal high");
+    // activate slave signal on pin2 and pin7
+    digitalWrite(2,HIGH);
+    delayMicroseconds(1800);
+    digitalWrite(2,LOW);
+    delay(18);
+    delayMicroseconds(200);
 
-    // Send 1800us PWM to all servos
-    for (int i = 0; i < numServos; i++) {
+    digitalWrite(7,HIGH);
+    delayMicroseconds(1800);
+    digitalWrite(7,LOW);
+    delay(18);
+    delayMicroseconds(200); // fine-tune to hit ~ 20 ms total
 
-      servos[i].writeMicroseconds(1800);
-    }
   } else {
     Serial.println("No magnet. Signal low");
+    // use master signal
+    digitalWrite(2,HIGH)
+    delayMicroseconds(1500);
+    digitalWrite(2,LOW);
+    delay(18);
+    delayMicroseconds(500);
+
+    digitalWrite(7,HIGH)
+    delayMicroseconds(1500);
+    digitalWrite(7,LOW);
+    delay(18);
+    delayMicroseconds(500);
 
     // Neutral 1500us PWM to all servos
     for (int i = 0; i < numServos; i++) {
