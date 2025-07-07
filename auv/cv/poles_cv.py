@@ -186,8 +186,8 @@ class CV:
         cv2.putText(frame, f"State: {self.state}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         cv2.putText(frame, f"Row: {self.row_counter}/{self.max_rows}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
-        cv2.imshow("Pole Detection", frame)
-        cv2.imshow("Red Mask", mask)
+        # cv2.imshow("Pole Detection", frame)
+        # cv2.imshow("Red Mask", mask)
 
         return {
             "lateral": lateral, "forward": forward, "yaw": yaw, "vertical": vertical, "end": self.end}, frame
