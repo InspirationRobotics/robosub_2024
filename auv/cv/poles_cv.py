@@ -29,12 +29,12 @@ class CV:
 
     def calculate_distance(self, object_width_px):
         """
-        Calculate the distance (in feet) to a red pole using bounding box width.
+        Calculate the distance (in feet) to a red pole using bounding box width. (below is for Graey's OAK-D Wide)
         """
-        focal_length = 2.97  # mm
+        focal_length = 2.75  # mm
         real_pole_width = 25.4  # mm
-        image_width_px = 1433  # px
-        camera_width = 12.8  # mm
+        image_width_px = 640  # px
+        camera_width = 97  # mm
 
         if object_width_px <= 0:
             return None
@@ -186,8 +186,8 @@ class CV:
         cv2.putText(frame, f"State: {self.state}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         cv2.putText(frame, f"Row: {self.row_counter}/{self.max_rows}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
-        cv2.imshow("Pole Detection", frame)
-        cv2.imshow("Red Mask", mask)
+        # cv2.imshow("Pole Detection", frame)
+        # cv2.imshow("Red Mask", mask)
 
         return {
             "lateral": lateral, "forward": forward, "yaw": yaw, "vertical": vertical, "end": self.end}, frame
