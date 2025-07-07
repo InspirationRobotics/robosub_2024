@@ -73,10 +73,13 @@ class Localize:
             pose = PoseStamped()
             pose.header.stamp = rospy.Time.now()
             pose.header.frame_id = "map"
+            
+            # publish position
             pose.pose.position.x = self.imu_pos_x
             pose.pose.position.y = self.imu_pos_y
             pose.pose.position.z = self.imu_pos_z
 
+            # publish quaternion rotation
             pose.pose.orientation.x = 0.0
             pose.pose.orientation.y = 0.0
             pose.pose.orientation.z = 0.0
