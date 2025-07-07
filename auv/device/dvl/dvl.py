@@ -29,7 +29,9 @@ class DVL:
         
         self.vel_pub = rospy.Publisher('/auv/devices/dvl/velocity', Vector3Stamped, queue_size=10)
 
+
         # TODO: Review if we need a position publisher
+
         self.pos_pub = rospy.Publisher('/auv/devices/dvl/position', PointStamped, queue_size=10)
         
         self.test = test
@@ -350,6 +352,7 @@ class DVL:
             vel_msg = Vector3Stamped()
             vel_msg.header.stamp = now
             vel_msg.header.frame_id = frame_id
+
             vel_msg.vector.x = self.vel_rot[0]
             vel_msg.vector.y = self.vel_rot[1]
             vel_msg.vector.z = self.vel_rot[2]
@@ -380,6 +383,7 @@ class DVL:
             self.__thread_pub = threading.Thread(target=self.publish_dvl, args=("graey_dvl"), daemon=True)
         elif self.sub == "onyx":
             self.__thread_pub = threading.Thread(target=self.publish_dvl, args=("onyx_dvl"), daemon=True)
+
         else:
             raise ValueError(f"[ERROR] Unknown sub: {self.sub}")
 
@@ -474,8 +478,3 @@ if __name__ == '__main__':
         
     finally:
         print("Node exited.")
-
-    # while True:
-    #     time.sleep(1.0)
-    #     # print("[DEBUG: Ran a check on DVL timing]")
-    #     print(dvl1.position)
