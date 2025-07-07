@@ -28,6 +28,10 @@ class DVL:
         self.rate = rospy.Rate(10)  # 10 Hz
         
         self.vel_pub = rospy.Publisher('/auv/devices/dvl/velocity', Vector3Stamped, queue_size=10)
+
+
+        # TODO: Review if we need a position publisher
+
         self.pos_pub = rospy.Publisher('/auv/devices/dvl/position', PointStamped, queue_size=10)
         
         self.test = test
@@ -347,7 +351,8 @@ class DVL:
             now = rospy.Time.now()
             vel_msg = Vector3Stamped()
             vel_msg.header.stamp = now
-            vel_msg.header.frame_id = id
+            vel_msg.header.frame_id = frame_id
+
             vel_msg.vector.x = self.vel_rot[0]
             vel_msg.vector.y = self.vel_rot[1]
             vel_msg.vector.z = self.vel_rot[2]
@@ -375,9 +380,10 @@ class DVL:
 
         # Add publisher thread depending on sub
         if self.sub == "graey":
-            self.__thread_pub = threading.Thread(target=self.publish, args=("graey_dvl"), daemon=True)
+            self.__thread_pub = threading.Thread(target=self.publish_dvl, args=("graey_dvl"), daemon=True)
         elif self.sub == "onyx":
-            self.__thread_pub = threading.Thread(target=self.publish, args=("onyx_dvl"), daemon=True)
+            self.__thread_pub = threading.Thread(target=self.publish_dvl, args=("onyx_dvl"), daemon=True)
+
         else:
             raise ValueError(f"[ERROR] Unknown sub: {self.sub}")
 

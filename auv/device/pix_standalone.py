@@ -119,13 +119,9 @@ class AUV(RosHandler):
         # Custom ROS topics
         self.AUV_COMPASS = TopicService("/auv/devices/compass", std_msgs.msg.Float64)
         self.AUV_IMU = TopicService("/auv/devices/imu", sensor_msgs.msg.Imu)
-        self.AUV_VECTORNAV = TopicService("/auv/devices/vectornav", geometry_msgs.msg.Vector3)
-        # ROS Topics for A50
-        self.AUV_A50_Velocity = TopicService("/auv/devices/a50/velocity", geometry_msgs.msg.Vector3Stamped)
-        self.AUV_A50_Position = TopicService("/auv/devices/a50/position", geometry_msgs.msg.PointStamped)
-        # ROS Topics for Explorer
-        self.AUV_Explorer_Velocity = TopicService("/auv/devices/explorer/velocity", geometry_msgs.msg.Vector3Stamped)
-        self.AUV_Explorer_Position = TopicService("/auv/devices/explorer/position", geometry_msgs.msg.PointStamped)
+        # ROS Topics for DVL
+        self.AUV_DVL_Velocity = TopicService("/auv/devices/dvl/velocity", geometry_msgs.msg.Vector3Stamped)
+        self.AUV_DVL_Position = TopicService("/auv/devices/dvl/position", geometry_msgs.msg.PointStamped)
         # ROS Topic for Barometer
         self.AUV_BARO = TopicService("/auv/devices/baro", std_msgs.msg.Float32MultiArray)
         self.AUV_GET_THRUSTERS = TopicService("/auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn)
@@ -378,17 +374,6 @@ class AUV(RosHandler):
                 self.AUV_COMPASS.set_data(comp_data)
                 # Publish the data
                 self.topic_publisher(topic=self.AUV_COMPASS)
-            if hasattr(self.vectornav, "yaw"):
-                # Vector3 objects have x, y, and z
-                # x --> Pitch
-                # y --> Roll
-                # z --> Yaw
-                vectornav_data = geometry_msgs.msg.Vector3(self.vectornav.pitch,
-                                                           self.vectornav.roll,
-                                                           self.vectornav.yaw)
-                
-                self.AUV_VECTORNAV.set_data(vectornav_data)
-                self.topic_publisher(topic=self.AUV_VECTORNAV)
             
         # Handle exceptions
         except Exception as e:
