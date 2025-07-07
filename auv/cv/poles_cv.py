@@ -147,24 +147,33 @@ class CV:
                     self.state = "searching"
 
         else:
-            # No detection, fallback motion based on state
-            if self.state == "searching":
-                yaw = -0.6 if (self.side == "right" and self.row_counter > 0) else 0.6 if self.row_counter > 0 else 0
-            elif self.state == "approaching":
-                forward = 1.2
-                yaw = self.slanted_yaw if self.row_counter > 0 else 0
-            elif self.state == "realign":
-                yaw = -self.slanted_yaw
-            elif self.state == "strafing":
-                lateral = 0.8 if self.side == "right" else -0.8
-            elif self.state == "moving_forward":
-                forward = 1.0
+            # No detection — start rotating to search
+            yaw = 0.65 if self.side == "left" else -0.65
+            forward = 0
+            lateral = 0
+            vertical = 0
+            print("[INFO] No red pole detected — yawing to search")
+        
+        return forward, lateral, yaw, vertical
+
+   
+            # # No detection, fallback motion based on state
+            # if self.state == "searching":
+            #     yaw = -0.6 if (self.side == "right" and self.row_counter > 0) else 0.6 if self.row_counter > 0 else 0
+            # elif self.state == "approaching":
+            #     forward = 1.2
+            #     yaw = self.slanted_yaw if self.row_counter > 0 else 0
+            # elif self.state == "realign":
+            #     yaw = -self.slanted_yaw
+            # elif self.state == "strafing":
+            #     lateral = 0.8 if self.side == "right" else -0.8
+            # elif self.state == "moving_forward":
+            #     forward = 1.0
                 
-            if self.row_counter >= self.max_rows:
-                self.end = True
-                print("[INFO] Pole Slalom Mission complete")           
+            # if self.row_counter >= self.max_rows:
+            #     self.end = True
+            #     print("[INFO] Pole Slalom Mission complete")           
             
-            return forward, lateral, yaw, vertical
         
         # Fallback return statement (in case the one above fails)
         print(f"[WARN] [movement_calculation] Unexpected logic fallthrough, returning zeros.")

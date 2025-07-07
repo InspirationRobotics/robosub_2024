@@ -60,7 +60,7 @@ class PoleSlalomMission:
             self.received = False
             self.next_data = {}
 
-            cv_data = self.data["poles_cv"]
+            cv_data = self.data.get("poles_cv", {})
             lateral = cv_data.get("lateral", 0)
             forward = cv_data.get("forward", 0)
             yaw = cv_data.get("yaw", 0)
