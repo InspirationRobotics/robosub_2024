@@ -16,7 +16,7 @@ class SensorFuse:
         # This is the ekf node that takes DVL and imu data and give estimation of velocity
         # Initialize node
         rospy.init_node('ekfNode', anonymous=True)
-        self.pub = rospy.Publisher('/auv/state/position', PoseStamped, queue_size=10)
+        self.pub = rospy.Publisher('/auv/state/pose', PoseStamped, queue_size=10)
         self.rate = rospy.Rate(10)  # 10 Hz
         
 
