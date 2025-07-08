@@ -46,6 +46,7 @@ class RobotControl:
 
         # Initialize the node
         rospy.init_node("robot_control", anonymous=True)
+        self.rate = rospy.Rate(10) # 10 Hz
         # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
         self.config     = deviceHelper.variables
         self.debug      = debug            
@@ -57,9 +58,7 @@ class RobotControl:
 
         # Establish thruster and depth publishers
         self.sub_pose       = rospy.Subscriber("auv/status/pose", PoseStamped, self.set_depth)  
-        self.sub_mode       = rospy.Subscriber("auv/status/mode", String, self.set_mode)
         self.pub_thrusters  = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
-        self.pub_mode       = rospy.Publisher("auv/status/mode", String, queue_size=10)
         self.pub_button     = rospy.Publisher("/mavros/manual_control/send", mavros_msgs.msg.ManualControl, queue_size=10)
 
         # store desire point
@@ -123,10 +122,10 @@ class RobotControl:
         """
         while not rospy.is_shutdown():
             # Get desire x,y,z
-            x       = self.desired_point["x"] if self.desired_point["x"] is not None else self.pose.pose.position.x
-            y       = self.desired_point["y"] if self.desired_point["y"] is not None else self.pose.pose.position.y
-            z       = self.desired_point["z"] if self.desired_point["z"] is not None else self.pose.pose.position.z
-            heading = self.desired_point["heading"] if self.desired_point["heading"] is not None else self.pose.pose.orientation.z
+            x       = self.desired_point["x"] if self.desired_point["x"] is not None else self.position['x']
+            y       = self.desired_point["y"] if self.desired_point["y"] is not None else self.position['y']
+            z       = self.desired_point["z"] if self.desired_point["z"] is not None else self.position['z']
+            heading = self.desired_point["heading"] if self.desired_point["heading"] is not None else self.orientation['yaw']
             # Calculate error
             x_error     = x - self.position['x']
             y_error     = y - self.position['y']
@@ -143,12 +142,6 @@ class RobotControl:
             self.movement(lateral=lateral_pwm, forward=surge_pwm, vertical=depth_pwm, yaw=yaw_pwm)
             
             time.sleep(0.1) # 10hz
-
-    def modeCallback(self, msg):
-        """
-        Callback function to handle the mode of the robot
-        """
-        self.mode = msg.data
 
     def movement(
         self,
@@ -184,7 +177,7 @@ class RobotControl:
         channels = [1500] * 18
         channels[0] = int((pitch * 80) + 1500) if pitch else 1500
         channels[1] = int((roll * 80) + 1500) if roll else 1500
-        channels[2] = int((vertical * 80) + 1500) if vertical and self.mode != "ALT_HOLD" else 1500  
+        channels[2] = int((vertical * 80) + 1500) if vertical else 1500  
         channels[3] = int((yaw * 80) + 1500) if yaw else 1500
         channels[4] = int((forward * 80) + 1500) if forward else 1500
         channels[5] = int((lateral * 80) + 1500) if lateral else 1500
@@ -196,12 +189,25 @@ class RobotControl:
         else:
             rospy.loginfo(f"pwms : {channels[0:6]}")
 
-    def setMode(self, msg):
+    def set_mode(self, msg:String):
         """
-        Set the mode of the robot
+        Callback function to handle the mode of the robot
+        Args:
+            msg: "pid" or "direct"
         """
-        self.mode = msg.data
-        self.pub_mode.publish(String(msg.data))
+        self.mode = msg
+        if self.mode=="direct":
+            self.thread.join()
+            for pid in self.PIDs:
+                pid.reset()
+        elif self.mode=="pid":
+            for pid in self.PIDs:
+                pid.reset()
+            self.thread = threading.Thread(target=self.publisherThread)
+            self.thread.daemon = True
+            self.thread.start()
+        else:
+            rospy.logewarn("Control mode not found")
         
     def set_absolute_z(self, depth):
         """
