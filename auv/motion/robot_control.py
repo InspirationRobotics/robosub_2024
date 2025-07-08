@@ -227,7 +227,7 @@ class RobotControl:
             depth (float): Depth to set the robot to
         """
         # Clear the PID error
-        self.PIDs["depth"].clear()
+        self.PIDs["depth"].reset()
         self.desired_point["z"] = depth
     
     def set_absolute_x(self, x):
@@ -238,7 +238,7 @@ class RobotControl:
             x (float): X position to set the robot to
         """
         # Clear the PID error
-        self.PIDs["lateral"].clear()
+        self.PIDs["lateral"].reset()
         self.desired_point["x"] = x
 
     def set_absolute_y(self, y):
@@ -249,7 +249,7 @@ class RobotControl:
             y (float): Y position to set the robot to
         """
         # Clear the PID error
-        self.PIDs["surge"].clear()
+        self.PIDs["surge"].reset()
         self.desired_point["y"] = y
 
     def set_absolute_heading(self, heading):
@@ -260,7 +260,7 @@ class RobotControl:
             heading (float): Heading to set the robot to
         """
         # Clear the PID error
-        self.PIDs["yaw"].clear()
+        self.PIDs["yaw"].reset()
         self.desired_point["heading"] = heading
     
     def set_relative_z(self, depth):
@@ -271,7 +271,7 @@ class RobotControl:
             depth (float): Relative depth to set the robot to (-2 means up, 2 means down)
         """
         # Clear the PID error
-        self.PIDs["depth"].clear()
+        self.PIDs["depth"].reset()
         self.desired_point["z"] = depth + self.pose.pose.position.z
 
     def set_relative_x(self, x):
@@ -282,7 +282,7 @@ class RobotControl:
             x (float): Relative x position to set the robot to (-2 means left, 2 means right)
         """
         # Clear the PID error
-        self.PIDs["lateral"].clear()
+        self.PIDs["lateral"].reset()
         self.desired_point["x"] = x + self.pose.pose.position.x
 
     def set_relative_y(self, y):
@@ -293,7 +293,7 @@ class RobotControl:
             y (float): Relative y position to set the robot to (-2 means left, 2 means right)
         """
         # Clear the PID error
-        self.PIDs["surge"].clear()
+        self.PIDs["surge"].reset()
         self.desired_point["y"] = y + self.pose.pose.position.y
 
     def set_relative_heading(self, heading):
@@ -304,7 +304,7 @@ class RobotControl:
             heading (float): Relative heading to set the robot to (-2 means left, 2 means right)
         """
         # Clear the PID error
-        self.PIDs["yaw"].clear()
+        self.PIDs["yaw"].reset()
         self.desired_point["heading"] = heading + self.pose.pose.orientation.z
 
     def exit(self):
