@@ -9,7 +9,7 @@ if __name__ == "__main__":
     arm.arm()
     time.sleep(3.0)
     print("[INFO}This is the start")
-    rc.set_depth(0.9)
+    rc.set_absolute_z(3)
 
     time.sleep(20)
     print("[INFO] Reached the end of the program")
