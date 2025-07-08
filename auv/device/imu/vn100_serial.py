@@ -47,6 +47,8 @@ class VN100:
             data_line = self.__ser.readline().decode()
             data_list = data_line.split(',')
 
+            rospy.loginfo(data_list)
+
             self.yaw, self.pitch, self.roll = (float(data_list[1]) + 90) % 360, float(data_list[3]), float(data_list[2])
             self.update_orientation()
 
