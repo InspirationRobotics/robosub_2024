@@ -43,9 +43,6 @@ class RobotControl:
         Args:
             enable_dvl (bool): Flag to enable or disable DVL
         """
-
-        # Initialize the node
-        rospy.init_node("robot_control", anonymous=True)
         self.rate = rospy.Rate(10) # 10 Hz
         # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
         self.config     = deviceHelper.variables
