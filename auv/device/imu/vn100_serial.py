@@ -36,7 +36,7 @@ class VN100:
         self.publish_thread = threading.Thread(target=self.publish_data, daemon=True)
         self.publish_thread.start()
 
-        time.sleep(2)
+        time.sleep(5)
 
     def read(self):
         """Parses roll, pitch, and yaw from the serial line"""
@@ -47,7 +47,7 @@ class VN100:
                 data_list = data_line.split(',')
 
                 self.yaw, self.pitch, self.roll = (float(data_list[1]) + 90) % 360, float(data_list[3]), float(data_list[2])
-                self.get_orientation()
+                self.update_orientation()
 
                 self.accX, self.accY, self.accZ = float(data_list[4]), float(data_list[5]), float(data_list[6])
                 self.gyroX, self.gyroY, self.gyroZ = float(data_list[7]), float(data_list[8]), float(data_list[9])
@@ -57,7 +57,7 @@ class VN100:
             except Exception:
                 pass
 
-    def get_orientation(self):
+    def update_orientation(self):
         """Converts Euler angles to quaternion form"""
         self.quat_orient = euler2quat(self.pitch, self.roll, self.yaw)
 
@@ -68,6 +68,7 @@ class VN100:
             imu_msg.header.stamp = rospy.Time.now()
             imu_msg.header.frame_id = "vectornav"
 
+            print(f"quat orient is {self.quat_orient}")
             imu_msg.orientation.w = self.quat_orient[0]
             imu_msg.orientation.x = self.quat_orient[1]
             imu_msg.orientation.y = self.quat_orient[2]
@@ -91,34 +92,13 @@ class VN100:
 
 
 if __name__ == "__main__":
-    import csv
-    from datetime import datetime
-
-    
-
     try:
         sensor = VN100()
         rospy.loginfo("VN100 node start running...")
-        
-    # try:
-    #     data = []
-    #     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    #     filename = f"data_{timestamp}.csv"
-    #     while True:
-    #         data.append({
-    #             "timestamp": datetime.now().isoformat(),
-    #             "Roll": sensor.roll,
-    #             "Pitch": sensor.pitch,
-    #             "Yaw": sensor.yaw,
-    #             "AccX": sensor.accX,
-    #             "AccY": sensor.accY,
-    #             "AccZ": sensor.accZ
-    #         })
-    #         print(f"YPR: ({sensor.yaw:.2f}, {sensor.pitch:.2f}, {sensor.roll:.2f})")
 
     except KeyboardInterrupt:
         sensor.shutdown()
-        rospy.loginfo("shutting down vn100 node")
+        rospy.loginfo("Shutting down vn100 node")
 
     except AttributeError:
         print("No data yet")
