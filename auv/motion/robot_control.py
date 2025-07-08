@@ -27,6 +27,8 @@ from ..utils import deviceHelper # Get the configuration of the devices plugged 
 from ..device.dvl import dvl # DVL class that enables position estimation
 from ..device.fog import fog_interface as fog
 import math
+from transforms3d.euler import euler2quat
+from transforms3d.euler import quat2euler
 import numpy as np
 
 
@@ -54,7 +56,7 @@ class RobotControl:
         self.orientation    = {'yaw':0,'pitch':0,'roll':0}
 
         # Establish thruster and depth publishers
-        self.sub_pose       = rospy.Subscriber("auv/status/pose", PoseStamped, self.set_depth)  
+        self.sub_pose       = rospy.Subscriber("auv/status/pose", PoseStamped, self.pose_callback)  
         self.pub_thrusters  = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
         self.pub_button     = rospy.Publisher("/mavros/manual_control/send", mavros_msgs.msg.ManualControl, queue_size=10)
 
@@ -112,6 +114,16 @@ class RobotControl:
         self.thread = threading.Thread(target=self.publisherThread)
         self.thread.daemon = True
         self.thread.start()
+
+    def pose_callback(self, msg):
+        self.position['x'] = msg.pose.position.x
+        self.position['y'] = msg.pose.position.y
+        self.position['z'] = msg.pose.position.z
+
+        roll, pitch, yaw = quat2euler([msg.pose.orientation.w,msg.pose.orientation.x,msg.pose.orientation.y,msg.pose.orientation.z])
+        self.orientation['yaw']     = yaw
+        self.orientation['pitch']   = pitch
+        self.orientation['roll']    = roll
 
     def publisherThread(self):
         """
