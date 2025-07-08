@@ -79,7 +79,7 @@ class DVL:
         self.error = [0, 0, 0]  # accumulated error
 
         # NORTH = 0, EAST = pi/2, SOUTH = pi, WEST = 3pi/2
-        self.compass_rad = None  # rad
+        # self.compass_rad = None  # rad
 
         self.vel_rot = [0, 0, 0]  # rotated velocity vector
 
@@ -212,7 +212,7 @@ class DVL:
         self.current_time = packet.get("time", 0)  # seconds
         self.dvl_error = packet.get("error", 0)
 
-        if self.prev_time is None or self.compass_rad is None:
+        if self.prev_time is None:
             self.prev_time = self.current_time
             print("[WARN] DVL not ready, waiting for compass or some more sample")
             return False
@@ -232,11 +232,11 @@ class DVL:
         # rotate velocity vector using compass heading
         # plus 45 degrees
         # X = lateral, Y = forward, Z = vertical
-        self.vel_rot = [
-            vel[0] * math.cos(self.compass_rad + self.dvl_rot) + vel[1] * math.sin(self.compass_rad + self.dvl_rot),
-            vel[1] * math.cos(self.compass_rad + self.dvl_rot) - vel[0] * math.sin(self.compass_rad + self.dvl_rot),
-            vel[2],
-        ]
+        # self.vel_rot = [
+        #     vel[0] * math.cos(self.compass_rad + self.dvl_rot) + vel[1] * math.sin(self.compass_rad + self.dvl_rot),
+        #     vel[1] * math.cos(self.compass_rad + self.dvl_rot) - vel[0] * math.sin(self.compass_rad + self.dvl_rot),
+        #     vel[2],
+        # ]
 
         # integrate velocity to position with respect to time
         self.position = [
@@ -245,20 +245,20 @@ class DVL:
             self.position[2] + self.vel_rot[2] * dt,
         ]
 
-        vel_rot_error = [
-            (vel[0] + self.dvl_error) * math.cos(self.compass_rad + self.dvl_rot + self.compass_error)
-            + (vel[1] + self.dvl_error) * math.sin(self.compass_rad + self.dvl_rot + self.compass_error),
-            (vel[1] + self.dvl_error) * math.cos(self.compass_rad + self.dvl_rot + self.compass_error)
-            - (vel[0] + self.dvl_error) * math.sin(self.compass_rad + self.dvl_rot + self.compass_error),
-            vel[2] + self.dvl_error,  # we actually have a sensor for depth, so useless
-        ]
+        # vel_rot_error = [
+        #     (vel[0] + self.dvl_error) * math.cos(self.compass_rad + self.dvl_rot + self.compass_error)
+        #     + (vel[1] + self.dvl_error) * math.sin(self.compass_rad + self.dvl_rot + self.compass_error),
+        #     (vel[1] + self.dvl_error) * math.cos(self.compass_rad + self.dvl_rot + self.compass_error)
+        #     - (vel[0] + self.dvl_error) * math.sin(self.compass_rad + self.dvl_rot + self.compass_error),
+        #     vel[2] + self.dvl_error,  # we actually have a sensor for depth, so useless
+        # ]
 
         # calculate accumulated error
-        self.error = [
-            self.error[0] + abs(self.vel_rot[0] - vel_rot_error[0]) * dt,
-            self.error[1] + abs(self.vel_rot[1] - vel_rot_error[1]) * dt,
-            self.error[2] + abs(self.vel_rot[2] - vel_rot_error[2]) * dt,
-        ]
+        # self.error = [
+        #     self.error[0] + abs(self.vel_rot[0] - vel_rot_error[0]) * dt,
+        #     self.error[1] + abs(self.vel_rot[1] - vel_rot_error[1]) * dt,
+        #     self.error[2] + abs(self.vel_rot[2] - vel_rot_error[2]) * dt,
+        # ]
 
         return True
 
@@ -380,9 +380,9 @@ class DVL:
 
         # Add publisher thread depending on sub
         if self.sub == "graey":
-            self.__thread_pub = threading.Thread(target=self.publish_dvl, args=("graey_dvl"), daemon=True)
+            self.__thread_pub = threading.Thread(target=self.publish_dvl, args=("graey_dvl",), daemon=True)
         elif self.sub == "onyx":
-            self.__thread_pub = threading.Thread(target=self.publish_dvl, args=("onyx_dvl"), daemon=True)
+            self.__thread_pub = threading.Thread(target=self.publish_dvl, args=("onyx_dvl",) , daemon=True)
 
         else:
             raise ValueError(f"[ERROR] Unknown sub: {self.sub}")
