@@ -23,7 +23,8 @@ class SensorFuse:
         # Create subscriber for imu and dvl
         # TODO: Fix IMU rostopic architecture
         self.imu_sub = rospy.Subscriber("/auv/devices/vectornav", Imu, self.imu_callback)
-        self.imu_data = {"ax": 0, "ay": 0, "az": 0}  # store one line of IMU data for ekf predict
+        self.imu_acc_data = {"ax": 0, "ay": 0, "az": 0}
+        self.imu_ori_data = {"qx": 0, "qy": 0, "qz": 0, "qw": 0}  # store one line of IMU data for ekf predict
         self.imu_array = None # used for passing into the ekf
 
         self.dvl_sub = rospy.Subscriber("/auv/devices/dvl/velocity", Vector3Stamped, self.dvl_callback)
@@ -33,15 +34,22 @@ class SensorFuse:
         # initialize dt before creating the filter
         self.dt = 1.0 / 100  # IMU time step (100 Hz)
         self.ekf = self.create_filter()
-        self.imu = {"ax": 0, "ay": 0, "az": 0}
         # tracks the cumulative position
         self.position = np.array([0.0, 0.0, 0.0])
         self.last_time = time.time()
 
     def imu_callback(self,msg):
-        orientation_list = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w]
-        (self.imu_data["ax"], self.imu_data["ay"], self.imu_data["az"]) = quat2euler(orientation_list)
-        self.imu_array = np.array([self.imu_data["ax"], self.imu_data["ay"], self.imu_data["az"]])
+        # (self.imu_data["ax"], self.imu_data["ay"], self.imu_data["az"]) = quat2euler(orientation_list)
+        self.imu_acc_data["ax"] = msg.linear_acceleration.x
+        self.imu_acc_data["ay"] = msg.linear_acceleration.y
+        self.imu_acc_data["az"] = msg.linear_acceleration.z
+
+        self.imu_ori_data['qx'] = msg.orientation.x
+        self.imu_ori_data['qy'] = msg.orientation.y
+        self.imu_ori_data['qz'] = msg.orientation.z
+        self.imu_ori_data['qw'] = msg.orientation.w
+
+        self.imu_array = np.array([self.imu_acc_data["ax"], self.imu_acc_data["ay"], self.imu_acc_data["az"]])
         # update state
         self.update_state()
 
@@ -87,10 +95,10 @@ class SensorFuse:
         pose_msg.pose.position.y = self.position[1]
         pose_msg.pose.position.z = self.position[2]
         
-        pose_msg.pose.orientation.w = self.imu_data.orientation.w
-        pose_msg.pose.orientation.x = self.imu_data.orientation.x
-        pose_msg.pose.orientation.y = self.imu_data.orientation.y
-        pose_msg.pose.orientation.z = self.imu_data.orientation.z
+        pose_msg.pose.orientation.w = self.imu_ori_data['w']
+        pose_msg.pose.orientation.x = self.imu_ori_data['x']
+        pose_msg.pose.orientation.y = self.imu_ori_data['y']
+        pose_msg.pose.orientation.z = self.imu_ori_data['z']
 
         self.pub.publish(pose_msg)
         self.rate.sleep()
