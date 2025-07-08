@@ -23,7 +23,7 @@ class SensorFuse:
         # Create subscriber for imu and dvl
         # TODO: Fix IMU rostopic architecture
         self.imu_sub = rospy.Subscriber("/auv/devices/vectornav", Imu, self.imu_callback)
-        self.imu_angles = {"ax": 0, "ay": 0, "az": 0}  # store one line of IMU data for ekf predict
+        self.imu_data = {"ax": 0, "ay": 0, "az": 0}  # store one line of IMU data for ekf predict
         self.imu_array = None # used for passing into the ekf
 
         self.dvl_sub = rospy.Subscriber("/auv/devices/dvl/velocity", Vector3Stamped, self.dvl_callback)
@@ -40,8 +40,8 @@ class SensorFuse:
 
     def imu_callback(self,msg):
         orientation_list = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w]
-        (self.imu_angles["ax"], self.imu_angles["ay"], self.imu_angles["az"]) = quat2euler(orientation_list)
-        self.imu_array = np.array([self.imu_angles["ax"], self.imu_angles["ay"], self.imu_angles["az"]])
+        (self.imu_data["ax"], self.imu_data["ay"], self.imu_data["az"]) = quat2euler(orientation_list)
+        self.imu_array = np.array([self.imu_data["ax"], self.imu_data["ay"], self.imu_data["az"]])
         # update state
         self.update_state()
 
