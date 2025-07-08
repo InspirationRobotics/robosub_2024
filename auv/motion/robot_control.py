@@ -176,10 +176,6 @@ class RobotControl:
             roll (float): Power for the roll maneuver
             vertical (float): Distance to change the depth by
         """
-        # swtich to manual/stablize mode if not in alt hold mode
-
-        self.pub_mode.publish(String("STASILIZE"))  
-
         # Create a message to send to the thrusters
         pwm = mavros_msgs.msg.OverrideRCIn()
 
