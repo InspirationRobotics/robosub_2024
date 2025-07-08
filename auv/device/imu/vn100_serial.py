@@ -56,6 +56,7 @@ class VN100:
                 self.publish_data()
                 self.rate.sleep()
             except IndexError as e:
+                print(data_list)
                 rospy.logdebug(data_list)
                 rospy.logerr(e)
 
