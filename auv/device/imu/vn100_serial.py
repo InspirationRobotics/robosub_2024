@@ -56,9 +56,15 @@ class VN100:
                 self.publish_data()
                 self.rate.sleep()
             except IndexError as e:
-                print(data_list)
+                print(f"raw data: {data_list}")
+                rospy.logdebug("first data received, causing index out of range")
+                rospy.logerr(e)
+            except Exception as e:
+                print(f"raw data: {data_list}")
                 rospy.logdebug(data_list)
                 rospy.logerr(e)
+
+
 
     def update_orientation(self):
         """Converts Euler angles to quaternion form"""
