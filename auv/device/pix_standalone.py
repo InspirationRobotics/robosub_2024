@@ -431,8 +431,7 @@ class AUV(RosHandler):
                 # Handle exceptions
                 except Exception as e:
                     print("sensor failed")
-                    print(e)
-            
+                    print(e)        
 
     def update_parameters_from_topic(self, data):
         """To update parameters (status of arming, mode) based on received data from ROS topics"""

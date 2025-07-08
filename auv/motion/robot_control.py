@@ -22,10 +22,10 @@ from auv.utils import arm, disarm
 from simple_pid import PID
 
 # Get the mathematical functions that handle various navigation tasks from utils.py
-from .utils import get_distance, get_heading_from_coords, heading_error, rotate_vector, inv_rotate_vector
-from ..utils import deviceHelper # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
-from ..device.dvl import dvl # DVL class that enables position estimation
-from ..device.fog import fog_interface as fog
+from auv.utils import get_distance, get_heading_from_coords, heading_error, rotate_vector, inv_rotate_vector
+from auv.utils import deviceHelper # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
+from auv.device.dvl import dvl # DVL class that enables position estimation
+from auv.device.fog import fog_interface as fog
 import math
 from transforms3d.euler import euler2quat
 from transforms3d.euler import quat2euler
