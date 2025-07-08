@@ -73,7 +73,7 @@ class VN100:
         """Published the IMU data to /auv/devices/vectornav"""
         imu_msg = Imu()
         imu_msg.header.stamp = rospy.Time.now()
-        imu_msg.header.frame_id = "vectornav"
+        imu_msg.header.frame_id = "base_link"
 
         # print(f"quat orient is {self.quat_orient}")
         imu_msg.orientation.w = self.quat_orient[0]
