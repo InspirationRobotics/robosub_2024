@@ -94,37 +94,31 @@ if __name__ == "__main__":
     import csv
     from datetime import datetime
 
-    sensor = VN100()
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"data_{timestamp}.csv"
-
-    data = []
-    print("Recording... Press Ctrl+C to stop.")
+    
 
     try:
-        while True:
-            data.append({
-                "timestamp": datetime.now().isoformat(),
-                "Roll": sensor.roll,
-                "Pitch": sensor.pitch,
-                "Yaw": sensor.yaw,
-                "AccX": sensor.accX,
-                "AccY": sensor.accY,
-                "AccZ": sensor.accZ
-            })
-            print(f"YPR: ({sensor.yaw:.2f}, {sensor.pitch:.2f}, {sensor.roll:.2f})")
+        sensor = VN100()
+        rospy.loginfo("VN100 node start running...")
+        
+    # try:
+    #     data = []
+    #     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    #     filename = f"data_{timestamp}.csv"
+    #     while True:
+    #         data.append({
+    #             "timestamp": datetime.now().isoformat(),
+    #             "Roll": sensor.roll,
+    #             "Pitch": sensor.pitch,
+    #             "Yaw": sensor.yaw,
+    #             "AccX": sensor.accX,
+    #             "AccY": sensor.accY,
+    #             "AccZ": sensor.accZ
+    #         })
+    #         print(f"YPR: ({sensor.yaw:.2f}, {sensor.pitch:.2f}, {sensor.roll:.2f})")
 
     except KeyboardInterrupt:
         sensor.shutdown()
         rospy.loginfo("shutting down vn100 node")
-        # print("Exiting and saving data to CSV...")
-        # fieldnames = ["timestamp", "Roll", "Pitch", "Yaw", "AccX", "AccY", "AccZ"]
-        # with open(filename, mode="w", newline="") as csvfile:
-        #     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        #     writer.writeheader()
-        #     writer.writerows(data)
-        # print(f"Data saved to {filename}")
 
     except AttributeError:
         print("No data yet")
