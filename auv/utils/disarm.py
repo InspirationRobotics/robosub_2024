@@ -20,7 +20,7 @@ def disarm():
         # Optional: turn off LED indicator if you use one
         # statusLed.red(False)
 
-        return resp.success, "Vehicle disarmed" ifs resp.success else "Failed to disarm vehicle"
+        return resp.success, "Vehicle disarmed" if resp.success else "Failed to disarm vehicle"
     except rospy.ServiceException as e:
         return False, f"Service call failed: {e}"
     
