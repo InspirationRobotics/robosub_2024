@@ -43,22 +43,18 @@ class VN100:
         """Parses roll, pitch, and yaw from the serial line"""
         while self.running and not rospy.is_shutdown():
             time.sleep(1 / 100)
-            try:
-                data_line = self.__ser.readline().decode()
-                data_list = data_line.split(',')
 
-                self.yaw, self.pitch, self.roll = (float(data_list[1]) + 90) % 360, float(data_list[3]), float(data_list[2])
-                self.update_orientation()
+            data_line = self.__ser.readline().decode()
+            data_list = data_line.split(',')
 
-                self.accX, self.accY, self.accZ = float(data_list[4]), float(data_list[5]), float(data_list[6])
-                self.gyroX, self.gyroY, self.gyroZ = float(data_list[7]), float(data_list[8]), float(data_list[9])
+            self.yaw, self.pitch, self.roll = (float(data_list[1]) + 90) % 360, float(data_list[3]), float(data_list[2])
+            self.update_orientation()
 
-                self.publish_data()
-                self.rate.sleep()
-            except IndexError:
-                print("Bad data")
-            except Exception:
-                pass
+            self.accX, self.accY, self.accZ = float(data_list[4]), float(data_list[5]), float(data_list[6])
+            self.gyroX, self.gyroY, self.gyroZ = float(data_list[7]), float(data_list[8]), float(data_list[9])
+
+            self.publish_data()
+            self.rate.sleep()
 
     def update_orientation(self):
         """Converts Euler angles to quaternion form"""
