@@ -22,11 +22,11 @@ class SensorFuse:
 
         # Create subscriber for imu and dvl
         # TODO: Fix IMU rostopic architecture
-        self.imu_sub = rospy.Subscriber("/auv/device/vectornav", Imu, self.imu_callback)
+        self.imu_sub = rospy.Subscriber("/auv/devices/vectornav", Imu, self.imu_callback)
         self.imu_angles = {"ax": 0, "ay": 0, "az": 0}  # store one line of IMU data for ekf predict
         self.imu_array = None # used for passing into the ekf
 
-        self.dvl_sub = rospy.Subscriber("/auv/device/dvl/velocity", Vector3Stamped, self.dvl_callback)
+        self.dvl_sub = rospy.Subscriber("/auv/devices/dvl/velocity", Vector3Stamped, self.dvl_callback)
         self.dvl_data = {"vx": 0, "vy": 0, "vz": 0}
         self.dvl_array = None # used for passing into the ekf
         # initialize filter, dvl, imu, dt, and last_time
