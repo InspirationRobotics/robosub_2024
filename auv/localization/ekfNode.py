@@ -39,8 +39,7 @@ class SensorFuse:
         self.last_time = time.time()
 
     def imu_callback(self,msg):
-        self.imu_data = msg
-        orientation_list = [self.imu.orientation.x, self.imu.orientation.y, self.imu.orientation.z, self.imu.orientation.w]
+        orientation_list = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w]
         (self.imu_angles["ax"], self.imu_angles["ay"], self.imu_angles["az"]) = quat2euler(orientation_list)
         self.imu_array = np.array([self.imu_angles["ax"], self.imu_angles["ay"], self.imu_angles["az"]])
         # update state
