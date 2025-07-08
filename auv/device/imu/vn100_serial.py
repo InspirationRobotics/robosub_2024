@@ -17,7 +17,7 @@ class VN100:
         self.__port = port
         self.__bps = 115200
         self.__ser = Serial(port=self.__port, baudrate=self.__bps, timeout=1)
-        self.rate = rospy.Rate(40) # 40 Hz
+        self.rate = rospy.Rate(30) # 30 Hz
 
         self.yaw = 0.0
         self.pitch = 0.0
@@ -41,8 +41,6 @@ class VN100:
     def read(self):
         """Parses roll, pitch, and yaw from the serial line"""
         while self.running and not rospy.is_shutdown():
-            time.sleep(1 / 100)
-
             data_line = self.__ser.readline().decode()
             data_list = data_line.split(',')
 
@@ -55,6 +53,7 @@ class VN100:
 
                 self.publish_data()
                 self.rate.sleep()
+
             except IndexError as e:
                 print(f"raw data: {data_list}")
                 rospy.logdebug("first data received, causing index out of range")
