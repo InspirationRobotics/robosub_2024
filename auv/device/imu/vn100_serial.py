@@ -75,7 +75,7 @@ class VN100:
         imu_msg.header.stamp = rospy.Time.now()
         imu_msg.header.frame_id = "vectornav"
 
-        print(f"quat orient is {self.quat_orient}")
+        # print(f"quat orient is {self.quat_orient}")
         imu_msg.orientation.w = self.quat_orient[0]
         imu_msg.orientation.x = self.quat_orient[1]
         imu_msg.orientation.y = self.quat_orient[2]
