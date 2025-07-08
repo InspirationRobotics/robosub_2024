@@ -4,32 +4,33 @@ These MAVROS topics are predefined topics that the pixhawk subscribes to. RobotC
 pixhawk flight controller and the software -- that is the job that pixstandalone.py does. 
 """
 
-import time
 
 # Import the MAVROS message types that are needed
-from geometry_msgs.msg import Twist
-import mavros_msgs.msg
-import mavros_msgs.srv
 import rospy
 import std_msgs
 from std_msgs.msg import Float64, Float32MultiArray, String
-import geometry_msgs.msg
+from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
-import threading
-from auv.utils import arm, disarm
+import mavros_msgs.msg
+import mavros_msgs.srv
+import geometry_msgs.msg
 
-# Import the PID controller
-from simple_pid import PID
+
 
 # Get the mathematical functions that handle various navigation tasks from utils.py
-from auv.utils import get_distance, get_heading_from_coords, heading_error, rotate_vector, inv_rotate_vector
 from auv.utils import deviceHelper # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
+from auv.utils import arm, disarm
 from auv.device.dvl import dvl # DVL class that enables position estimation
 from auv.device.fog import fog_interface as fog
-import math
+
+from simple_pid import PID
 from transforms3d.euler import euler2quat
 from transforms3d.euler import quat2euler
+import threading
 import numpy as np
+import time
+import math
+
 
 
 
