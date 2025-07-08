@@ -468,7 +468,8 @@ if __name__ == '__main__':
         dvl1 = DVL()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"dvl_log_{timestamp}.csv"
-        csvLog(dvl1, filename)
+        dvl1.start()
+        # csvLog(dvl1, filename)
         rospy.spin()
     
     except KeyboardInterrupt:
