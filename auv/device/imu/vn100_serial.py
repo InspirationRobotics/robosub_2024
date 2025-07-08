@@ -17,6 +17,7 @@ class VN100:
         self.__port = port
         self.__bps = 115200
         self.__ser = Serial(port=self.__port, baudrate=self.__bps, timeout=1)
+        self.rate = rospy.Rate(40) # 40 Hz
 
         self.yaw = 0.0
         self.pitch = 0.0
@@ -35,14 +36,12 @@ class VN100:
         self.read_thread = threading.Thread(target=self.read, daemon=True)
         self.read_thread.start()
 
-        self.publish_thread = threading.Thread(target=self.publish_data, daemon=True)
-        self.publish_thread.start()
 
         time.sleep(2)
 
     def read(self):
         """Parses roll, pitch, and yaw from the serial line"""
-        while self.running:
+        while self.running and not rospy.is_shutdown():
             time.sleep(1 / 100)
             try:
                 data_line = self.__ser.readline().decode()
@@ -54,6 +53,8 @@ class VN100:
                 self.accX, self.accY, self.accZ = float(data_list[4]), float(data_list[5]), float(data_list[6])
                 self.gyroX, self.gyroY, self.gyroZ = float(data_list[7]), float(data_list[8]), float(data_list[9])
 
+                self.publish_data()
+                self.rate.sleep()
             except IndexError:
                 print("Bad data")
             except Exception:
@@ -65,26 +66,25 @@ class VN100:
 
     def publish_data(self):
         """Published the IMU data to /auv/devices/vectornav"""
-        while self.running and not rospy.is_shutdown():
-            imu_msg = Imu()
-            imu_msg.header.stamp = rospy.Time.now()
-            imu_msg.header.frame_id = "vectornav"
+        imu_msg = Imu()
+        imu_msg.header.stamp = rospy.Time.now()
+        imu_msg.header.frame_id = "vectornav"
 
-            print(f"quat orient is {self.quat_orient}")
-            imu_msg.orientation.w = self.quat_orient[0]
-            imu_msg.orientation.x = self.quat_orient[1]
-            imu_msg.orientation.y = self.quat_orient[2]
-            imu_msg.orientation.z = self.quat_orient[3]
+        print(f"quat orient is {self.quat_orient}")
+        imu_msg.orientation.w = self.quat_orient[0]
+        imu_msg.orientation.x = self.quat_orient[1]
+        imu_msg.orientation.y = self.quat_orient[2]
+        imu_msg.orientation.z = self.quat_orient[3]
 
-            imu_msg.angular_velocity.x = self.gyroX
-            imu_msg.angular_velocity.y = self.gyroY
-            imu_msg.angular_velocity.z = self.gyroZ
+        imu_msg.angular_velocity.x = self.gyroX
+        imu_msg.angular_velocity.y = self.gyroY
+        imu_msg.angular_velocity.z = self.gyroZ
 
-            imu_msg.linear_acceleration.x = self.accX
-            imu_msg.linear_acceleration.y = self.accY
-            imu_msg.linear_acceleration.z = self.accZ
+        imu_msg.linear_acceleration.x = self.accX
+        imu_msg.linear_acceleration.y = self.accY
+        imu_msg.linear_acceleration.z = self.accZ
 
-            self.vectornav_pub.publish(imu_msg)
+        self.vectornav_pub.publish(imu_msg)
 
     def shutdown(self):
         """Clean shutdown of threads and serial connection"""

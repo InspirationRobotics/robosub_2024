@@ -94,6 +94,7 @@ class SensorFuse:
         pose_msg.pose.orientation.z = self.imu_data.orientation.z
 
         self.pub.publish(pose_msg)
+        self.rate.sleep()
     
     @staticmethod
     def f(x, dt):
