@@ -24,3 +24,6 @@ def arm():
         return resp.success, "Vehicle armed" if resp.success else "Failed to arm vehicle"
     except rospy.ServiceException as e:
         return False, f"Service call failed: {e}"
+    
+if __name__=="__main__":
+    arm()
