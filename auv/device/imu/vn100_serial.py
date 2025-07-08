@@ -102,6 +102,7 @@ if __name__ == "__main__":
     try:
         sensor = VN100()
         rospy.loginfo("VN100 node start running...")
+        rospy.spin()
 
     except KeyboardInterrupt:
         sensor.shutdown()
