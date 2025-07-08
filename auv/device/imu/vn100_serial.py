@@ -33,10 +33,9 @@ class VN100:
 
         self.running = True  # Added for Ctrl+C protection
 
+        time.sleep(2)
         self.read_thread = threading.Thread(target=self.read, daemon=True)
         self.read_thread.start()
-
-
         time.sleep(2)
 
     def read(self):
