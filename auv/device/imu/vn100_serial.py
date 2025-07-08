@@ -1,6 +1,7 @@
 import rospy
 import time
 import threading
+import numpy as np
 
 from serial import Serial
 from transforms3d.euler import euler2quat
@@ -26,6 +27,7 @@ class VN100:
         self.gyroX = 0.0
         self.gyroY = 0.0
         self.gyroZ = 0.0
+        self.quat_orient = np.array([0,0,0,0])
         self.vectornav_pub = rospy.Publisher('/auv/devices/vectornav', Imu, queue_size=10)
 
         self.running = True  # Added for Ctrl+C protection
@@ -36,7 +38,7 @@ class VN100:
         self.publish_thread = threading.Thread(target=self.publish_data, daemon=True)
         self.publish_thread.start()
 
-        time.sleep(5)
+        time.sleep(2)
 
     def read(self):
         """Parses roll, pitch, and yaw from the serial line"""
