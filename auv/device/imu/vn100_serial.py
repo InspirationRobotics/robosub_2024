@@ -17,6 +17,7 @@ class VN100:
         self.__port = port
         self.__bps = 115200
         self.__ser = Serial(port=self.__port, baudrate=self.__bps, timeout=1)
+        rospy.init_node("imu_node", anonymous=True)  
         self.rate = rospy.Rate(30) # 30 Hz
 
         self.yaw = 0.0
