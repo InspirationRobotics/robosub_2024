@@ -148,9 +148,10 @@ class SensorFuse:
 
 
         # Update the state with IMU data
-        print("Before modifying ekf.x, shape:", self.ekf.x.shape)
+        print("DEBUG: imu_array shape:", self.imu_array.shape)
+        print("DEBUG: ekf.x shape before imu update:", self.ekf.x.shape)
         self.ekf.x[6:] = self.imu_array  # ax, ay, az go into indices 6–8
-        print("After modifying ekf.x, shape:", self.ekf.x.shape)
+        print("DEBUG: ekf.x shape after imu update", self.ekf.x.shape)
 
         print("DEBUG: ekf.F shape:", self.ekf.F.shape, type(self.ekf.F))
         print("DEBUG: ekf.x shape:", self.ekf.x.shape, type(self.ekf.x))
