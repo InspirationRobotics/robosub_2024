@@ -74,7 +74,7 @@ class VN100:
         yaw_rad = np.deg2rad(self.yaw)
         
         # Create quaternion (order: ZYX by default)
-        self.quat_orient = euler2quat(yaw_rad, pitch_rad, roll_rad, axes='szyx')
+        self.quat_orient = euler2quat(yaw_rad, pitch_rad, roll_rad, axes='rzyx')
 
     def publish_data(self):
         """Published the IMU data to /auv/devices/vectornav"""

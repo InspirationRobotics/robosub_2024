@@ -126,7 +126,7 @@ class RobotControl:
         self.position['y'] = msg.pose.position.y
         self.position['z'] = msg.pose.position.z
 
-        yaw, pitch, roll  = quat2euler([msg.pose.orientation.w,msg.pose.orientation.x,msg.pose.orientation.y,msg.pose.orientation.z], axes='szyx')
+        yaw, pitch, roll  = quat2euler([msg.pose.orientation.w,msg.pose.orientation.x,msg.pose.orientation.y,msg.pose.orientation.z], axes='rzyx')
         roll_deg, pitch_deg, yaw_deg = np.rad2deg([roll, pitch, yaw])
         self.orientation['yaw']     = yaw_deg
         self.orientation['pitch']   = pitch_deg
