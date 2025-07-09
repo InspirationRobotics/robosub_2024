@@ -266,8 +266,8 @@ class SensorFuse:
         ekf = ExtendedKalmanFilter(dim_x=9, dim_z=3, dim_u=0)
 
         # Initial state (all zeros)
-        ekf.x = np.zeros(9)
-
+        ekf.x = np.array([0.,0.,0.,0.,0.,0.,0.,0.,0.])
+        print(f"DEBUG: ekf.x is {ekf.x} with shape {ekf.x.shape}")
         # Nonlinear transition and measurement functions
         ekf.f = self.f
         ekf.F = self.FJacobian_at(ekf.x, self.dt)
