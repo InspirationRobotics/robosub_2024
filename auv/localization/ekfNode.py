@@ -144,7 +144,8 @@ class SensorFuse:
         self.ekf.x[6:] = self.imu_array  # ax, ay, az go into indices 6–8
 
         # Predict the next state
-        self.ekf.predict()
+        self.ekf.predict_x()
+        self.ekf.predict_covariance()
         
 
 
