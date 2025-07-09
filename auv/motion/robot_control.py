@@ -63,7 +63,7 @@ class RobotControl:
         self.pub_button     = rospy.Publisher("/mavros/manual_control/send", mavros_msgs.msg.ManualControl, queue_size=10)
 
         # Create variable to store pwm when direct control
-        self.direct_pwm = [1500] * 6
+        self.direct_input = [0] * 6
         # store desire point
         self.desired_point  = {"x":None,"y":None,"z":None,"heading":None}
         # A set of PIDs (Proportional - Integral - Derivative) to handle the movement of the sub
@@ -133,6 +133,7 @@ class RobotControl:
         """
         Publisher to publish the thruster values
         """
+        # TODO add np clip protection to the pwms
         while not rospy.is_shutdown():
             if self.mode=="pid":
                 # Get desire x,y,z
@@ -155,12 +156,12 @@ class RobotControl:
                 # Set the PWM values
                 self.__movement(lateral=lateral_pwm, forward=surge_pwm, vertical=depth_pwm, yaw=yaw_pwm)
             elif self.mode=="direct":
-                pitch_pwm   = self.direct_pwm[0]
-                roll_pwm    = self.direct_pwm[1]
-                depth_pwm   = self.direct_pwm[2]
-                yaw_pwm     = self.direct_pwm[3]
-                surge_pwm   = self.direct_pwm[4]
-                lateral_pwm = self.direct_pwm[5]
+                pitch_pwm   = self.direct_input[0]
+                roll_pwm    = self.direct_input[1]
+                depth_pwm   = self.direct_input[2]
+                yaw_pwm     = self.direct_input[3]
+                surge_pwm   = self.direct_input[4]
+                lateral_pwm = self.direct_input[5]
                 self.__movement(pitch=pitch_pwm,roll=roll_pwm,vertical=depth_pwm,yaw=yaw_pwm,forward=surge_pwm,lateral=lateral_pwm)
             else:
                 rospy.logerr("Invalid control mode")
@@ -197,7 +198,7 @@ class RobotControl:
         channels[4] = int((forward * 80) + 1500) if forward else 1500
         channels[5] = int((lateral * 80) + 1500) if lateral else 1500
         with self.lock:
-            self.direct_pwm = channels
+            self.direct_input = channels
 
     def __movement(
         self,
@@ -353,7 +354,7 @@ class RobotControl:
     def reset(self):
         for key, pid in self.PIDs.items():
                 pid.reset()
-        self.direct_pwm = [1500] * 6
+        self.direct_input = [0] * 6
 
     def exit(self):
         """

@@ -22,7 +22,7 @@ if __name__ == "__main__":
     rc.set_control_mode('direct')
     time.sleep(3)
 
-    rc.movement(yaw=1600)
+    rc.movement(yaw=3)
     rospy.loginfo("yaw at pwm=1600")
     time.sleep(3)
     print("[INFO] Reached the end of the program")
