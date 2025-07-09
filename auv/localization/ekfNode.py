@@ -14,6 +14,7 @@ from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import PoseStamped, Vector3Stamped
 from transforms3d.euler import quat2euler
+from transforms3d.quaternions import quat2mat
 
 
 class SensorFuse:
@@ -69,13 +70,33 @@ class SensorFuse:
         # update state
         self.update_state()
 
-    def dvl_callback(self,msg):
-        self.dvl_data["vx"] = msg.vector.x
-        self.dvl_data["vy"] = msg.vector.y
-        self.dvl_data["vz"] = msg.vector.z
-        self.dvl_array = np.array([self.dvl_data["vx"], self.dvl_data["vy"], self.dvl_data["vz"]])
-
-        self.update_dvl()
+    def dvl_callback(self, msg):
+        try:
+            # Store body-frame velocities
+            self.dvl_data["vx"] = msg.vector.x
+            self.dvl_data["vx"] = msg.vector.y
+            self.dvl_data["vz"] = msg.vector.z
+            
+            # Convert quaternion to rotation matrix
+            q = [self.imu_ori_data['qw'], 
+                self.imu_ori_data['qx'],
+                self.imu_ori_data['qy'],
+                self.imu_ori_data['qz']]
+            rot_matrix = quat2mat(q)  # From transforms3d.quaternions
+            
+            # Convert DVL velocities to numpy array and rotate
+            v_body = np.array([self.dvl_data["vx"],
+                            self.dvl_data["vy"],
+                            self.dvl_data["vz"]])
+            
+            v_global = rot_matrix @ v_body  # (3,3) @ (3,) -> (3,)
+            
+            # Store rotated velocity for EKF update
+            self.dvl_array = v_global.reshape(-1, 1)  # Convert to column vector
+            
+            self.update_filter()
+        except Exception as e:
+            rospy.logerr(f"DVL callback error: {str(e)}")
 
     def barometer_callback(self, msg):
         """
