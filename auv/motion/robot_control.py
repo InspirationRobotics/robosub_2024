@@ -56,7 +56,7 @@ class RobotControl:
         self.sub            = deviceHelper.variables.get("sub")
         self.mode           = "pid"
         self.position       = {'x':0,'y':0,'z':0}
-        self.orientation    = {'yaw':0,'pitch':0,'roll':0}
+        self.orientation    = {'yaw':0,'pitch':0,'roll':0}   # in degrees, see self.pose_callback
 
         # Establish thruster and depth publishers
         self.sub_pose       = rospy.Subscriber("auv/state/pose", PoseStamped, self.pose_callback)  
@@ -127,9 +127,10 @@ class RobotControl:
         self.position['z'] = msg.pose.position.z
 
         roll, pitch, yaw = quat2euler([msg.pose.orientation.w,msg.pose.orientation.x,msg.pose.orientation.y,msg.pose.orientation.z])
-        self.orientation['yaw']     = yaw
-        self.orientation['pitch']   = pitch
-        self.orientation['roll']    = roll
+        roll_deg, pitch_deg, yaw_deg = np.rad2deg([roll, pitch, yaw])
+        self.orientation['yaw']     = yaw_deg
+        self.orientation['pitch']   = pitch_deg
+        self.orientation['roll']    = roll_deg
 
         # if self.debug:
         #     rospy.loginfo(f"pos: {self.position}")
