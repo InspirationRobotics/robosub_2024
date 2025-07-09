@@ -19,6 +19,7 @@ if __name__ == "__main__":
     rospy.loginfo("set absolute x to 5.5, y to 4.5")
 
     rc.set_absolute_heading(0)
+    rospy.loginfo("set heading to 0")
     time.sleep(3)
 
     rc.set_control_mode('direct')
@@ -30,11 +31,14 @@ if __name__ == "__main__":
 
     rc.set_control_mode('pid')
     rospy.loginfo("Set mode back to pid")
+    time.sleep(3)
 
     rc.set_absolute_heading(153)
     rc.set_absolute_x(2)
     rc.set_absolute_y(3)
     rc.set_absolute_z(0.8)
-    print("[INFO] Reached the end of the program")
+    rospy.loginfo("set absolute x to 2, y to 3, z to 0.8, heading to 153")
+    time.sleep(3)
 
+    rospy.loginfo("Reached the end of the program")
     disarm.disarm()
