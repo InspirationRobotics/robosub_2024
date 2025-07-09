@@ -170,7 +170,7 @@ class SensorFuse:
         with self.ekf_lock:
             # Return 1D array instead of 2D matrix
             def h_z(x):
-                return np.array([x[2]])  # 1D array with shape (1,)
+                return np.array([x[2]]).reshape(-1,1)  # 1D array with shape (1,)
                 
             # Jacobian remains 2D but with single row
             def H_z(x):
