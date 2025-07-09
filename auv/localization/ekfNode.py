@@ -62,6 +62,7 @@ class SensorFuse:
         self.imu_array = np.array([self.imu_acc_data["ax"], self.imu_acc_data["ay"], self.imu_acc_data["az"]])
 
         # update state
+        print("Before updating state, ekf.x shape:", self.ekf.x.shape)
         self.update_state()
 
     def dvl_callback(self,msg):
@@ -71,6 +72,8 @@ class SensorFuse:
         self.dvl_array = np.array([self.dvl_data["vx"], self.dvl_data["vy"], self.dvl_data["vz"]])
 
         # update filter
+        print("Before updating dvl, ekf.x shape:", self.ekf.x.shape)
+
         self.update_dvl()
 
     def barometer_callback(self, msg):
