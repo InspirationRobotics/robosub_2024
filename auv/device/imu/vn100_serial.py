@@ -67,8 +67,14 @@ class VN100:
 
 
     def update_orientation(self):
-        """Converts Euler angles to quaternion form"""
-        self.quat_orient = euler2quat(self.pitch, self.roll, self.yaw)
+        """Converts Euler angles (in degrees) to quaternion"""
+        # Convert degrees to radians first
+        roll_rad = np.deg2rad(self.roll)
+        pitch_rad = np.deg2rad(self.pitch)
+        yaw_rad = np.deg2rad(self.yaw)
+        
+        # Create quaternion (order: ZYX by default)
+        self.quat_orient = euler2quat(yaw_rad, pitch_rad, roll_rad, axes='szyx')
 
     def publish_data(self):
         """Published the IMU data to /auv/devices/vectornav"""
