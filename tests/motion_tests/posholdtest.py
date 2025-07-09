@@ -14,8 +14,8 @@ if __name__ == "__main__":
     rospy.loginfo("set absolute depth to 0")
 
     time.sleep(3)
-    rc.set_absolute_x(2)
-    rospy.loginfo("set absolute x to 15")
+    rc.set_absolute_x(0.2)
+    rospy.loginfo("set absolute x to 0.2")
 
     time.sleep(3)
 
@@ -23,6 +23,7 @@ if __name__ == "__main__":
     time.sleep(3)
 
     rc.movement(yaw=1600)
+    rospy.loginfo("yaw at pwm=1600")
     time.sleep(3)
     print("[INFO] Reached the end of the program")
 
