@@ -140,12 +140,17 @@ class SensorFuse:
         # Update the state transition matrix F with the new dt
         self.dt = dt
 
+        self.ekf.F = self.FJacobian_at(self.ekf.x, dt)
+
         # Update the state with IMU data
         self.ekf.x[6:] = self.imu_array  # ax, ay, az go into indices 6–8
 
+        print("DEBUG: ekf.F shape:", self.ekf.F.shape, type(self.ekf.F))
+        print("DEBUG: ekf.x shape:", self.ekf.x.shape, type(self.ekf.x))
+        
         # Predict the next state
-        self.ekf.predict_x()
-        self.ekf.predict_covariance()
+        self.ekf.predict()
+
         
 
 
@@ -275,8 +280,7 @@ class SensorFuse:
         print(f"DEBUG: ekf.x is {ekf.x} with shape {ekf.x.shape}")
         # Nonlinear transition and measurement functions
         ekf.f = self.f
-        ekf.F = lambda x: self.FJacobian_at(x, self.dt)
-
+        ekf.F = self.FJacobian_at(ekf.x, self.dt)  # output is a numpy array
 
         ekf.hx = self.hx_velocity  # assume initial measurement function is for velocity (DVL)
         ekf.H = self.H_velocity
