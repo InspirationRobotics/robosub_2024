@@ -168,18 +168,26 @@ class SensorFuse:
     
     def update_depth(self):
         with self.ekf_lock:
-            def h_z(x):
-                res = np.array([[x[2,0]]]) 
-                return res.reshape(-1,1)  # Return as 1x1 matrix
+            # Ensure we have valid depth data
+            if self.barometer_depth is None or not self.calibrated:
+                return
                 
+            # Measurement function returns column vector
+            def h_z(x):
+                return np.array([[x[2, 0]]])  # Returns 2D matrix (1x1)
+                
+            # Jacobian matrix (1x9)
             def H_z(x):
                 return np.array([[0, 0, 1, 0, 0, 0, 0, 0, 0]])
                 
-            z = np.array([[self.barometer_depth]])  # 1x1 matrix
+            # Measurement as 2D matrix (1x1)
+            z = np.array([[self.barometer_depth]])
             
-            R_z = np.array([0.05])  # 1D measurement noise
+            # Measurement noise as 2D matrix (1x1)
+            R_z = np.array([[0.05]])
 
-            self.ekf.update(z, H_z, h_z, R=R_z)
+            # Perform EKF update
+            self.ekf.update(z, HJacobian=H_z, Hx=h_z, R=R_z)
 
 
     def publish(self):
