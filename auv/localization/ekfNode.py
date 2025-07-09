@@ -35,7 +35,7 @@ class SensorFuse:
 
         self.dvl_sub    = rospy.Subscriber("/auv/devices/dvl/velocity", Vector3Stamped, self.dvl_callback)
         self.dvl_data   = {"vx": 0, "vy": 0, "vz": 0}
-        self.dvl_array  = None # used for passing into the ekf
+        self.dvl_array  = np.zeros((3, 1)) # used for passing into the ekf
 
         self.baro_sub           = rospy.Subscriber("/mavlink/from", Mavlink, self.barometer_callback)
         self.barometer_depth    = None
@@ -139,32 +139,24 @@ class SensorFuse:
         rospy.loginfo(f"depth calibration Finished. Surface is: {self.depth_calib}")
 
     def update_state(self):
-        with self.ekf_lock:
-            assert self.ekf.x.shape == (9,), f"ekf.x corrupted: shape {self.ekf.x.shape}"
-            assert self.ekf.x.ndim == 1, "State vector must be 1D"
-            # Calculate time delta
-            current_time = time.time()
-            dt = current_time - self.last_time
-            self.last_time = current_time
+        # Accept both (9,) and (9,1) shapes
+        assert self.ekf.x.shape in [(9,), (9,1)], \
+            f"ekf.x corrupted: shape {self.ekf.x.shape}"
+            
+        # Calculate time delta
+        current_time = time.time()
+        dt = current_time - self.last_time
+        self.last_time = current_time
 
-            # Update the state transition matrix F with the new dt
-            self.dt = dt
+        # Update the state transition matrix F with the new dt
+        self.ekf.F = self.FJacobian_at(self.ekf.x, dt)
 
-            self.ekf.F = self.FJacobian_at(self.ekf.x, dt)
-            print(f"DEBUG: ekf.F is type {type(self.ekf.F)}, shape {getattr(self.ekf.F, 'shape', None)}")
+        # Update the state with IMU data
+        # Ensure imu_array is column vector before assignment
+        self.ekf.x[6:] = self.imu_array.reshape(-1, 1)
 
-
-            # Update the state with IMU data
-            print("DEBUG: imu_array shape:", self.imu_array.shape)
-            print("DEBUG: ekf.x shape before imu update:", self.ekf.x.shape)
-            self.ekf.x[6:] = self.imu_array.reshape(-1, 1)  # ax, ay, az go into indices 6–8
-            print("DEBUG: ekf.x shape after imu update", self.ekf.x.shape)
-
-            print("DEBUG: ekf.F shape:", self.ekf.F.shape, type(self.ekf.F))
-            print("DEBUG: ekf.x shape:", self.ekf.x.shape, type(self.ekf.x))
-
-            # Predict the next state
-            self.ekf.predict()
+        # Predict the next state
+        self.ekf.predict()
 
 
     def update_dvl(self):
