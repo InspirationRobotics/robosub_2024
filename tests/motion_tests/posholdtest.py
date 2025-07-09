@@ -10,7 +10,7 @@ if __name__ == "__main__":
     arm.arm()
     time.sleep(3.0)
     print("[INFO}This is the start")
-    rc.set_absolute_z(0)
+    rc.set_absolute_z(3)
     rospy.loginfo("set absolute depth to 0")
 
     time.sleep(3)

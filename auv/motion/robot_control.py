@@ -223,6 +223,19 @@ class RobotControl:
             roll (float): Power for the roll maneuver
             vertical (float): Distance to change the depth by
         """
+        def clip(pwmMin:int, pwmMax:int, value:int):
+            """
+            A clip function to ensure the pwm is in the acceptable range
+
+            Args: 
+                pwmMin (int) : min pwm
+                pwmMax (int) : max pwm
+                value  (int) : calculated pwm
+            """
+            value = min(pwmMax,value)
+            value = max(pwmMin,value)
+            return value
+        
         # Create a message to send to the thrusters
         pwm = mavros_msgs.msg.OverrideRCIn()
 
@@ -234,6 +247,11 @@ class RobotControl:
         channels[3] = int((yaw * 80) + 1500) if yaw else 1500
         channels[4] = int((forward * 80) + 1500) if forward else 1500
         channels[5] = int((lateral * 80) + 1500) if lateral else 1500
+
+        # Clip the numbers to ensure in range
+        for i,num in enumerate(channels):
+            channels[i] = clip(1100,1900,num)
+        
         pwm.channels = channels
 
         # Publish PWMs to /auv/devices/thrusters
