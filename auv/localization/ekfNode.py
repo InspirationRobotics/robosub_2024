@@ -168,15 +168,19 @@ class SensorFuse:
     
     def update_depth(self):
         with self.ekf_lock:
+            # Return 1D array instead of 2D matrix
             def h_z(x):
-                return np.array([[x[2,0]]])  # Return as 1x1 matrix
+                return np.array([x[2]])  # 1D array with shape (1,)
                 
+            # Jacobian remains 2D but with single row
             def H_z(x):
                 return np.array([[0, 0, 1, 0, 0, 0, 0, 0, 0]])
                 
-            z = np.array([[self.barometer_depth]])  # 1x1 matrix
+            # Measurement as 1D array
+            z = np.array([self.barometer_depth])  # 1D array with shape (1,)
             
-            R_z = np.array([0.05])  # 1D measurement noise
+            # Measurement noise as scalar or 1D array
+            R_z = 0.05  # Scalar works for 1D measurement
 
             self.ekf.update(z, H_z, h_z, R=R_z)
 
