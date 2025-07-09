@@ -160,7 +160,7 @@ class RobotControl:
         lateral=None,
         pitch=None,
         roll=None,
-        vertical=0,
+        vertical=None,
         **kwargs,
     ):
         """
@@ -206,6 +206,7 @@ class RobotControl:
         """
         self.mode = msg
         if self.mode=="direct":
+            self.movement() # set 0s on all channel
             self.thread.join()
             for pid in self.PIDs:
                 pid.reset()
