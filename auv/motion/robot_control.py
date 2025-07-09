@@ -199,7 +199,6 @@ class RobotControl:
         with self.lock:
             self.direct_pwm = channels
 
-
     def __movement(
         self,
         yaw=None,
@@ -251,16 +250,16 @@ class RobotControl:
                         - "pid" for PID control
                         - "direct" for direct thruster control
         """
-        self.mode = msg
-        if self.mode=="direct":
-            self.__movement() # set 0s on all channel
-            for key, pid in self.PIDs.items():
-                pid.reset()
-        elif self.mode=="pid":
-            self.__movement()
-            for key, pid in self.PIDs.items():
-                pid.reset()
+        self.reset()
+        
+        if msg=="direct":
+            self.mode = msg
+            rospy.loginfo("Set to direct control mode")
+        elif msg=="pid":
+            self.mode = msg
+            rospy.loginfo("Set to pid control mode")
         else:
+            self.mode = "pid"
             rospy.logewarn("Control mode not found")
         
     def set_absolute_z(self, depth):
@@ -350,6 +349,11 @@ class RobotControl:
         # Clear the PID error
         self.PIDs["yaw"].reset()
         self.desired_point["heading"] = heading + self.pose.pose.orientation.z
+
+    def reset(self):
+        for key, pid in self.PIDs.items():
+                pid.reset()
+        self.direct_pwm = [1500] * 6
 
     def exit(self):
         """
