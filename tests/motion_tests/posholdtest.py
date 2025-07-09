@@ -6,6 +6,8 @@ if __name__ == "__main__":
     rospy.init_node("poshold_test", anonymous=True)  # avoid hiearchy issue
     rc = robot_control.RobotControl(debug=True)
 
+    rospy.loginfo(f"current state: {rc.orientation}")
+
     rc.set_control_mode("pid")
     arm.arm()
     time.sleep(3.0)
@@ -22,6 +24,7 @@ if __name__ == "__main__":
     rospy.loginfo("set heading to 0")
     time.sleep(3)
 
+    rospy.loginfo(f"current state: {rc.orientation}")
     rc.set_control_mode('direct')
     time.sleep(3)
 
@@ -40,5 +43,6 @@ if __name__ == "__main__":
     rospy.loginfo("set absolute x to 2, y to 3, z to 0.8, heading to 153")
     time.sleep(3)
 
+    rospy.loginfo(f"current state: {rc.orientation}")
     rospy.loginfo("Reached the end of the program")
     disarm.disarm()
