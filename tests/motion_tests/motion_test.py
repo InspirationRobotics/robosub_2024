@@ -5,7 +5,7 @@ from auv.utils import arm, disarm
 
 
 rospy.init_node("MotionTest", anonymous=True)
-rc = robot_control.RobotControl(enable_dvl=False)
+rc = robot_control.RobotControl()
 
 arm.arm()
 time.sleep(3.0)
