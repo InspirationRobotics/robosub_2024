@@ -131,21 +131,25 @@ class SensorFuse:
         rospy.loginfo(f"depth calibration Finished. Surface is: {self.depth_calib}")
 
     def update_state(self):
+        assert self.ekf.x.shape == (9,), f"ekf.x corrupted: shape {self.ekf.x.shape}"
         # Calculate time delta
         current_time = time.time()
         dt = current_time - self.last_time
         self.last_time = current_time
 
         # Update the state transition matrix F with the new dt
-        self.ekf.F = self.FJacobian_at(self.ekf.x, dt)
+        self.dt = dt
 
         # Update the state with IMU data
         self.ekf.x[6:] = self.imu_array  # ax, ay, az go into indices 6–8
 
         # Predict the next state
         self.ekf.predict()
+        
+
 
     def update_dvl(self):
+        assert self.ekf.x.shape == (9,), f"ekf.x corrupted: shape {self.ekf.x.shape}"
         z = self.dvl_array.reshape(-1, 1)  # Ensure shape (3,1)
         self.ekf.update(z, self.H_velocity, self.hx_velocity)
         self.position = self.ekf.x[0:3]
@@ -270,7 +274,8 @@ class SensorFuse:
         print(f"DEBUG: ekf.x is {ekf.x} with shape {ekf.x.shape}")
         # Nonlinear transition and measurement functions
         ekf.f = self.f
-        ekf.F = self.FJacobian_at(ekf.x, self.dt)
+        ekf.F = lambda x: self.FJacobian_at(x, self.dt)
+
 
         ekf.hx = self.hx_velocity  # assume initial measurement function is for velocity (DVL)
         ekf.H = self.H_velocity
