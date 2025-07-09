@@ -7,6 +7,7 @@ from serial import Serial
 from transforms3d.euler import euler2quat
 
 from auv.utils import deviceHelper
+from geometry_msgs.msg import Vector3Stamped
 from sensor_msgs.msg import Imu
 
 class VN100:
@@ -29,6 +30,7 @@ class VN100:
         self.gyroZ = 0.0
         self.quat_orient = np.array([0,0,0,0])
         self.vectornav_pub = rospy.Publisher('/auv/devices/vectornav', Imu, queue_size=10)
+        self.YPR_pub = rospy.Publisher('/auv/devices/vectornav/YPR', Vector3Stamped, queue_size=10)
 
         self.running = True  # Added for Ctrl+C protection
 
@@ -89,6 +91,16 @@ class VN100:
         imu_msg.linear_acceleration.z = self.accZ
 
         self.vectornav_pub.publish(imu_msg)
+        
+        YPR = Vector3Stamped()
+        YPR = Vector3Stamped()
+        YPR.header.stamp = rospy.Time.now()
+        YPR.header.frame_id = "base_link"
+
+        YPR.vector.x = self.yaw
+        YPR.vector.y = self.pitch
+        YPR.vector.z = self.roll
+        self.YPR_pub.publish(YPR)
 
     def shutdown(self):
         """Clean shutdown of threads and serial connection"""
