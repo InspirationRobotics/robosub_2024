@@ -193,7 +193,7 @@ class RobotControl:
         if not self.debug:
             self.pub_thrusters.publish(pwm)
         else:
-            rospy.logdebug(f"pwms : {channels[0:6]}")
+            rospy.loginfo(f"pwms : {channels[0:6]}")
 
     def set_control_mode(self, msg:String):
         """
