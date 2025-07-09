@@ -190,13 +190,13 @@ class RobotControl:
             vertical (float): Distance to change the depth by
         
         """
-        channels = [1500] * 6
-        channels[0] = int((pitch * 80) + 1500) if pitch else 1500
-        channels[1] = int((roll * 80) + 1500) if roll else 1500
-        channels[2] = int((vertical * 80) + 1500) if vertical else 1500  
-        channels[3] = int((yaw * 80) + 1500) if yaw else 1500
-        channels[4] = int((forward * 80) + 1500) if forward else 1500
-        channels[5] = int((lateral * 80) + 1500) if lateral else 1500
+        channels = [0] * 6
+        channels[0] = pitch if pitch else 0
+        channels[1] = roll if roll else 0
+        channels[2] = vertical if vertical else 0
+        channels[3] = yaw  if yaw else 0
+        channels[4] = forward if forward else 0
+        channels[5] = lateral if lateral else 0
         with self.lock:
             self.direct_input = channels
 
