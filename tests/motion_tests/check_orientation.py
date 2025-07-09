@@ -7,14 +7,15 @@ from auv.utils import arm, disarm
 rospy.init_node("MotionTest", anonymous=True)
 rc = robot_control.RobotControl(enable_dvl=False)
 
+arm.arm()
 
-print("[INFO}This is the start")
-rc.set_depth(0.9) 
+rospy.loginfo("This is the start")
 
-time.sleep(5.0)
+rospy.loginfo(f"current state: {rc.orientation}")
+first_time = time.time()
+while time.time() - first_time < 30:
+    rospy.loginfo(f"current state: {rc.orientation}")
+    time.sleep(0.5)
 
-
-print("Reached the end")
-
-rc.set_depth(0.0)
+rospy.loginfo("Reached the end")
 disarm.disarm()
