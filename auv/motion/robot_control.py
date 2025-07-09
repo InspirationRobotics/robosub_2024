@@ -211,7 +211,7 @@ class RobotControl:
             for key, pid in self.PIDs:
                 pid.reset()
         elif self.mode=="pid":
-            for pid in self.PIDs:
+            for key, pid in self.PIDs:
                 pid.reset()
             self.thread = threading.Thread(target=self.publisherThread)
             self.thread.daemon = True
