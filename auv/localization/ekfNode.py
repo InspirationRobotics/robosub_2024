@@ -147,7 +147,7 @@ class SensorFuse:
 
     def update_dvl(self):
         # Update the filter with the latest DVL measurements
-        self.ekf.update(self.dvl_array, self.H_velocity, self.hx_velocity)
+        self.ekf.update(self.dvl_array.reshape(-1, 1), self.H_velocity, self.hx_velocity)
         self.position = self.ekf.x[0:3]
         self.publish()
     
@@ -164,7 +164,9 @@ class SensorFuse:
         # Measurement noise (tunable)
         R_z = np.array([[0.05]])  # Low noise = high trust in barometer
 
-        self.ekf.update(np.array([self.barometer_depth]), H_z, h_z, R=R_z)
+        z = np.array([[self.barometer_depth]])  # shape (1,1)
+        self.ekf.update(z, H_z, h_z, R=R_z)
+
 
     def publish(self):
         pose_msg = PoseStamped()
