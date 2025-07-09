@@ -13,14 +13,14 @@ if __name__ == "__main__":
     rc.set_absolute_z(0)
     rospy.loginfo("set absolute depth to 0")
 
-    time.sleep(10)
+    time.sleep(3)
     rc.set_absolute_x(15)
     rospy.loginfo("set absolute x to 15")
 
-    time.sleep(10)
+    time.sleep(3)
 
     rc.set_control_mode('direct')
-    time.sleep(10)
+    time.sleep(3)
     print("[INFO] Reached the end of the program")
 
     disarm.disarm()
