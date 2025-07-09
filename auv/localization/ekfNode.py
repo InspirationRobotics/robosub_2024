@@ -94,7 +94,7 @@ class SensorFuse:
             # Store rotated velocity for EKF update
             self.dvl_array = v_global.reshape(-1, 1)  # Convert to column vector
             
-            self.update_filter()
+            self.update_dvl()
         except Exception as e:
             rospy.logerr(f"DVL callback error: {str(e)}")
 
