@@ -81,22 +81,22 @@ class RobotControl:
 
         self.PIDs = {
             "yaw": PID(
-                self.config.get("YAW_PID_P", 12),
-                self.config.get("YAW_PID_I", 0.01),
-                self.config.get("YAW_PID_D", 0.0),
+                self.config.get("YAW_PID_P", 0.5),
+                self.config.get("YAW_PID_I", 0.1),
+                self.config.get("YAW_PID_D", 0.1),
                 setpoint=0,
                 # output_limits=(-5, 5),   
             ),
             "surge": PID(
-                self.config.get("FORWARD_PID_P", 4.0),
-                self.config.get("FORWARD_PID_I", 0.01),
+                self.config.get("FORWARD_PID_P", 0.5),
+                self.config.get("FORWARD_PID_I", 0.1),
                 self.config.get("FORWARD_PID_D", 0.1),
                 setpoint=0,
                 # output_limits=(-5, 5),
             ),
             "lateral": PID(
-                self.config.get("LATERAL_PID_P", 4.0),
-                self.config.get("LATERAL_PID_I", 0.01),
+                self.config.get("LATERAL_PID_P", 0.5),
+                self.config.get("LATERAL_PID_I", 0.1),
                 self.config.get("LATERAL_PID_D", 0.1),
                 setpoint=0,
                 # output_limits=(-5, 5),
