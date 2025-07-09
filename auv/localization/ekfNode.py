@@ -1,3 +1,4 @@
+
 import numpy as np
 from filterpy.kalman import ExtendedKalmanFilter
 from filterpy.common import Q_discrete_white_noise
@@ -5,7 +6,11 @@ from auv.utils import deviceHelper
 from auv.device.dvl import DVL
 import time
 import threading
+from statistics import mean
 import rospy
+from struct import pack, unpack
+from mavros_msgs.msg import Mavlink
+from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import PoseStamped, Vector3Stamped
 from transforms3d.euler import quat2euler
@@ -22,14 +27,19 @@ class SensorFuse:
 
         # Create subscriber for imu and dvl
         # TODO: Fix IMU rostopic architecture
-        self.imu_sub = rospy.Subscriber("/auv/devices/vectornav", Imu, self.imu_callback)
-        self.imu_acc_data = {"ax": 0, "ay": 0, "az": 0}
-        self.imu_ori_data = {"qx": 0, "qy": 0, "qz": 0, "qw": 0}  # store one line of IMU data for ekf predict
-        self.imu_array = None # used for passing into the ekf
+        self.imu_sub        = rospy.Subscriber("/auv/devices/vectornav", Imu, self.imu_callback)
+        self.imu_acc_data   = {"ax": 0, "ay": 0, "az": 0}
+        self.imu_ori_data   = {"qx": 0, "qy": 0, "qz": 0, "qw": 0}  # store one line of IMU data for ekf predict
+        self.imu_array      = None # used for passing into the ekf
 
-        self.dvl_sub = rospy.Subscriber("/auv/devices/dvl/velocity", Vector3Stamped, self.dvl_callback)
-        self.dvl_data = {"vx": 0, "vy": 0, "vz": 0}
-        self.dvl_array = None # used for passing into the ekf
+        self.dvl_sub    = rospy.Subscriber("/auv/devices/dvl/velocity", Vector3Stamped, self.dvl_callback)
+        self.dvl_data   = {"vx": 0, "vy": 0, "vz": 0}
+        self.dvl_array  = None # used for passing into the ekf
+
+        self.baro_sub           = rospy.Subscriber("/mavlink/from", Mavlink, self.barometer_callback)
+        self.barometer_depth    = None
+        self.depth_calib        = None
+        self.calibrated         = False
         # initialize filter, dvl, imu, dt, and last_time
         # initialize dt before creating the filter
         self.dt = 1.0 / 100  # IMU time step (100 Hz)
@@ -50,6 +60,7 @@ class SensorFuse:
         self.imu_ori_data['qw'] = msg.orientation.w
 
         self.imu_array = np.array([self.imu_acc_data["ax"], self.imu_acc_data["ay"], self.imu_acc_data["az"]])
+
         # update state
         self.update_state()
 
@@ -58,8 +69,66 @@ class SensorFuse:
         self.dvl_data["vy"] = msg.vector.y
         self.dvl_data["vz"] = msg.vector.z
         self.dvl_array = np.array([self.dvl_data["vx"], self.dvl_data["vy"], self.dvl_data["vz"]])
+
         # update filter
-        self.update_filter()
+        self.update_dvl()
+
+    def barometer_callback(self, msg):
+        """
+        Handles barometric data by unpacking, calculating depth from raw data, then publishes raw data
+
+        Args:
+            msg: Barometric data from corresponding publisher
+        """
+        try:
+            # If the barometric data message has the right ID
+            if msg.msgid == 143:
+                # Unpack the data
+                p = pack("QQ", *msg.payload64)
+                time_boot_ms, press_abs, press_diff, temperature = unpack("Iffhxx", p) # Pressure is in mBar
+
+                # Calculate the depth based on the pressure
+                press_diff = round(press_diff, 2)
+                press_abs = round(press_abs, 2)
+                self.barometer_depth = (press_abs / (997.0474 * 9.80665 * 0.01)) - self.depth_calib
+            
+            if self.calibrated:
+                self.update_depth()
+        # Handle exceptions
+        except Exception as e:
+            rospy.logerr("Barometer unpacking failed")
+            rospy.logerr(e)
+
+    def calibrate_depth(self, sample_time=3):
+        """
+        To calibrate the depth data
+
+        Args:
+            sample_time (int): The number of seconds taken to calibrate the data        
+        """
+        rospy.loginfo("Starting Depth Calibration...")
+        samples = []
+
+        # Wait for depth data
+        while self.barometer_depth == None:
+            rospy.sleep(0.1)
+            pass
+
+
+        prevDepth = self.barometer_depth
+        start_time = time.time()
+
+        # Collect data for sample_time seconds, then calculate the mean
+        while time.time() - start_time < sample_time:
+            if self.barometer_depth == prevDepth:
+                continue
+
+            samples.append(self.barometer_depth)
+            prevDepth = self.barometer_depth
+
+        self.depth_calib = mean(samples)
+        self.calibrated = True
+        rospy.loginfo(f"depth calibration Finished. Surface is: {self.depth_calib}")
 
     def update_state(self):
         # Calculate time delta
@@ -71,20 +140,31 @@ class SensorFuse:
         self.ekf.F = self.FJacobian_at(self.ekf.x, dt)
 
         # Update the state with IMU data
-        self.ekf.x[3:] = self.imu_array
+        self.ekf.x[6:] = self.imu_array  # ax, ay, az go into indices 6–8
 
         # Predict the next state
         self.ekf.predict()
 
-        # Integrate position and publish it
-        self.position += dt * np.array(self.ekf.x[0:3])
-        self.publish()
-
-    def update_filter(self):
+    def update_dvl(self):
         # Update the filter with the latest DVL measurements
-        self.ekf.update(self.dvl_array, self.HJacobian_at, self.hx)
+        self.ekf.update(self.dvl_array, self.H_velocity, self.hx_velocity)
+        self.position = self.ekf.x[0:3]
         self.publish()
     
+    def update_depth(self):
+        # Define measurement function h(x) and Jacobian H for z-position only
+        def h_z(x):
+            return np.array([x[2]])  # z-position
+
+        def H_z(x):
+            H = np.zeros((1, 9))
+            H[0, 2] = 1
+            return H
+
+        # Measurement noise (tunable)
+        R_z = np.array([[0.05]])  # Low noise = high trust in barometer
+
+        self.ekf.update(np.array([self.barometer_depth]), H_z, h_z, R=R_z)
 
     def publish(self):
         pose_msg = PoseStamped()
@@ -107,29 +187,68 @@ class SensorFuse:
     def f(x, dt):
         # Non-linear state transition matrix
         # predicts the next state based on the current state and time step
+
         x_new = np.copy(x)
-        x_new[0] += x[3] * dt  # vel_x update
-        x_new[1] += x[4] * dt  # vel_y update
-        x_new[2] += x[5] * dt  # vel_z update
+        
+        # Position update: p += v * dt + 0.5 * a * dt^2
+        x_new[0] += x[3] * dt + 0.5 * x[6] * dt**2
+        x_new[1] += x[4] * dt + 0.5 * x[7] * dt**2
+        x_new[2] += x[5] * dt + 0.5 * x[8] * dt**2
+
+        # Velocity update: v += a * dt
+        x_new[3] += x[6] * dt
+        x_new[4] += x[7] * dt
+        x_new[5] += x[8] * dt
+
+        # Acceleration assumed constant (no update)
         return x_new
 
     @staticmethod
     def FJacobian_at(x, dt):
-        # Linearizes f(x)
+        # Linearizes f(x) for state: [px, py, pz, vx, vy, vz, ax, ay, az]
         return np.array([
-            [1., 0., 0., dt, 0., 0.],  # dvl_vel_x depends on vx and ax
-            [0., 1., 0., 0., dt, 0.],  # dvl_vel_y depends on vy and ay
-            [0., 0., 1., 0., 0., dt],  # dvl_vel_z depends on vz and az
-            [0., 0., 0., 1., 0., 0.],  # imu_accel_x depends on ax
-            [0., 0., 0., 0., 1., 0.],  # imu_accel_y depends on ay
-            [0., 0., 0., 0., 0., 1.]   # imu_accel_z depends on az
+            [1., 0., 0.,  dt, 0., 0., 0.5*dt**2,       0.,        0.],
+            [0., 1., 0.,  0., dt, 0.,      0., 0.5*dt**2,        0.],
+            [0., 0., 1.,  0., 0., dt,      0.,       0., 0.5*dt**2],
+            
+            [0., 0., 0.,  1., 0., 0.,      dt,        0.,        0.],
+            [0., 0., 0.,  0., 1., 0.,      0.,       dt,        0.],
+            [0., 0., 0.,  0., 0., 1.,      0.,        0.,       dt ],
+            
+            [0., 0., 0.,  0., 0., 0.,      1.,        0.,        0.],
+            [0., 0., 0.,  0., 0., 0.,      0.,        1.,        0.],
+            [0., 0., 0.,  0., 0., 0.,      0.,        0.,        1.]
         ])
+    
+    # @staticmethod
+    # def FJacobian_at(x, dt):
+    #     # Linearizes f(x)
+    #     return np.array([
+    #         [1., 0., 0., dt, 0., 0.],  # dvl_vel_x depends on vx and ax
+    #         [0., 1., 0., 0., dt, 0.],  # dvl_vel_y depends on vy and ay
+    #         [0., 0., 1., 0., 0., dt],  # dvl_vel_z depends on vz and az
+    #         [0., 0., 0., 1., 0., 0.],  # imu_accel_x depends on ax
+    #         [0., 0., 0., 0., 1., 0.],  # imu_accel_y depends on ay
+    #         [0., 0., 0., 0., 0., 1.]   # imu_accel_z depends on az
+    #     ])
 
+    @staticmethod
+    def hx_velocity(x):
+        return x[3:6]  # vx, vy, vz
+
+    @staticmethod
+    def H_velocity(x):
+        H = np.zeros((3, 9))
+        H[0, 3] = 1
+        H[1, 4] = 1
+        H[2, 5] = 1
+        return H
+    
     @staticmethod
     def hx(x):
         # non-linear measurement matrix
         return np.array([x[0], x[1], x[2]])  # extracting velocity from the state vector
-
+    
     @staticmethod
     def HJacobian_at(x):
         # Define the Jacobian matrix for the measurement function
@@ -141,51 +260,35 @@ class SensorFuse:
 
     # ------------- Extended Kalman Filter ----------------
     def create_filter(self) -> ExtendedKalmanFilter:
-        # and 3 measurements (vel_x, vel_y, vel_z)
-        ekf = ExtendedKalmanFilter(dim_x=6, dim_z=3, dim_u=0)
+        # Full state: [px, py, pz, vx, vy, vz, ax, ay, az]
+        ekf = ExtendedKalmanFilter(dim_x=9, dim_z=3, dim_u=0)
 
-        # Init everything to 0
-        # These are the sensor measurements
-        ekf.x = np.array([0., 0., 0., 0., 0., 0.])
+        # Initial state (all zeros)
+        ekf.x = np.zeros(9)
 
-        # Create non-linear state transition matrix
-        # Each row corresponds to a measurement from sensors
-        # Each column indicates the dependence of the measurement on a sensor measurement
-        # ie. Since Vx depends on vx dvl and ax imu we put 1's in the vx dvl and ax imu cols
-        # 1's for acceleration are placeholder for dt which you'll see in the predict class
+        # Nonlinear transition and measurement functions
         ekf.f = self.f
         ekf.F = self.FJacobian_at(ekf.x, self.dt)
 
-        # Create the non-linear measurement matrix
-        # Each row corresponds to a predicted val so vx vy vz
-        # Each col corresponds to the sensor vals
-        # Convert the predicted state estimate into predicted sensor values so just pulling out the vel values
-        ekf.hx = self.hx
-        ekf.H = self.HJacobian_at(ekf.x)
+        ekf.hx = self.hx_velocity  # assume initial measurement function is for velocity (DVL)
+        ekf.H = self.H_velocity(ekf.x)
 
-        # Covariance matrix (P): initial uncertainty in the state
-        # Covariance matrix uncertainty will change over time to be more certain
-        ekf.P = np.eye(6) * 1000  # High uncertainty at the start
+        # State covariance (uncertainty in initial state)
+        ekf.P = np.eye(9) * 1000.0  # large uncertainty
 
-        # Create the process noise covariance matrix
-        # model noise so that the predict model can account for it (can be tuned thru trial and error)
-        # Large Q means trusting actual sensor observations more than predicted measurements
-        ekf.Q = np.eye(6)
+        # Process noise covariance (how much we trust our model)
+        ekf.Q = np.eye(9) * 0.1  # tunable
 
-        # Create the measurement noise matrix
-        # uncertainty in the predicted vals (can be tuned)
-        ekf.R = np.array([
-            [0.1, 0., 0.],  # vel_x
-            [0., 0.1, 0.],  # vel_y
-            [0., 0., 0.1]   # vel_z
-        ])
-
+        # Measurement noise (how noisy are the DVL measurements)
+        ekf.R = np.eye(3) * 0.1  # for velocity [vx, vy, vz]
 
         return ekf
+
 
 
 if __name__=="__main__":
     ekf = SensorFuse()
     time.sleep(2)
+    ekf.calibrate_depth()
     rospy.loginfo("ekf node running")
     rospy.spin()
