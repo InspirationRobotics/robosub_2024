@@ -53,6 +53,7 @@ class RobotControl:
         self.lock       = threading.Lock()         
 
         # Store informaiton
+        self.sub            = deviceHelper.variables.get("sub")
         self.mode           = "pid"
         self.position       = {'x':0,'y':0,'z':0}
         self.orientation    = {'yaw':0,'pitch':0,'roll':0}
@@ -105,9 +106,9 @@ class RobotControl:
                 self.config.get("DEPTH_PID_I", 0.1),
                 self.config.get("DEPTH_PID_D", 0.1),
                 setpoint=0,
-                output_limits=(-5, 5),
             ),  
         }
+
 
         # Wait for the topics to run
         time.sleep(1)
@@ -141,22 +142,35 @@ class RobotControl:
         # TODO add np clip protection to the pwms
         while not rospy.is_shutdown():
             if self.mode=="pid":
+                """
+                The pid calculation for depth:
+                    input: current depth
+                    setpoint -> set to desired depth > 0
+                    output: -> some value [-400,400] we then add offset of 1450 to it, resulting in correct pwm
+                """
                 # Get desire x,y,z
+                heading = self.desired_point["heading"] if self.desired_point["heading"] is not None else self.orientation['yaw']
                 x       = self.desired_point["x"] if self.desired_point["x"] is not None else self.position['x']
                 y       = self.desired_point["y"] if self.desired_point["y"] is not None else self.position['y']
                 z       = self.desired_point["z"] if self.desired_point["z"] is not None else self.position['z']
-                heading = self.desired_point["heading"] if self.desired_point["heading"] is not None else self.orientation['yaw']
+                
                 # Calculate error
+                yaw_error   = heading - self.orientation['yaw']
                 x_error     = x - self.position['x']
                 y_error     = y - self.position['y']
                 z_error     = z - self.position['z']
-                yaw_error   = heading - self.orientation['yaw']
-
+                
                 # Get the PWM values
+                yaw_pwm     = self.PIDs["yaw"](yaw_error)
                 lateral_pwm = self.PIDs["lateral"](x_error)
                 surge_pwm   = self.PIDs["surge"](y_error)
-                depth_pwm   = self.PIDs["depth"](z_error)
-                yaw_pwm     = self.PIDs["yaw"](yaw_error)
+                if self.sub=="graey":
+                    depth_pwm = int(self.PIDs["depth"](self.position['z']) * -1 + self.depth_pid_offset)
+                elif self.sub== "onyx":
+                    depth_pwm = int(self.PIDs["depth"](self.position['z']) *  1 + self.depth_pid_offset)
+                else:
+                    depth_pwm = int(self.PIDs["depth"](self.position['z']) * -1 + self.depth_pid_offset)
+                
 
                 # Set the PWM values
                 self.__movement(lateral=lateral_pwm, forward=surge_pwm, vertical=depth_pwm, yaw=yaw_pwm)
