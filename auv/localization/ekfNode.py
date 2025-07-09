@@ -38,7 +38,7 @@ class SensorFuse:
 
         self.baro_sub           = rospy.Subscriber("/mavlink/from", Mavlink, self.barometer_callback)
         self.barometer_depth    = None
-        self.depth_calib        = None
+        self.depth_calib        = 0
         self.calibrated         = False
         # initialize filter, dvl, imu, dt, and last_time
         # initialize dt before creating the filter
