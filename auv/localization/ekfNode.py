@@ -67,7 +67,6 @@ class SensorFuse:
         ]).reshape(-1, 1)  # Store as column vector
 
         # update state
-        print("Before updating state, ekf.x shape:", self.ekf.x.shape)
         self.update_state()
 
     def dvl_callback(self,msg):
@@ -75,9 +74,6 @@ class SensorFuse:
         self.dvl_data["vy"] = msg.vector.y
         self.dvl_data["vz"] = msg.vector.z
         self.dvl_array = np.array([self.dvl_data["vx"], self.dvl_data["vy"], self.dvl_data["vz"]])
-
-        # update filter
-        print("Before updating dvl, ekf.x shape:", self.ekf.x.shape)
 
         self.update_dvl()
 
@@ -157,7 +153,6 @@ class SensorFuse:
 
         # Predict the next state
         self.ekf.predict()
-
 
     def update_dvl(self):
         with self.ekf_lock:
@@ -244,18 +239,6 @@ class SensorFuse:
             [0., 0., 0.,  0., 0., 0.,      0.,        1.,        0.],
             [0., 0., 0.,  0., 0., 0.,      0.,        0.,        1.]
         ])
-    
-    # @staticmethod
-    # def FJacobian_at(x, dt):
-    #     # Linearizes f(x)
-    #     return np.array([
-    #         [1., 0., 0., dt, 0., 0.],  # dvl_vel_x depends on vx and ax
-    #         [0., 1., 0., 0., dt, 0.],  # dvl_vel_y depends on vy and ay
-    #         [0., 0., 1., 0., 0., dt],  # dvl_vel_z depends on vz and az
-    #         [0., 0., 0., 1., 0., 0.],  # imu_accel_x depends on ax
-    #         [0., 0., 0., 0., 1., 0.],  # imu_accel_y depends on ay
-    #         [0., 0., 0., 0., 0., 1.]   # imu_accel_z depends on az
-    #     ])
 
     @staticmethod
     def hx_velocity(x):
@@ -289,7 +272,7 @@ class SensorFuse:
 
         # Initial state (all zeros)
         ekf.x = np.zeros((9, 1))
-        print(f"DEBUG: ekf.x is {ekf.x} with shape {ekf.x.shape}")
+
         # Nonlinear transition and measurement functions
         ekf.f = self.f
         ekf.F = self.FJacobian_at(ekf.x, self.dt)  # output is a numpy array
@@ -307,8 +290,6 @@ class SensorFuse:
         ekf.R = np.eye(3) * 0.1  # for velocity [vx, vy, vz]
 
         return ekf
-
-
 
 if __name__=="__main__":
     ekf = SensorFuse()
