@@ -144,6 +144,8 @@ class SensorFuse:
         self.dt = dt
 
         self.ekf.F = self.FJacobian_at(self.ekf.x, dt)
+        print(f"DEBUG: ekf.F is type {type(self.ekf.F)}, shape {getattr(self.ekf.F, 'shape', None)}")
+
 
         # Update the state with IMU data
         print("Before modifying ekf.x, shape:", self.ekf.x.shape)
