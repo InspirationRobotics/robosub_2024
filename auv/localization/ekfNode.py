@@ -234,11 +234,9 @@ class SensorFuse:
     #         [0., 0., 0., 0., 0., 1.]   # imu_accel_z depends on az
     #     ])
 
-
     @staticmethod
     def hx_velocity(x):
-        return x[3:6].reshape(-1, 1)  # returns (3,1)
-
+        return x[3:6].reshape(3, 1)  # shape: (3,1)
 
     @staticmethod
     def H_velocity(x):
@@ -246,7 +244,7 @@ class SensorFuse:
         H[0, 3] = 1
         H[1, 4] = 1
         H[2, 5] = 1
-        return H
+        return H  # shape: (3, 9)
     
     @staticmethod
     def hx(x):
