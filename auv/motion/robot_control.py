@@ -324,7 +324,7 @@ class RobotControl:
         """
         # Clear the PID error
         self.PIDs["yaw"].reset()
-        self.desired_point["heading"] = heading
+        self.desired_point["heading"] = heading /360
     
     def set_relative_z(self, depth):
         """
