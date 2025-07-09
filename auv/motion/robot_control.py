@@ -208,10 +208,10 @@ class RobotControl:
         if self.mode=="direct":
             self.movement() # set 0s on all channel
             self.thread.join()
-            for key, pid in self.PIDs:
+            for key, pid in self.PIDs.items():
                 pid.reset()
         elif self.mode=="pid":
-            for key, pid in self.PIDs:
+            for key, pid in self.PIDs.items():
                 pid.reset()
             self.thread = threading.Thread(target=self.publisherThread)
             self.thread.daemon = True
