@@ -49,10 +49,11 @@ class RobotControl:
         self.rate = rospy.Rate(10) # 10 Hz
         # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
         self.config     = deviceHelper.variables
-        self.debug      = debug            
+        self.debug      = debug   
+        self.lock       = threading.Lock()         
 
         # Store informaiton
-        self.mode           = ""
+        self.mode           = "pid"
         self.position       = {'x':0,'y':0,'z':0}
         self.orientation    = {'yaw':0,'pitch':0,'roll':0}
 
@@ -61,6 +62,8 @@ class RobotControl:
         self.pub_thrusters  = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
         self.pub_button     = rospy.Publisher("/mavros/manual_control/send", mavros_msgs.msg.ManualControl, queue_size=10)
 
+        # Create variable to store pwm when direct control
+        self.direct_pwm = [1500] * 6
         # store desire point
         self.desired_point  = {"x":None,"y":None,"z":None,"heading":None}
         # A set of PIDs (Proportional - Integral - Derivative) to handle the movement of the sub
@@ -131,29 +134,73 @@ class RobotControl:
         Publisher to publish the thruster values
         """
         while not rospy.is_shutdown():
-            # Get desire x,y,z
-            x       = self.desired_point["x"] if self.desired_point["x"] is not None else self.position['x']
-            y       = self.desired_point["y"] if self.desired_point["y"] is not None else self.position['y']
-            z       = self.desired_point["z"] if self.desired_point["z"] is not None else self.position['z']
-            heading = self.desired_point["heading"] if self.desired_point["heading"] is not None else self.orientation['yaw']
-            # Calculate error
-            x_error     = x - self.position['x']
-            y_error     = y - self.position['y']
-            z_error     = z - self.position['z']
-            yaw_error   = heading - self.orientation['yaw']
+            if self.mode=="pid":
+                # Get desire x,y,z
+                x       = self.desired_point["x"] if self.desired_point["x"] is not None else self.position['x']
+                y       = self.desired_point["y"] if self.desired_point["y"] is not None else self.position['y']
+                z       = self.desired_point["z"] if self.desired_point["z"] is not None else self.position['z']
+                heading = self.desired_point["heading"] if self.desired_point["heading"] is not None else self.orientation['yaw']
+                # Calculate error
+                x_error     = x - self.position['x']
+                y_error     = y - self.position['y']
+                z_error     = z - self.position['z']
+                yaw_error   = heading - self.orientation['yaw']
 
-            # Get the PWM values
-            lateral_pwm = self.PIDs["lateral"](x_error)
-            surge_pwm   = self.PIDs["surge"](y_error)
-            depth_pwm   = self.PIDs["depth"](z_error)
-            yaw_pwm     = self.PIDs["yaw"](yaw_error)
+                # Get the PWM values
+                lateral_pwm = self.PIDs["lateral"](x_error)
+                surge_pwm   = self.PIDs["surge"](y_error)
+                depth_pwm   = self.PIDs["depth"](z_error)
+                yaw_pwm     = self.PIDs["yaw"](yaw_error)
 
-            # Set the PWM values
-            self.movement(lateral=lateral_pwm, forward=surge_pwm, vertical=depth_pwm, yaw=yaw_pwm)
+                # Set the PWM values
+                self.__movement(lateral=lateral_pwm, forward=surge_pwm, vertical=depth_pwm, yaw=yaw_pwm)
+            elif self.mode=="direct":
+                pitch_pwm   = self.direct_pwm[0]
+                roll_pwm    = self.direct_pwm[1]
+                depth_pwm   = self.direct_pwm[2]
+                yaw_pwm     = self.direct_pwm[3]
+                surge_pwm   = self.direct_pwm[4]
+                lateral_pwm = self.direct_pwm[5]
+                self.__movement(pitch=pitch_pwm,roll=roll_pwm,vertical=depth_pwm,yaw=yaw_pwm,forward=surge_pwm,lateral=lateral_pwm)
+            else:
+                rospy.logerr("Invalid control mode")
+                
             
-            time.sleep(0.1) # 10hz
+            self.rate.sleep()
 
-    def movement(
+    def movement(        
+        self,
+        yaw=None,
+        forward=None,
+        lateral=None,
+        pitch=None,
+        roll=None,
+        vertical=None,
+        **kwargs,
+    ):
+        """
+        A function that sets the pwms and not sending pwm directly to mavros topic, it's for easier interface
+        Args:
+            yaw (float): Power for the yaw maneuver
+            forward (float): Power to move forward
+            lateral (float): Power for moving laterally (negative one way (less than 1500), positive the other way (more than 1500))
+            pitch (float): Power for the pitch maneuver
+            roll (float): Power for the roll maneuver
+            vertical (float): Distance to change the depth by
+        
+        """
+        channels = [1500] * 6
+        channels[0] = int((pitch * 80) + 1500) if pitch else 1500
+        channels[1] = int((roll * 80) + 1500) if roll else 1500
+        channels[2] = int((vertical * 80) + 1500) if vertical else 1500  
+        channels[3] = int((yaw * 80) + 1500) if yaw else 1500
+        channels[4] = int((forward * 80) + 1500) if forward else 1500
+        channels[5] = int((lateral * 80) + 1500) if lateral else 1500
+        with self.lock:
+            self.direct_pwm = channels
+
+
+    def __movement(
         self,
         yaw=None,
         forward=None,
@@ -206,16 +253,13 @@ class RobotControl:
         """
         self.mode = msg
         if self.mode=="direct":
-            self.movement() # set 0s on all channel
-            self.thread.join()
+            self.__movement() # set 0s on all channel
             for key, pid in self.PIDs.items():
                 pid.reset()
         elif self.mode=="pid":
+            self.__movement()
             for key, pid in self.PIDs.items():
                 pid.reset()
-            self.thread = threading.Thread(target=self.publisherThread)
-            self.thread.daemon = True
-            self.thread.start()
         else:
             rospy.logewarn("Control mode not found")
         
