@@ -61,11 +61,20 @@ class SensorFuse:
         self.imu_ori_data['qz'] = msg.orientation.z
         self.imu_ori_data['qw'] = msg.orientation.w
 
-        self.imu_array = np.array([
-        msg.linear_acceleration.x,
-        msg.linear_acceleration.y,
-        msg.linear_acceleration.z
-        ]).reshape(-1, 1)  # Store as column vector
+        # Store body-frame acceleration
+        accel_body = np.array([msg.linear_acceleration.x,
+                            msg.linear_acceleration.y,
+                            msg.linear_acceleration.z])
+        
+        # Get rotation matrix from IMU quaternion
+        q = [msg.orientation.w, msg.orientation.x, 
+            msg.orientation.y, msg.orientation.z]
+        rot_matrix = quat2mat(q)  # Body-to-world rotation
+        
+        # Rotate acceleration to world frame
+        accel_world = rot_matrix @ accel_body
+
+        self.imu_array = accel_world.reshape(-1, 1)  # Store as column vector
 
         # update state
         self.update_state()
