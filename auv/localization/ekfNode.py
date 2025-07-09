@@ -146,8 +146,8 @@ class SensorFuse:
         self.ekf.predict()
 
     def update_dvl(self):
-        # Update the filter with the latest DVL measurements
-        self.ekf.update(self.dvl_array.reshape(-1, 1), self.H_velocity, self.hx_velocity)
+        z = self.dvl_array.reshape(-1, 1)  # Ensure shape (3,1)
+        self.ekf.update(z, self.H_velocity, self.hx_velocity)
         self.position = self.ekf.x[0:3]
         self.publish()
     
@@ -234,9 +234,11 @@ class SensorFuse:
     #         [0., 0., 0., 0., 0., 1.]   # imu_accel_z depends on az
     #     ])
 
+
     @staticmethod
     def hx_velocity(x):
-        return x[3:6]  # vx, vy, vz
+        return x[3:6].reshape(-1, 1)  # returns (3,1)
+
 
     @staticmethod
     def H_velocity(x):
@@ -248,8 +250,7 @@ class SensorFuse:
     
     @staticmethod
     def hx(x):
-        # non-linear measurement matrix
-        return np.array([x[0], x[1], x[2]])  # extracting velocity from the state vector
+        return x[0:3].reshape(-1, 1)
     
     @staticmethod
     def HJacobian_at(x):
