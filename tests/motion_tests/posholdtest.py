@@ -14,8 +14,9 @@ if __name__ == "__main__":
     rospy.loginfo("set absolute depth to 0")
 
     time.sleep(3)
-    rc.set_absolute_x(0.2)
-    rospy.loginfo("set absolute x to 0.2")
+    rc.set_absolute_x(5.5)
+    rc.set_absolute_y(4.5)
+    rospy.loginfo("set absolute x to 5.5, y to 4.5")
 
     time.sleep(3)
 
