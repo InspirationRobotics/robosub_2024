@@ -204,7 +204,6 @@ class RobotControl:
                     roll=roll_pwm
                 )
 
-
             elif self.mode=="direct":
                 pitch_pwm   = self.direct_input[0]
                 roll_pwm    = self.direct_input[1]
