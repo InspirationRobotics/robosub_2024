@@ -23,6 +23,7 @@ class SensorFuse:
         rospy.init_node('ekfNode', anonymous=True)
         self.pub = rospy.Publisher('/auv/state/pose', PoseStamped, queue_size=10)
         self.rate = rospy.Rate(10)  # 10 Hz
+        self.ekf_lock = threading.Lock()
         
 
         # Create subscriber for imu and dvl
@@ -30,7 +31,7 @@ class SensorFuse:
         self.imu_sub        = rospy.Subscriber("/auv/devices/vectornav", Imu, self.imu_callback)
         self.imu_acc_data   = {"ax": 0, "ay": 0, "az": 0}
         self.imu_ori_data   = {"qx": 0, "qy": 0, "qz": 0, "qw": 0}  # store one line of IMU data for ekf predict
-        self.imu_array = np.array([0., 0., 0.])  # Before first IMU callback
+        self.imu_array = np.zeros((3, 1))  # Before first IMU callback
 
         self.dvl_sub    = rospy.Subscriber("/auv/devices/dvl/velocity", Vector3Stamped, self.dvl_callback)
         self.dvl_data   = {"vx": 0, "vy": 0, "vz": 0}
@@ -45,7 +46,7 @@ class SensorFuse:
         self.dt = 1.0 / 100  # IMU time step (100 Hz)
         self.ekf = self.create_filter()
         # tracks the cumulative position
-        self.position = np.array([0.0, 0.0, 0.0])
+        self.position = np.zeros((3, 1))
         self.last_time = time.time()
 
     def imu_callback(self,msg):
@@ -59,7 +60,11 @@ class SensorFuse:
         self.imu_ori_data['qz'] = msg.orientation.z
         self.imu_ori_data['qw'] = msg.orientation.w
 
-        self.imu_array = np.array([self.imu_acc_data["ax"], self.imu_acc_data["ay"], self.imu_acc_data["az"]])
+        self.imu_array = np.array([
+        msg.linear_acceleration.x,
+        msg.linear_acceleration.y,
+        msg.linear_acceleration.z
+        ]).reshape(-1, 1)  # Store as column vector
 
         # update state
         print("Before updating state, ekf.x shape:", self.ekf.x.shape)
@@ -134,50 +139,54 @@ class SensorFuse:
         rospy.loginfo(f"depth calibration Finished. Surface is: {self.depth_calib}")
 
     def update_state(self):
-        assert self.ekf.x.shape == (9,), f"ekf.x corrupted: shape {self.ekf.x.shape}"
-        assert self.ekf.x.ndim == 1, "State vector must be 1D"
-        # Calculate time delta
-        current_time = time.time()
-        dt = current_time - self.last_time
-        self.last_time = current_time
+        with self.ekf_lock:
+            assert self.ekf.x.shape == (9,), f"ekf.x corrupted: shape {self.ekf.x.shape}"
+            assert self.ekf.x.ndim == 1, "State vector must be 1D"
+            # Calculate time delta
+            current_time = time.time()
+            dt = current_time - self.last_time
+            self.last_time = current_time
 
-        # Update the state transition matrix F with the new dt
-        self.dt = dt
+            # Update the state transition matrix F with the new dt
+            self.dt = dt
 
-        self.ekf.F = self.FJacobian_at(self.ekf.x, dt)
-        print(f"DEBUG: ekf.F is type {type(self.ekf.F)}, shape {getattr(self.ekf.F, 'shape', None)}")
+            self.ekf.F = self.FJacobian_at(self.ekf.x, dt)
+            print(f"DEBUG: ekf.F is type {type(self.ekf.F)}, shape {getattr(self.ekf.F, 'shape', None)}")
 
 
-        # Update the state with IMU data
-        print("DEBUG: imu_array shape:", self.imu_array.shape)
-        print("DEBUG: ekf.x shape before imu update:", self.ekf.x.shape)
-        self.ekf.x[6:] = self.imu_array  # ax, ay, az go into indices 6–8
-        print("DEBUG: ekf.x shape after imu update", self.ekf.x.shape)
+            # Update the state with IMU data
+            print("DEBUG: imu_array shape:", self.imu_array.shape)
+            print("DEBUG: ekf.x shape before imu update:", self.ekf.x.shape)
+            self.ekf.x[6:] = self.imu_array.reshape(-1, 1)  # ax, ay, az go into indices 6–8
+            print("DEBUG: ekf.x shape after imu update", self.ekf.x.shape)
 
-        print("DEBUG: ekf.F shape:", self.ekf.F.shape, type(self.ekf.F))
-        print("DEBUG: ekf.x shape:", self.ekf.x.shape, type(self.ekf.x))
+            print("DEBUG: ekf.F shape:", self.ekf.F.shape, type(self.ekf.F))
+            print("DEBUG: ekf.x shape:", self.ekf.x.shape, type(self.ekf.x))
 
-        # Predict the next state
-        self.ekf.predict()
+            # Predict the next state
+            self.ekf.predict()
 
 
     def update_dvl(self):
-        z = self.dvl_array  # Keep as 1D vector (3,)
-        self.ekf.update(z, self.H_velocity, self.hx_velocity)
-        self.position = self.ekf.x[0:3]
-        self.publish()
+        with self.ekf_lock:
+            z = self.dvl_array.reshape(-1, 1)  # Keep as 1D vector (3,)
+            self.ekf.update(z, self.H_velocity, self.hx_velocity)
+            self.position = self.ekf.x[0:3]
+            self.publish()
     
     def update_depth(self):
-        def h_z(x):
-            return np.array([x[2]])  # Return 1D array (1,)
-        
-        def H_z(x):
-            return np.array([[0, 0, 1, 0, 0, 0, 0, 0, 0]])  # Jacobian for z-position
-        
-        R_z = np.array([0.05])  # 1D measurement noise
-        
-        z = np.array([self.barometer_depth])  # 1D vector (1,)
-        self.ekf.update(z, H_z, h_z, R=R_z)
+        with self.ekf_lock:
+            def h_z(x):
+                return np.array([[x[2,0]]])  # Return as 1x1 matrix
+                
+            def H_z(x):
+                return np.array([[0, 0, 1, 0, 0, 0, 0, 0, 0]])
+                
+            z = np.array([[self.barometer_depth]])  # 1x1 matrix
+            
+            R_z = np.array([0.05])  # 1D measurement noise
+
+            self.ekf.update(z, H_z, h_z, R=R_z)
 
 
     def publish(self):
@@ -201,8 +210,9 @@ class SensorFuse:
     def f(x, dt):
         # Non-linear state transition matrix
         # predicts the next state based on the current state and time step
-
-        x_new = np.copy(x)
+        # Convert to 1D for calculations
+        x_flat = x.ravel()
+        x_new = np.zeros(9)
         
         # Position update: p += v * dt + 0.5 * a * dt^2
         x_new[0] += x[3] * dt + 0.5 * x[6] * dt**2
@@ -215,7 +225,7 @@ class SensorFuse:
         x_new[5] += x[8] * dt
 
         # Acceleration assumed constant (no update)
-        return x_new
+        return x_new.reshape(-1, 1)  # Return as column vector
 
     @staticmethod
     def FJacobian_at(x, dt):
@@ -248,7 +258,7 @@ class SensorFuse:
 
     @staticmethod
     def hx_velocity(x):
-        return x[3:6]  # Return 1D slice (3,)
+        return x[3:6]  # Return slice as column vector (3x1)
 
     @staticmethod
     def H_velocity(x):
@@ -277,7 +287,7 @@ class SensorFuse:
         ekf = ExtendedKalmanFilter(dim_x=9, dim_z=3, dim_u=0)
 
         # Initial state (all zeros)
-        ekf.x = np.array([0.,0.,0.,0.,0.,0.,0.,0.,0.])
+        ekf.x = np.zeros((9, 1))
         print(f"DEBUG: ekf.x is {ekf.x} with shape {ekf.x.shape}")
         # Nonlinear transition and measurement functions
         ekf.f = self.f
