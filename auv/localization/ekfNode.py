@@ -236,7 +236,8 @@ class SensorFuse:
 
     @staticmethod
     def hx_velocity(x):
-        return x[3:6].reshape(3, 1)  # shape: (3,1)
+        print("DEBUG: hx_velocity called with x.shape =", x.shape)
+        return x[3:6].reshape(3, 1)
 
     @staticmethod
     def H_velocity(x):
@@ -272,7 +273,7 @@ class SensorFuse:
         ekf.F = self.FJacobian_at(ekf.x, self.dt)
 
         ekf.hx = self.hx_velocity  # assume initial measurement function is for velocity (DVL)
-        ekf.H = self.H_velocity(ekf.x)
+        ekf.H = self.H_velocity
 
         # State covariance (uncertainty in initial state)
         ekf.P = np.eye(9) * 1000.0  # large uncertainty
