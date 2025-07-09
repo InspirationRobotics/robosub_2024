@@ -193,13 +193,16 @@ class RobotControl:
         if not self.debug:
             self.pub_thrusters.publish(pwm)
         else:
-            rospy.loginfo(f"pwms : {channels[0:6]}")
+            rospy.logdebug(f"pwms : {channels[0:6]}")
 
-    def set_mode(self, msg:String):
+    def set_control_mode(self, msg:String):
         """
-        Callback function to handle the mode of the robot
+        Callback function to handle the control mode of the robot.
+
         Args:
-            msg: "pid" or "direct"
+            msg (String): The control mode command. Expected values are:
+                        - "pid" for PID control
+                        - "direct" for direct thruster control
         """
         self.mode = msg
         if self.mode=="direct":
