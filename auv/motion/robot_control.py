@@ -130,6 +130,10 @@ class RobotControl:
         self.orientation['pitch']   = pitch
         self.orientation['roll']    = roll
 
+        if self.debug:
+            rospy.loginfo(f"pos: {self.position}")
+            rospy.loginfo(f"ori: {self.orientation}")
+
     def publisherThread(self):
         """
         Publisher to publish the thruster values
