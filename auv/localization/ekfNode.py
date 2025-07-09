@@ -30,7 +30,7 @@ class SensorFuse:
         self.imu_sub        = rospy.Subscriber("/auv/devices/vectornav", Imu, self.imu_callback)
         self.imu_acc_data   = {"ax": 0, "ay": 0, "az": 0}
         self.imu_ori_data   = {"qx": 0, "qy": 0, "qz": 0, "qw": 0}  # store one line of IMU data for ekf predict
-        self.imu_array      = None # used for passing into the ekf
+        self.imu_array = np.array([0., 0., 0.])  # Before first IMU callback
 
         self.dvl_sub    = rospy.Subscriber("/auv/devices/dvl/velocity", Vector3Stamped, self.dvl_callback)
         self.dvl_data   = {"vx": 0, "vy": 0, "vz": 0}
@@ -135,6 +135,7 @@ class SensorFuse:
 
     def update_state(self):
         assert self.ekf.x.shape == (9,), f"ekf.x corrupted: shape {self.ekf.x.shape}"
+        assert self.ekf.x.ndim == 1, "State vector must be 1D"
         # Calculate time delta
         current_time = time.time()
         dt = current_time - self.last_time
@@ -159,30 +160,23 @@ class SensorFuse:
         # Predict the next state
         self.ekf.predict()
 
-        
-
 
     def update_dvl(self):
-        assert self.ekf.x.shape == (9,), f"ekf.x corrupted: shape {self.ekf.x.shape}"
-        z = self.dvl_array.reshape(-1, 1)  # Ensure shape (3,1)
+        z = self.dvl_array  # Keep as 1D vector (3,)
         self.ekf.update(z, self.H_velocity, self.hx_velocity)
         self.position = self.ekf.x[0:3]
         self.publish()
     
     def update_depth(self):
-        # Define measurement function h(x) and Jacobian H for z-position only
         def h_z(x):
-            return np.array([x[2]])  # z-position
-
+            return np.array([x[2]])  # Return 1D array (1,)
+        
         def H_z(x):
-            H = np.zeros((1, 9))
-            H[0, 2] = 1
-            return H
-
-        # Measurement noise (tunable)
-        R_z = np.array([[0.05]])  # Low noise = high trust in barometer
-
-        z = np.array([[self.barometer_depth]])  # shape (1,1)
+            return np.array([[0, 0, 1, 0, 0, 0, 0, 0, 0]])  # Jacobian for z-position
+        
+        R_z = np.array([0.05])  # 1D measurement noise
+        
+        z = np.array([self.barometer_depth])  # 1D vector (1,)
         self.ekf.update(z, H_z, h_z, R=R_z)
 
 
@@ -254,8 +248,7 @@ class SensorFuse:
 
     @staticmethod
     def hx_velocity(x):
-        print("DEBUG: hx_velocity called with x.shape =", x.shape)
-        return x[3:6].reshape(3, 1)
+        return x[3:6]  # Return 1D slice (3,)
 
     @staticmethod
     def H_velocity(x):
