@@ -323,7 +323,7 @@ class oakCamera:
             try:
                 frame1 = qcam.get().getCvFrame()
                 # Add "DEBUG" text
-                cv2.putText(
+                frame1 = cv2.putText(
                     frame1,
                     "DEBUG",                  # text
                     (500, 500),                 # position (x, y)
