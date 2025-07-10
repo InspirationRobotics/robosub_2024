@@ -322,17 +322,44 @@ class oakCamera:
         while not self.rospy.is_shutdown() and not self.isKilled:
             try:
                 frame1 = qcam.get().getCvFrame()
+                # ---- RED POLE DETECTION ----
+                hsv = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
+                lower_red1 = np.array([0, 100, 100])
+                upper_red1 = np.array([10, 255, 255])
+                lower_red2 = np.array([160, 100, 100])
+                upper_red2 = np.array([179, 255, 255])
+
+                mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+                mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+                red_mask = cv2.bitwise_or(mask1, mask2)
+
+                contours, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+                red_poles = []
+                for cnt in contours:
+                    area = cv2.contourArea(cnt)
+                    if area > 1000:
+                        x, y, w, h = cv2.boundingRect(cnt)
+                        red_poles.append((x, y, w, h, area))
+
+                # Draw bounding box around the largest red pole (if found)
+                if red_poles:
+                    red_poles.sort(key=lambda x: x[4], reverse=True)
+                    x, y, w, h, area = red_poles[0]
+                    cv2.rectangle(frame1, (x, y), (x + w, y + h), (0, 0, 255), 3)
+                    cv2.putText(frame1, "Red Pole", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            
                 # Add "DEBUG" text
-                frame1 = cv2.putText(
-                    frame1,
-                    "DEBUG",                  # text
-                    (300, 300),                 # position (x, y)
-                    cv2.FONT_HERSHEY_SIMPLEX,  # font
-                    1.0,                      # font scale
-                    (0, 0, 255),              # color (B, G, R) — red
-                    5,                        # thickness
-                    cv2.LINE_AA               # line type
-                )
+                # frame1 = cv2.putText(
+                #     frame1,
+                #     "DEBUG",                  # text
+                #     (300, 300),                 # position (x, y)
+                #     cv2.FONT_HERSHEY_SIMPLEX,  # font
+                #     1.0,                      # font scale
+                #     (0, 0, 255),              # color (B, G, R) — red
+                #     5,                        # thickness
+                #     cv2.LINE_AA               # line type
+                # )
                 # Publish the frame that was used as a ROS Image in the correct topic
                 msg = self.br.cv2_to_imgmsg(frame1)
                 self.pubFrame.publish(msg)
