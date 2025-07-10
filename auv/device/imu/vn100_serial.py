@@ -39,6 +39,8 @@ class VN100:
         self.read_thread.start()
         time.sleep(2)
 
+        self.calibrate_heading()
+
     def read(self):
         """Parses roll, pitch, and yaw from the serial line"""
         while self.running and not rospy.is_shutdown():
@@ -113,7 +115,6 @@ class VN100:
 if __name__ == "__main__":
     try:
         sensor = VN100()
-        sensor.calibrate_heading()
         rospy.loginfo("VN100 node start running...")
         rospy.spin()
 
