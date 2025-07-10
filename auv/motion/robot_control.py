@@ -128,10 +128,10 @@ class RobotControl:
         self.position['y'] = msg.pose.position.y
         self.position['z'] = msg.pose.position.z
 
-    def YPR_callback(self, msg):
-        self.orientation['yaw']     = msg.vector.x
-        self.orientation['pitch']   = msg.vector.y
-        self.orientation['roll']    = msg.vector.z
+        self.orientation['yaw']     = msg.pose.orientation.z
+        self.orientation['pitch']   = msg.pose.orientation.y
+        self.orientation['roll']    = msg.pose.orientation.x
+
 
     def publisherThread(self):
         """
@@ -162,12 +162,6 @@ class RobotControl:
                 yaw_pwm     = self.PIDs["yaw"](yaw_error)
                 lateral_pwm = self.PIDs["lateral"](x_error)
                 surge_pwm   = self.PIDs["surge"](y_error)
-                # if self.sub=="graey":
-                #     depth_pwm = int(self.PIDs["depth"](self.position['z']) * -1 + self.depth_pid_offset)
-                # elif self.sub== "onyx":
-                #     depth_pwm = int(self.PIDs["depth"](self.position['z']) *  1 + self.depth_pid_offset)
-                # else:
-                #     depth_pwm = int(self.PIDs["depth"](self.position['z']) * -1 + self.depth_pid_offset)
                 depth_pwm   = self.PIDs['depth'](z_error) 
                 
 
