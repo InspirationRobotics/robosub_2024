@@ -80,7 +80,16 @@ class USBCamera:
             try:
                 ret, frame1 = self.cam.read()
                 if ret:
-                    msg = self.br.cv2_to_imgmsg(frame1)
+                    new_frame = cv2.putText(frame1,  # The image on which to draw
+                                            "DEBUG",  # The text string
+                                            (300, 300),  # The bottom-left corner coordinates of the text
+                                            cv2.FONT_HERSHEY_SIMPLEX,  # The font type
+                                            1,  # The font scale factor
+                                            (0,0,255),  # The text color (BGR format)
+                                            thickness=1,  # The thickness of the text
+                                            lineType=cv2.LINE_8,  # The line type (default is LINE_8)
+                                            bottomLeftOrigin=False)
+                    msg = self.br.cv2_to_imgmsg(new_frame)
                     self.pub.publish(msg)
                     if time.time() - self.time > 3:
                         self.sendFakeFrame(frame1)
