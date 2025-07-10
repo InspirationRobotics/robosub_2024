@@ -130,8 +130,8 @@ if __name__ == "__main__":
         rospy.loginfo("Shutting down vn100 node")
 
     except AttributeError as e:
-        rospy.logwarn("Attribute error occur, most likely due to None type data")
-        rospy.logwarn(e)
+        rospy.logerr("Attribute error occur, most likely due to None type data")
+        rospy.logerr(e)
     except ValueError:
         print("Bad data")
     except Exception as e:
