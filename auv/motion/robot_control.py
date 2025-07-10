@@ -89,6 +89,20 @@ class RobotControl:
                 setpoint=0,
                 # output_limits=(-5, 5),   
             ),
+            "pitch": PID(
+                self.config.get("YAW_PID_P", 0.5),
+                self.config.get("YAW_PID_I", 0.1),
+                self.config.get("YAW_PID_D", 0.1),
+                setpoint=0,
+                # output_limits=(-5, 5),   
+            ),
+            "roll": PID(
+                self.config.get("YAW_PID_P", 0.5),
+                self.config.get("YAW_PID_I", 0.1),
+                self.config.get("YAW_PID_D", 0.1),
+                setpoint=0,
+                # output_limits=(-5, 5),   
+            ),
             "surge": PID(
                 self.config.get("FORWARD_PID_P", 0.5),
                 self.config.get("FORWARD_PID_I", 0.1),
@@ -146,12 +160,13 @@ class RobotControl:
                     'y': self.desired_point["y"] if self.desired_point["y"] is not None else self.position['y'],
                     'z': self.desired_point["z"] if self.desired_point["z"] is not None else self.position['z'],
 
-                    # Calculate error
+                    
                     'yaw': self.desired_point["yaw"] if self.desired_point.get("yaw") is not None else self.orientation['yaw'],
                     'pitch': self.desired_point["pitch"] if self.desired_point.get("pitch") is not None else self.orientation['pitch'],
                     'roll': self.desired_point["roll"] if self.desired_point.get("roll") is not None else self.orientation['roll'],
                 }
 
+                # Calculate error
                 errors = {
                     "x": desired["x"] - self.position['x'],
                     "y": desired["y"] - self.position['y'],
@@ -163,9 +178,11 @@ class RobotControl:
 
                 # Set the PWM values
                 # Original PID outputs in world frame
+                
                 lateral_pwm_world = self.PIDs["lateral"](errors["x"])
                 surge_pwm_world   = self.PIDs["surge"](errors["y"])
                 depth_pwm_world   = self.PIDs["depth"](errors["z"])
+
 
                 yaw = self.orientation["yaw"]
                 pitch = self.orientation["pitch"]
@@ -365,7 +382,7 @@ class RobotControl:
         self.PIDs["surge"].reset()
         self.desired_point["y"] = y
 
-    def set_absolute_heading(self, heading):
+    def set_absolute_yaw(self, heading):
         """
         Set the heading of the robot
 
@@ -409,7 +426,7 @@ class RobotControl:
         self.PIDs["surge"].reset()
         self.desired_point["y"] = y + self.pose.pose.position.y
 
-    def set_relative_heading(self, heading):
+    def set_relative_yaw(self, heading):
         """
         Set the heading of the robot relative to the current heading
 
