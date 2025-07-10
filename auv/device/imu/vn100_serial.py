@@ -28,9 +28,7 @@ class VN100:
         self.gyroX = 0.0
         self.gyroY = 0.0
         self.gyroZ = 0.0
-        self.quat_orient = np.array([0,0,0,0])
         self.vectornav_pub = rospy.Publisher('/auv/devices/vectornav', Imu, queue_size=10)
-        self.YPR_pub = rospy.Publisher('/auv/devices/vectornav/YPR', Vector3Stamped, queue_size=10)
 
         self.running = True  # Added for Ctrl+C protection
 
@@ -47,7 +45,6 @@ class VN100:
 
             try :
                 self.yaw, self.pitch, self.roll = (float(data_list[1]) + 90) % 360, float(data_list[3]), float(data_list[2])
-                self.update_orientation()
 
                 self.accX, self.accY, self.accZ = float(data_list[4]), float(data_list[5]), float(data_list[6].split('*')[0])  # remove check sum
                 self.gyroX, self.gyroY, self.gyroZ = float(data_list[7]), float(data_list[8]), float(data_list[9].split('*')[0])
@@ -64,18 +61,6 @@ class VN100:
                 rospy.logdebug(data_list)
                 rospy.logerr(e)
 
-
-
-    def update_orientation(self):
-        """Converts Euler angles (in degrees) to quaternion"""
-        # Convert degrees to radians first
-        roll_rad = np.deg2rad(self.roll)
-        pitch_rad = np.deg2rad(self.pitch)
-        yaw_rad = np.deg2rad(self.yaw)
-        
-        # Create quaternion (order: ZYX by default)
-        self.quat_orient = euler2quat(yaw_rad, pitch_rad, roll_rad, axes='szyx')
-
     def publish_data(self):
         """Published the IMU data to /auv/devices/vectornav"""
         imu_msg = Imu()
@@ -83,10 +68,10 @@ class VN100:
         imu_msg.header.frame_id = "base_link"
 
         # print(f"quat orient is {self.quat_orient}")
-        imu_msg.orientation.w = self.quat_orient[0]
-        imu_msg.orientation.x = self.quat_orient[1]
-        imu_msg.orientation.y = self.quat_orient[2]
-        imu_msg.orientation.z = self.quat_orient[3]
+        imu_msg.orientation.w = 0.0
+        imu_msg.orientation.x = self.roll
+        imu_msg.orientation.y = self.pitch
+        imu_msg.orientation.z = self.yaw
 
         imu_msg.angular_velocity.x = self.gyroX
         imu_msg.angular_velocity.y = self.gyroY
@@ -98,15 +83,6 @@ class VN100:
 
         self.vectornav_pub.publish(imu_msg)
         
-        YPR = Vector3Stamped()
-        YPR = Vector3Stamped()
-        YPR.header.stamp = rospy.Time.now()
-        YPR.header.frame_id = "base_link"
-
-        YPR.vector.x = self.yaw
-        YPR.vector.y = self.pitch
-        YPR.vector.z = self.roll
-        self.YPR_pub.publish(YPR)
 
     def shutdown(self):
         """Clean shutdown of threads and serial connection"""

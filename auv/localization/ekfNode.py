@@ -13,8 +13,8 @@ from mavros_msgs.msg import Mavlink
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import PoseStamped, Vector3Stamped
-from transforms3d.euler import quat2euler
-from transforms3d.quaternions import quat2mat
+from transforms3d.euler import quat2euler, euler2mat
+
 
 
 class SensorFuse:
@@ -31,7 +31,7 @@ class SensorFuse:
         # TODO: Fix IMU rostopic architecture
         self.imu_sub        = rospy.Subscriber("/auv/devices/vectornav", Imu, self.imu_callback)
         self.imu_acc_data   = {"ax": 0, "ay": 0, "az": 0}
-        self.imu_ori_data   = {"qx": 0, "qy": 0, "qz": 0, "qw": 0}  # store one line of IMU data for ekf predict
+        self.imu_ori_data   = {"yaw": 0, "pitch": 0, "roll": 0}  # store one line of IMU data for ekf predict
         self.imu_array = np.zeros((3, 1))  # Before first IMU callback
 
         self.dvl_sub    = rospy.Subscriber("/auv/devices/dvl/velocity", Vector3Stamped, self.dvl_callback)
@@ -56,10 +56,9 @@ class SensorFuse:
         self.imu_acc_data["ay"] = msg.linear_acceleration.y
         self.imu_acc_data["az"] = msg.linear_acceleration.z
 
-        self.imu_ori_data['qx'] = msg.orientation.x
-        self.imu_ori_data['qy'] = msg.orientation.y
-        self.imu_ori_data['qz'] = msg.orientation.z
-        self.imu_ori_data['qw'] = msg.orientation.w
+        self.imu_ori_data['roll'] = msg.orientation.x
+        self.imu_ori_data['pitch'] = msg.orientation.y
+        self.imu_ori_data['yaw'] = msg.orientation.z
 
         # Store body-frame acceleration
         accel_body = np.array([msg.linear_acceleration.x,
@@ -67,9 +66,8 @@ class SensorFuse:
                             msg.linear_acceleration.z])
         
         # Get rotation matrix from IMU quaternion
-        q = [msg.orientation.w, msg.orientation.x, 
-            msg.orientation.y, msg.orientation.z]
-        rot_matrix = quat2mat(q)  # Body-to-world rotation
+        euler = [self.imu_ori_data['yaw'], self.imu_ori_data['pitch'], self.imu_ori_data['roll']]  # yaw pitch roll
+        rot_matrix = euler2mat(euler, axes='szyx')  # Body-to-world rotation
         
         # Rotate acceleration to world frame
         accel_world = rot_matrix @ accel_body
@@ -86,12 +84,9 @@ class SensorFuse:
             self.dvl_data["vx"] = msg.vector.y
             self.dvl_data["vz"] = msg.vector.z
             
-            # Convert quaternion to rotation matrix
-            q = [self.imu_ori_data['qw'], 
-                self.imu_ori_data['qx'],
-                self.imu_ori_data['qy'],
-                self.imu_ori_data['qz']]
-            rot_matrix = quat2mat(q)  # From transforms3d.quaternions
+            # Get rotation matrix from IMU quaternion
+            euler = [self.imu_ori_data['yaw'], self.imu_ori_data['pitch'], self.imu_ori_data['roll']]  # yaw pitch roll
+            rot_matrix = euler2mat(euler, axes='szyx')  # Body-to-world rotation
             
             # Convert DVL velocities to numpy array and rotate
             v_body = np.array([self.dvl_data["vx"],
