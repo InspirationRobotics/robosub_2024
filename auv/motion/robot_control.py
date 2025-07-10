@@ -82,45 +82,46 @@ class RobotControl:
 
         self.PIDs = {
             "yaw": PID(
-                self.config.get("YAW_PID_P", 0.5),
+                self.config.get("YAW_PID_P", 0.3),
                 self.config.get("YAW_PID_I", 0.1),
-                self.config.get("YAW_PID_D", 0.1),
+                self.config.get("YAW_PID_D", 0.07),
                 setpoint=0,
-                # output_limits=(-5, 5),   
+                output_limits=(-5, 5),   
             ),
             "pitch": PID(
                 self.config.get("YAW_PID_P", 0.5),
                 self.config.get("YAW_PID_I", 0.1),
                 self.config.get("YAW_PID_D", 0.1),
                 setpoint=0,
-                # output_limits=(-5, 5),   
+                output_limits=(-5, 5),   
             ),
             "roll": PID(
                 self.config.get("YAW_PID_P", 0.5),
                 self.config.get("YAW_PID_I", 0.1),
                 self.config.get("YAW_PID_D", 0.1),
                 setpoint=0,
-                # output_limits=(-5, 5),   
+                output_limits=(-5, 5),   
             ),
             "surge": PID(
                 self.config.get("FORWARD_PID_P", 0.5),
                 self.config.get("FORWARD_PID_I", 0.1),
                 self.config.get("FORWARD_PID_D", 0.1),
                 setpoint=0,
-                # output_limits=(-5, 5),
+                output_limits=(-5, 5),
             ),
             "lateral": PID(
                 self.config.get("LATERAL_PID_P", 0.5),
                 self.config.get("LATERAL_PID_I", 0.1),
                 self.config.get("LATERAL_PID_D", 0.1),
                 setpoint=0,
-                # output_limits=(-5, 5),
+                output_limits=(-5, 5),
             ), 
             "depth": PID(
                 self.config.get("DEPTH_PID_P", 0.5),
-                self.config.get("DEPTH_PID_I", 0.1),
+                self.config.get("DEPTH_PID_I", 0.2),
                 self.config.get("DEPTH_PID_D", 0.1),
                 setpoint=0,
+                output_limits=(-5, 5),
             ),  
         }
 
