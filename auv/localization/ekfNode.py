@@ -218,10 +218,10 @@ class SensorFuse:
         pose_msg.pose.position.y = self.position[1]
         pose_msg.pose.position.z = self.position[2]
         
-        pose_msg.pose.orientation.w = self.imu_ori_data['qw']
-        pose_msg.pose.orientation.x = self.imu_ori_data['qx']
-        pose_msg.pose.orientation.y = self.imu_ori_data['qy']
-        pose_msg.pose.orientation.z = self.imu_ori_data['qz']
+        pose_msg.pose.orientation.w = 0.0
+        pose_msg.pose.orientation.x = self.imu_ori_data['roll']
+        pose_msg.pose.orientation.y = self.imu_ori_data['pitch']
+        pose_msg.pose.orientation.z = self.imu_ori_data['yaw']
 
         self.pub.publish(pose_msg)
         self.rate.sleep()
