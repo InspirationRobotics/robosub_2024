@@ -129,8 +129,9 @@ if __name__ == "__main__":
         sensor.shutdown()
         rospy.loginfo("Shutting down vn100 node")
 
-    except AttributeError:
-        print("No data yet")
+    except AttributeError as e:
+        rospy.logwarn("Attribute error occur, most likely due to None type data")
+        rospy.logwarn(e)
     except ValueError:
         print("Bad data")
     except Exception as e:
