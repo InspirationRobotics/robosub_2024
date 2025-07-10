@@ -61,7 +61,6 @@ class RobotControl:
 
         # Establish thruster and depth publishers
         self.sub_pose       = rospy.Subscriber("/auv/state/pose", PoseStamped, self.pose_callback)  
-        self.sub_YPR        = rospy.Subscriber("/auv/devices/vectornav/YPR", Vector3Stamped, self.YPR_callback)
         self.pub_thrusters  = rospy.Publisher("/auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
         self.pub_button     = rospy.Publisher("/mavros/manual_control/send", mavros_msgs.msg.ManualControl, queue_size=10)
 
