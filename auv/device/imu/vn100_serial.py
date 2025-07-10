@@ -71,7 +71,7 @@ class VN100:
         start_time = time.time()
         self.calibrated = False
         
-        while not rospy.shutdown() and time.time() - start_time < 3:
+        while not rospy.is_shutdown() and time.time() - start_time < 3:
             try:
                 with self.lock:
                     if self.yaw:
