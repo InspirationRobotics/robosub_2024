@@ -65,9 +65,8 @@ class SensorFuse:
                             msg.linear_acceleration.y,
                             msg.linear_acceleration.z])
         
-        # Get rotation matrix from IMU quaternion
-        euler = [self.imu_ori_data['yaw'], self.imu_ori_data['pitch'], self.imu_ori_data['roll']]  # yaw pitch roll
-        rot_matrix = euler2mat(euler, axes='szyx')  # Body-to-world rotation
+        # Get rotation matrix from IMU YPR
+        rot_matrix = euler2mat(ai=self.imu_ori_data['yaw'], aj=self.imu_ori_data['pitch'], ak=self.imu_ori_data['roll'], axes='szyx')  # Body-to-world rotation
         
         # Rotate acceleration to world frame
         accel_world = rot_matrix @ accel_body
@@ -85,8 +84,8 @@ class SensorFuse:
             self.dvl_data["vz"] = msg.vector.z
             
             # Get rotation matrix from IMU quaternion
-            euler = [self.imu_ori_data['yaw'], self.imu_ori_data['pitch'], self.imu_ori_data['roll']]  # yaw pitch roll
-            rot_matrix = euler2mat(euler, axes='szyx')  # Body-to-world rotation
+            rot_matrix = euler2mat(ai=self.imu_ori_data['yaw'], aj=self.imu_ori_data['pitch'], ak=self.imu_ori_data['roll'], axes='szyx')  # Body-to-world rotation
+
             
             # Convert DVL velocities to numpy array and rotate
             v_body = np.array([self.dvl_data["vx"],
