@@ -70,15 +70,22 @@ class VN100:
         samples = []
         start_time = time.time()
         self.calibrated = False
-
+        
         while not rospy.shutdown() and time.time() - start_time < 3:
-            with self.lock:
-                if self.yaw:
-                    samples.append(self.yaw)
+            try:
+                with self.lock:
+                    if self.yaw:
+                        samples.append(self.yaw)
+            except AttributeError as e:
+                rospy.logwarn("attribute not assigned with value yet")
+                rospy.logwarn(e)
+                self.rate.sleep()
+                continue
             
         self.heading_offset = 0 - np.mean(samples)
         self.calibrated = True
         rospy.loginfo("Calibration finished, current heading set to 0")
+        
         
         
 
