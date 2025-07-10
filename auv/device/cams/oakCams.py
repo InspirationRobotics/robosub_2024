@@ -326,7 +326,7 @@ class oakCamera:
                 frame1 = cv2.putText(
                     frame1,
                     "DEBUG",                  # text
-                    (500, 500),                 # position (x, y)
+                    (300, 300),                 # position (x, y)
                     cv2.FONT_HERSHEY_SIMPLEX,  # font
                     1.0,                      # font scale
                     (0, 0, 255),              # color (B, G, R) — red
