@@ -6,7 +6,6 @@ import numpy as np
 from serial import Serial
 
 from auv.utils import deviceHelper
-from geometry_msgs.msg import Vector3Stamped
 from sensor_msgs.msg import Imu
 
 class VN100:
@@ -74,7 +73,8 @@ class VN100:
 
         while not rospy.shutdown() and time.time() - start_time < 3:
             with self.lock:
-                samples.append(self.yaw)
+                if self.yaw:
+                    samples.append(self.yaw)
             
         self.heading_offset = 0 - np.mean(samples)
         self.calibrated = True
