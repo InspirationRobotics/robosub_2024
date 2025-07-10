@@ -4,7 +4,6 @@ import threading
 import numpy as np
 
 from serial import Serial
-from transforms3d.euler import euler2quat
 
 from auv.utils import deviceHelper
 from geometry_msgs.msg import Vector3Stamped
@@ -28,11 +27,14 @@ class VN100:
         self.gyroX = 0.0
         self.gyroY = 0.0
         self.gyroZ = 0.0
+        self.heading_offset = 0
         self.vectornav_pub = rospy.Publisher('/auv/devices/vectornav', Imu, queue_size=10)
 
+        self.calibrated = False
         self.running = True  # Added for Ctrl+C protection
 
         time.sleep(2)
+        self.lock = threading.Lock()
         self.read_thread = threading.Thread(target=self.read, daemon=True)
         self.read_thread.start()
         time.sleep(2)
@@ -44,12 +46,13 @@ class VN100:
             data_list = data_line.split(',')
 
             try :
-                self.yaw, self.pitch, self.roll = (float(data_list[1]) + 90) % 360, float(data_list[3]), float(data_list[2])
+                self.yaw, self.pitch, self.roll = (float(data_list[1]) + 90 + self.heading_offset) % 360, float(data_list[3]), float(data_list[2])
 
                 self.accX, self.accY, self.accZ = float(data_list[4]), float(data_list[5]), float(data_list[6].split('*')[0])  # remove check sum
                 self.gyroX, self.gyroY, self.gyroZ = float(data_list[7]), float(data_list[8]), float(data_list[9].split('*')[0])
 
-                self.publish_data()
+                if self.calibrated:
+                    self.publish_data()
                 self.rate.sleep()
 
             except IndexError as e:
@@ -60,6 +63,22 @@ class VN100:
                 print(f"raw data: {data_list}")
                 rospy.logdebug(data_list)
                 rospy.logerr(e)
+
+    def calibrate_heading(self):
+        rospy.loginfo("Starting heading calibration... Keep the IMU stationary!")
+        samples = []
+        start_time = time.time()
+        self.calibrated = False
+
+        while not rospy.shutdown() and time.time() - start_time < 3:
+            with self.lock:
+                samples.append(self.yaw)
+            
+        self.heading_offset = 0 - np.mean(samples)
+        self.calibrated = True
+        rospy.loginfo("Calibration finished, current heading set to 0")
+        
+        
 
     def publish_data(self):
         """Published the IMU data to /auv/devices/vectornav"""
@@ -94,6 +113,7 @@ class VN100:
 if __name__ == "__main__":
     try:
         sensor = VN100()
+        sensor.calibrate_heading()
         rospy.loginfo("VN100 node start running...")
         rospy.spin()
 
