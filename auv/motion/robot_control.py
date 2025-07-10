@@ -68,7 +68,7 @@ class RobotControl:
         # Create variable to store pwm when direct control
         self.direct_input = [0] * 6
         # store desire point
-        self.desired_point  = {"x":None,"y":None,"z":None,"heading":None}
+        self.desired_point  = {"x":None,"y":None,"z":None,"yaw":None,"pitch":None,"roll":None}
         # A set of PIDs (Proportional - Integral - Derivative) to handle the movement of the sub
         """
         PIDs work by continously computing the error between the desired setpoint (desired yaw angle, forward velocity, etc.) and the 
@@ -142,10 +142,9 @@ class RobotControl:
         self.position['y'] = msg.pose.position.y
         self.position['z'] = msg.pose.position.z
 
-        self.orientation['yaw']     = msg.pose.orientation.z
-        self.orientation['pitch']   = msg.pose.orientation.y
-        self.orientation['roll']    = msg.pose.orientation.x
-
+        self.orientation['yaw']     = np.deg2rad(msg.pose.orientation.z)
+        self.orientation['pitch']   = np.deg2rad(msg.pose.orientation.y)
+        self.orientation['roll']    = np.deg2rad(msg.pose.orientation.x)
 
     def publisherThread(self):
         """
@@ -154,7 +153,8 @@ class RobotControl:
         # TODO add np clip protection to the pwms
         while not rospy.is_shutdown():
             if self.mode == "pid":
-                desired = {
+                # Update desire pose
+                self.desired = {
                     # Get desired X, Y, Z
                     'x': self.desired_point["x"] if self.desired_point["x"] is not None else self.position['x'],
                     'y': self.desired_point["y"] if self.desired_point["y"] is not None else self.position['y'],
@@ -168,12 +168,12 @@ class RobotControl:
 
                 # Calculate error
                 errors = {
-                    "x": desired["x"] - self.position['x'],
-                    "y": desired["y"] - self.position['y'],
-                    "z": desired["z"] - self.position['z'],
-                    "yaw": desired["yaw"] - self.orientation['yaw'],
-                    "pitch": desired["pitch"] - self.orientation['pitch'],
-                    "roll": desired["roll"] - self.orientation['roll'],
+                    "x": self.desired["x"] - self.position['x'],
+                    "y": self.desired["y"] - self.position['y'],
+                    "z": self.desired["z"] - self.position['z'],
+                    "yaw": self.desired["yaw"] - self.orientation['yaw'],
+                    "pitch": self.desired["pitch"] - self.orientation['pitch'],
+                    "roll": self.desired["roll"] - self.orientation['roll'],
                 }
 
                 # Set the PWM values
@@ -382,17 +382,37 @@ class RobotControl:
         self.PIDs["surge"].reset()
         self.desired_point["y"] = y
 
-    def set_absolute_yaw(self, heading):
+    def set_absolute_yaw(self, yaw):
         """
         Set the heading of the robot
 
         Args:
-            heading (float): Heading to set the robot to
+            yaw (float): robot desired yaw angle, unit: degrees
         """
         # Clear the PID error
         self.PIDs["yaw"].reset()
-        self.desired_point["heading"] = heading /360
+        self.desired_point["yaw"] = np.deg2rad(yaw)
     
+    def set_absolute_pitch(self,pitch):
+        """
+        Set the pitch angle of the robot
+
+        Args:
+            pitch (float): robot desired pitch angle, unit: degrees
+        """
+        self.PIDs["pitch"].reset()
+        self.desired_point["pitch"] = np.deg2rad(pitch)
+
+    def set_absolute_pitch(self,roll):
+        """
+        Set the roll angle of the robot
+
+        Args:
+            roll (float): desired roll angle, unit: degrees
+        """
+        self.PIDs["roll"].reset()
+        self.desired_point["roll"] = np.deg2rad(roll)
+
     def set_relative_z(self, depth):
         """
         Set the depth of the robot relative to the current depth
@@ -426,16 +446,38 @@ class RobotControl:
         self.PIDs["surge"].reset()
         self.desired_point["y"] = y + self.pose.pose.position.y
 
-    def set_relative_yaw(self, heading):
+    def set_relative_yaw(self, yaw):
         """
         Set the heading of the robot relative to the current heading
 
         Args:
-            heading (float): Relative heading to set the robot to (-2 means left, 2 means right)
+            yaw (float): Relative heading to set the robot to (-2 means left, 2 means right), unit: degrees
         """
         # Clear the PID error
         self.PIDs["yaw"].reset()
-        self.desired_point["heading"] = heading + self.pose.pose.orientation.z
+        self.desired_point["yaw"] = np.deg2rad(yaw) + self.orientation['yaw']
+    
+    def set_relative_pitch(self, pitch):
+        """
+        Set the heading of the robot relative to the current heading
+
+        Args:
+            pitch (float): Relative pitch to set the robot to, unit: degrees
+        """
+        # Clear the PID error
+        self.PIDs["pitch"].reset()
+        self.desired_point["pitch"] = np.deg2rad(pitch) + self.orientation['pitch']
+
+    def set_relative_roll(self, roll):
+        """
+        Set the heading of the robot relative to the current heading
+
+        Args:
+            roll (float): Relative heading to set the robot to, unit: degrees
+        """
+        # Clear the PID error
+        self.PIDs["roll"].reset()
+        self.desired_point["roll"] = np.deg2rad(roll) + self.orientation['roll']
 
     def reset(self):
         for key, pid in self.PIDs.items():
