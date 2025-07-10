@@ -11,6 +11,7 @@ import std_msgs
 from std_msgs.msg import Float64, Float32MultiArray, String
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Vector3Stamped
 import mavros_msgs.msg
 import mavros_msgs.srv
 import geometry_msgs.msg
@@ -59,8 +60,9 @@ class RobotControl:
         self.orientation    = {'yaw':0,'pitch':0,'roll':0}   # in degrees, see self.pose_callback
 
         # Establish thruster and depth publishers
-        self.sub_pose       = rospy.Subscriber("auv/state/pose", PoseStamped, self.pose_callback)  
-        self.pub_thrusters  = rospy.Publisher("auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
+        self.sub_pose       = rospy.Subscriber("/auv/state/pose", PoseStamped, self.pose_callback)  
+        self.sub_YPR        = rospy.Subscriber("/auv/devices/vectornav/YPR", Vector3Stamped, self.YPR_callback)
+        self.pub_thrusters  = rospy.Publisher("/auv/devices/thrusters", mavros_msgs.msg.OverrideRCIn, queue_size=10)
         self.pub_button     = rospy.Publisher("/mavros/manual_control/send", mavros_msgs.msg.ManualControl, queue_size=10)
 
         # Create variable to store pwm when direct control
@@ -126,15 +128,10 @@ class RobotControl:
         self.position['y'] = msg.pose.position.y
         self.position['z'] = msg.pose.position.z
 
-        yaw, pitch, roll  = quat2euler([msg.pose.orientation.w,msg.pose.orientation.x,msg.pose.orientation.y,msg.pose.orientation.z], axes='rzyx')
-        roll_deg, pitch_deg, yaw_deg = np.rad2deg([roll, pitch, yaw])
-        self.orientation['yaw']     = yaw_deg
-        self.orientation['pitch']   = pitch_deg
-        self.orientation['roll']    = roll_deg
-
-        # if self.debug:
-        #     rospy.loginfo(f"pos: {self.position}")
-        #     rospy.loginfo(f"ori: {self.orientation}")
+    def YPR_callback(self, msg):
+        self.orientation['yaw']     = msg.vector.x
+        self.orientation['pitch']   = msg.vector.y
+        self.orientation['roll']    = msg.vector.z
 
     def publisherThread(self):
         """
