@@ -248,9 +248,9 @@ class DVL:
             vel_msg.header.stamp = now
             vel_msg.header.frame_id = frame_id
 
-            vel_msg.twist.linear.x = self.vel_rot[0]
-            vel_msg.twist.linear.y = self.vel_rot[1]
-            vel_msg.twist.linear.z = self.vel_rot[2]
+            vel_msg.twist.linear.x = self.vel[0]
+            vel_msg.twist.linear.y = self.vel[1]
+            vel_msg.twist.linear.z = self.vel[2]
             vel_msg.twist.angular.x = 0.0
             vel_msg.twist.angular.y = 0.0
             vel_msg.twist.angular.z = 0.0
