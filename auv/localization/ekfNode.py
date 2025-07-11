@@ -12,7 +12,7 @@ from struct import pack, unpack
 from mavros_msgs.msg import Mavlink
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import Imu
-from geometry_msgs.msg import PoseStamped, Vector3Stamped
+from geometry_msgs.msg import PoseStamped, TwistStamped
 from transforms3d.euler import quat2euler, euler2mat
 
 
@@ -34,7 +34,7 @@ class SensorFuse:
         self.imu_ori_data   = {"yaw": 0, "pitch": 0, "roll": 0}  # store one line of IMU data for ekf predict
         self.imu_array = np.zeros((3, 1))  # Before first IMU callback
 
-        self.dvl_sub    = rospy.Subscriber("/auv/devices/dvl/velocity", Vector3Stamped, self.dvl_callback)
+        self.dvl_sub    = rospy.Subscriber("/auv/devices/dvl/velocity", TwistStamped, self.dvl_callback)
         self.dvl_data   = {"vx": 0, "vy": 0, "vz": 0}
         self.dvl_array  = np.zeros((3, 1)) # used for passing into the ekf
 
