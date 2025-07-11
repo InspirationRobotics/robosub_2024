@@ -483,6 +483,8 @@ class RobotControl:
     def reset(self):
         for key, pid in self.PIDs.items():
                 pid.reset()
+        
+        self.desired_point  = {"x":None,"y":None,"z":None,"yaw":None,"pitch":None,"roll":None}
         self.direct_input = [0] * 6
 
     def exit(self):
