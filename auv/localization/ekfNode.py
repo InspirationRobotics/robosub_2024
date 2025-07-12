@@ -3,7 +3,6 @@ import numpy as np
 from filterpy.kalman import ExtendedKalmanFilter
 from filterpy.common import Q_discrete_white_noise
 from auv.utils import deviceHelper
-from auv.device.dvl import DVL
 import time
 import threading
 from statistics import mean
@@ -12,7 +11,8 @@ from struct import pack, unpack
 from mavros_msgs.msg import Mavlink
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import Imu
-from geometry_msgs.msg import PoseStamped, TwistStamped
+from geometry_msgs.msg import PoseStamped, Vector3Stamped
+from geometry_msgs.msg import TwistStamped
 from transforms3d.euler import quat2euler, euler2mat
 
 
@@ -23,7 +23,8 @@ class SensorFuse:
         # Initialize node
         rospy.init_node('ekfNode', anonymous=True)
         self.pub = rospy.Publisher('/auv/state/pose', PoseStamped, queue_size=10)
-        self.rate = rospy.Rate(10)  # 10 Hz
+        self.rate = rospy.Rate(40)  # 10 Hz
+        self.dt = 1.0 / 50.0  # Default prediction rate (50 Hz)
         self.ekf_lock = threading.Lock()
         
 
@@ -34,7 +35,7 @@ class SensorFuse:
         self.imu_ori_data   = {"yaw": 0, "pitch": 0, "roll": 0}  # store one line of IMU data for ekf predict
         self.imu_array = np.zeros((3, 1))  # Before first IMU callback
 
-        self.dvl_sub    = rospy.Subscriber("/auv/devices/dvl/velocity", TwistStamped, self.dvl_callback)
+        self.dvl_sub    = rospy.Subscriber("/auv/devices/dvl/velocity",TwistStamped, self.dvl_callback)
         self.dvl_data   = {"vx": 0, "vy": 0, "vz": 0}
         self.dvl_array  = np.zeros((3, 1)) # used for passing into the ekf
 
@@ -42,13 +43,15 @@ class SensorFuse:
         self.barometer_depth    = None
         self.depth_calib        = 0
         self.calibrated         = False
-        # initialize filter, dvl, imu, dt, and last_time
-        # initialize dt before creating the filter
-        self.dt = 1.0 / 100  # IMU time step (100 Hz)
+
         self.ekf = self.create_filter()
         # tracks the cumulative position
         self.position = np.zeros((3, 1))
-        self.last_time = time.time()
+
+        self.calibrate_depth()
+
+        self.predictThread = threading.Thread(target=self.predict_thread)
+        self.predictThread.start()
 
     def imu_callback(self,msg):
         # (self.imu_data["ax"], self.imu_data["ay"], self.imu_data["az"]) = quat2euler(orientation_list)
@@ -57,24 +60,8 @@ class SensorFuse:
         self.imu_acc_data["az"] = msg.linear_acceleration.z
 
         self.imu_ori_data['roll'] = msg.orientation.x
-        self.imu_ori_data['pitch'] = msg.orientation.y
+        self.imu_ori_data['pitch'] = (msg.orientation.y + 180) % 360
         self.imu_ori_data['yaw'] = msg.orientation.z
-
-        # Store body-frame acceleration
-        accel_body = np.array([msg.linear_acceleration.x,
-                            msg.linear_acceleration.y,
-                            msg.linear_acceleration.z])
-        
-        # Get rotation matrix from IMU YPR
-        rot_matrix = euler2mat(ai=self.imu_ori_data['yaw'], aj=self.imu_ori_data['pitch'], ak=self.imu_ori_data['roll'], axes='szyx')  # Body-to-world rotation
-        
-        # Rotate acceleration to world frame
-        accel_world = rot_matrix @ accel_body
-
-        self.imu_array = accel_world.reshape(-1, 1)  # Store as column vector
-
-        # update state
-        self.update_state()
 
     def dvl_callback(self, msg):
         try:
@@ -84,7 +71,11 @@ class SensorFuse:
             self.dvl_data["vz"] = msg.twist.linear.z
             
             # Get rotation matrix from IMU quaternion
-            rot_matrix = euler2mat(ai=self.imu_ori_data['yaw'], aj=self.imu_ori_data['pitch'], ak=self.imu_ori_data['roll'], axes='szyx')  # Body-to-world rotation
+            yaw = np.deg2rad(self.imu_ori_data['yaw'])
+            pitch = np.deg2rad(self.imu_ori_data['pitch'])
+            roll = np.deg2rad(self.imu_ori_data['roll'])
+            with self.ekf_lock:
+                rot_matrix = euler2mat(ai=yaw, aj=pitch, ak=roll, axes='szyx')  # Body-to-world rotation
 
             
             # Convert DVL velocities to numpy array and rotate
@@ -96,6 +87,7 @@ class SensorFuse:
             
             # Store rotated velocity for EKF update
             self.dvl_array = v_global.reshape(-1, 1)  # Convert to column vector
+            # self.dvl_array = v_body.reshape(-1,1)
             
             self.update_dvl()
         except Exception as e:
@@ -126,6 +118,41 @@ class SensorFuse:
         except Exception as e:
             rospy.logerr("Barometer unpacking failed")
             rospy.logerr(e)
+    def predict_thread(self):
+        while not rospy.is_shutdown():
+            with self.ekf_lock:
+                self.ekf.predict()
+            self.publish()
+            self.rate.sleep()
+
+    def update_dvl(self):
+        with self.ekf_lock:
+            z = self.dvl_array.reshape(-1, 1)  # Keep as 1D vector (3,)
+            self.ekf.update(z, self.H_velocity, self.hx_velocity)
+            self.position = self.ekf.x[0:3]
+    
+    def update_depth(self):
+        with self.ekf_lock:
+            # Ensure we have valid depth data
+            if self.barometer_depth is None or not self.calibrated:
+                return
+                
+            # Measurement function returns column vector
+            def h_z(x):
+                return np.array([[x[2, 0]]])  # Returns 2D matrix (1x1)
+                
+            # Jacobian matrix (1x9)
+            def H_z(x):
+                return np.array([[0, 0, 1, 0, 0, 0, 0, 0, 0]])
+                
+            # Measurement as 2D matrix (1x1)
+            z = np.array([[self.barometer_depth]])
+            
+            # Measurement noise as 2D matrix (1x1)
+            R_z = np.array([[0.05]])
+
+            # Perform EKF update
+            self.ekf.update(z, HJacobian=H_z, Hx=h_z, R=R_z)
 
     def calibrate_depth(self, sample_time=3):
         """
@@ -157,56 +184,6 @@ class SensorFuse:
         self.depth_calib = mean(samples)
         self.calibrated = True
         rospy.loginfo(f"depth calibration Finished. Surface is: {self.depth_calib}")
-
-    def update_state(self):
-        # Accept both (9,) and (9,1) shapes
-        assert self.ekf.x.shape in [(9,), (9,1)], \
-            f"ekf.x corrupted: shape {self.ekf.x.shape}"
-            
-        # Calculate time delta
-        current_time = time.time()
-        dt = current_time - self.last_time
-        self.last_time = current_time
-
-        # Update the state transition matrix F with the new dt
-        self.ekf.F = self.FJacobian_at(self.ekf.x, dt)
-
-        # Update the state with IMU data
-        # Ensure imu_array is column vector before assignment
-        self.ekf.x[6:] = self.imu_array.reshape(-1, 1)
-
-        # Predict the next state
-        self.ekf.predict()
-
-    def update_dvl(self):
-        with self.ekf_lock:
-            z = self.dvl_array.reshape(-1, 1)  # Keep as 1D vector (3,)
-            self.ekf.update(z, self.H_velocity, self.hx_velocity)
-            self.position = self.ekf.x[0:3]
-            self.publish()
-    
-    def update_depth(self):
-        with self.ekf_lock:
-            # Ensure we have valid depth data
-            if self.barometer_depth is None or not self.calibrated:
-                return
-                
-            # Measurement function returns column vector
-            def h_z(x):
-                return np.array([[x[2, 0]]])  # Returns 2D matrix (1x1)
-                
-            # Jacobian matrix (1x9)
-            def H_z(x):
-                return np.array([[0, 0, 1, 0, 0, 0, 0, 0, 0]])
-                
-            # Measurement as 2D matrix (1x1)
-            z = np.array([[self.barometer_depth]])
-            
-            # Measurement noise as 2D matrix (1x1)
-            R_z = np.array([[0.05]])
-
-            # Perform EKF update
-            self.ekf.update(z, HJacobian=H_z, Hx=h_z, R=R_z)
 
     def publish(self):
         pose_msg = PoseStamped()
@@ -306,9 +283,9 @@ class SensorFuse:
         # === EKF Configuration for state: [x, y, z, vx, vy, vz, ax, ay, az] ===
 
         # --- Initial State Covariance (P): how uncertain we are about the initial state
-        initial_pos_var   = 100.0  # moderate uncertainty in position
-        initial_vel_var   = 10.0   # Lower uncertainty in velocity
-        initial_accel_var = 10.0    # Lower uncertainty in acceleration
+        initial_pos_var   = 10.0  # moderate uncertainty in position
+        initial_vel_var   = 1.0   # Lower uncertainty in velocity
+        initial_accel_var = 1.0    # Lower uncertainty in acceleration
 
         ekf.P = np.diag([
             initial_pos_var, initial_pos_var, initial_pos_var,       # x, y, z
@@ -317,9 +294,9 @@ class SensorFuse:
         ])
 
         # --- Process Noise Covariance (Q): how much we expect the model to drift
-        process_pos_noise   = 0.05
-        process_vel_noise   = 0.1
-        process_accel_noise = 0.2
+        process_pos_noise   = 0.1
+        process_vel_noise   = 0.05
+        process_accel_noise = 0.01
 
         ekf.Q = np.diag([
             process_pos_noise, process_pos_noise, process_pos_noise,        # x, y, z
@@ -328,18 +305,16 @@ class SensorFuse:
         ])
 
         # --- Measurement Noise Covariance (R): uncertainty in DVL velocity measurement
-        dvl_vel_noise = 0.1  # meters/second
+        dvl_vel_noise = 0.01  # meters/second
 
         ekf.R = np.diag([
             dvl_vel_noise, dvl_vel_noise, dvl_vel_noise   # vx, vy, vz
         ])
-
 
         return ekf
 
 if __name__=="__main__":
     ekf = SensorFuse()
     time.sleep(2)
-    ekf.calibrate_depth()
     rospy.loginfo("ekf node running")
     rospy.spin()
