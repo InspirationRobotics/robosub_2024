@@ -20,8 +20,8 @@ tmux send-keys -t $SESSION:0.2 'source /opt/ros/${ROS_DISTRO}/setup.bash' C-m
 tmux send-keys -t $SESSION:0.2 'roslaunch mavros px4.launch' C-m
 echo 'starting mavros ...'
 sleep 5
-tmux send-keys -t $SESSION:0.1 'python3 -m auv.device.pix_standalone' C-m
-echo 'starting pix_standalone ...'
+tmux send-keys -t $SESSION:0.1 'python3 -m auv.device.dvl.dvl' C-m
+echo 'starting dvl node ...'
 sleep 3
 # Optional: Select the first pane (idle) on attach
 tmux select-pane -t $SESSION_NAME:0.3
