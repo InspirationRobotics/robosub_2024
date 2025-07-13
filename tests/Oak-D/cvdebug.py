@@ -11,7 +11,7 @@ def callbacks(msg):
     try:
         cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
     except CvBridgeError as e:
-        rospy.logerr(f"cv_bridge error: {e}")
+        rospy.logerr(e)
         return
     cv2.imshow("OAK-D forward", cv_image)
     cv2.waitKey(1)
