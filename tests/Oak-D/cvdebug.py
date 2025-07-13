@@ -9,7 +9,7 @@ rospy.init_node("cv_debugger", anonymous=True)
 
 def callbacks(msg):
     try:
-        cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        cv_image = bridge.imgmsg_to_cv2(msg)
     except CvBridgeError as e:
         rospy.logerr(e)
         return
