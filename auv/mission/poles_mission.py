@@ -37,7 +37,7 @@ class PoleSlalomMission:
         data = json.loads(msg.data)
         self.next_data[file_name] = data
         self.received = True
-        print(f"[DEBUG] Received data from {file_name}")
+        print("[DEBUG] Received data from {file_name}")
 
     def run(self):
         """
@@ -66,7 +66,7 @@ class PoleSlalomMission:
             yaw = cv_data.get("yaw", 0)
             end = cv_data.get("end", False)
 
-            print(f"[MOTION] Fwd: {forward}, Lat: {lateral}, Yaw: {yaw}")
+            print("[MOTION] Fwd: {forward}, Lat: {lateral}, Yaw: {yaw}")
 
             if end:
                 print("[INFO] Pole slalom mission complete.")
