@@ -11,7 +11,7 @@ rc.set_control_mode('direct')
 
 arm.arm()
 time.sleep(3.0)
-print("[INFO}This is the start")
+print("[INFO]This is the start")
 
 rc.movement(forward=3)
 time.sleep(5)
