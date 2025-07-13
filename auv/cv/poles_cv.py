@@ -1,6 +1,5 @@
 """
-Pole Slalom CV. Detects red poles, approaches them according to gate side,
-and performs repeatable slalom movement with distance-based logic.
+Pole Slalom CV. Detects red poles, yaws to face it, and approaches until close.
 """
 
 import cv2
@@ -14,34 +13,12 @@ class CV:
     def __init__(self, **config):
         self.shape = (640, 480)
         self.x_midpoint = self.shape[0] / 2
-        self.tolerance = 50
-        self.row_counter = 0
-        self.max_rows = 3
+        self.tolerance = 40  # How centered the object should be
         self.config = config
-        self.side = config.get("side", "right")  # from gate mission
-        self.state = "searching"
+        self.state = "searching"  # searching → centering → approaching
         self.end = False
-        self.depth_time = time.time()
-        self.slanted_yaw = 0
-        self.strafe_start_time = time.time()
 
-        print("[INFO] Pole Slalom CV initialized")
-
-    def calculate_distance(self, object_width_px):
-        """
-        Calculate the distance (in feet) to a red pole using bounding box width. (below is for Graey's OAK-D Wide)
-        """
-        focal_length = 2.75  # mm
-        real_pole_width = 25.4  # mm
-        image_width_px = 640  # px
-        camera_width = 97  # mm
-
-        if object_width_px <= 0:
-            return None
-
-        distance_mm = (focal_length * real_pole_width * image_width_px) / (object_width_px * camera_width)
-        distance_ft = distance_mm / 304.8
-        return distance_ft
+        print("[INFO] Pole Center & Approach CV initialized")
 
     def detect_red_pole(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -82,104 +59,44 @@ class CV:
         yaw = 0
         vertical = 0
 
-        if self.row_counter >= self.max_rows:
-            self.end = True
-            return forward, lateral, yaw, vertical
-
-        if detection["status"]:
-            x1, x2 = detection["xmin"], detection["xmax"]
-            object_width_px = x2 - x1
-            distance_ft = self.calculate_distance(object_width_px)
-            x_center = (x1 + x2) / 2
-
-            if self.row_counter == 0:
-                # ROW 1: Straight approach
-                if self.state == "searching":
-                    if distance_ft and distance_ft < 4:
-                        self.state = "approaching"
-
-                elif self.state == "approaching":
-                    if distance_ft > 1.0:
-                        forward = 1.2
-                    else:
-                        forward = 0
-                        self.state = "strafing"
-                        self.strafe_start_time = time.time()
-
-                elif self.state == "strafing":
-                    lateral = 0.8 if self.side == "right" else -0.8
-                    if time.time() - self.strafe_start_time >= 2.0:
-                        self.state = "moving_forward"
-
-                elif self.state == "moving_forward":
-                    forward = 1.0
-                    self.row_counter += 1
-                    self.state = "searching"
-
+        if self.state == "searching":
+            if detection["status"]:
+                self.state = "centering"
             else:
-                # ROW 2 & 3: Slanted approach + realign
-                if self.state == "searching":
-                    yaw = -0.6 if self.side == "right" else 0.6
-                    if distance_ft and distance_ft < 4:
-                        self.state = "approaching"
-                        self.slanted_yaw = yaw
+                # Spin in place to search
+                yaw = 0.5
+                print("[INFO] Searching: No red pole detected → yawing")
 
-                elif self.state == "approaching":
-                    forward = 1.2
-                    yaw = self.slanted_yaw
-                    if distance_ft <= 1.0:
-                        forward = 0
-                        self.state = "realign"
+        elif self.state == "centering":
+            if detection["status"]:
+                x_center = (detection["xmin"] + detection["xmax"]) / 2
+                offset = x_center - self.x_midpoint
 
-                elif self.state == "realign":
-                    yaw = -self.slanted_yaw
-                    self.state = "strafing"
-                    self.strafe_start_time = time.time()
+                if abs(offset) > self.tolerance:
+                    yaw = -0.4 if offset > 0 else 0.4  # Yaw toward the center
+                    print(f"[INFO] Centering: offset={offset:.1f} → yaw={yaw}")
+                else:
+                    print("[INFO] Centering: Pole centered → transitioning to approaching")
+                    self.state = "approaching"
+            else:
+                print("[WARN] Lost pole while centering → reverting to searching")
+                self.state = "searching"
 
-                elif self.state == "strafing":
-                    lateral = 0.8 if self.side == "right" else -0.8
-                    if time.time() - self.strafe_start_time >= 2.0:
-                        self.state = "moving_forward"
-
-                elif self.state == "moving_forward":
+        elif self.state == "approaching":
+            if detection["status"]:
+                area = detection["area"]
+                if area < 16000:
                     forward = 1.0
-                    self.row_counter += 1
-                    self.state = "searching"
+                    print(f"[INFO] Approaching: area={area:.0f} → moving forward")
+                else:
+                    forward = 0
+                    self.end = True
+                    print("[INFO] Pole is close enough → stopping")
+            else:
+                print("[WARN] Lost pole while approaching → reverting to searching")
+                self.state = "searching"
 
-        else:
-            # No detection — start rotating to search
-            yaw = 0.65 if self.side == "left" else -0.65
-            forward = 0
-            lateral = 0
-            vertical = 0
-            print("[INFO] No red pole detected — yawing to search")
-        
         return forward, lateral, yaw, vertical
-
-   
-            # # No detection, fallback motion based on state
-            # if self.state == "searching":
-            #     yaw = -0.6 if (self.side == "right" and self.row_counter > 0) else 0.6 if self.row_counter > 0 else 0
-            # elif self.state == "approaching":
-            #     forward = 1.2
-            #     yaw = self.slanted_yaw if self.row_counter > 0 else 0
-            # elif self.state == "realign":
-            #     yaw = -self.slanted_yaw
-            # elif self.state == "strafing":
-            #     lateral = 0.8 if self.side == "right" else -0.8
-            # elif self.state == "moving_forward":
-            #     forward = 1.0
-                
-            # if self.row_counter >= self.max_rows:
-            #     self.end = True
-            #     print("[INFO] Pole Slalom Mission complete")           
-            
-        
-        # Fallback return statement (in case the one above fails)
-        print(f"[WARN] [movement_calculation] Unexpected logic fallthrough, returning zeros.")
-        return forward, lateral, yaw, vertical
-
-
 
     def run(self, raw_frame, target, detections):
         detection, mask = self.detect_red_pole(raw_frame)
@@ -195,12 +112,14 @@ class CV:
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
             cv2.line(frame, (x_center, 0), (x_center, self.shape[1]), (255, 255, 0), 2)
             cv2.line(frame, (int(self.x_midpoint), 0), (int(self.x_midpoint), self.shape[1]), (0, 255, 0), 1)
+            cv2.putText(frame, f"Area: {detection['area']}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
 
-        cv2.putText(frame, f"State: {self.state}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-        cv2.putText(frame, f"Row: {self.row_counter}/{self.max_rows}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-
-        # cv2.imshow("Pole Detection", frame)
-        # cv2.imshow("Red Mask", mask)
+        cv2.putText(frame, f"State: {self.state}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
 
         return {
-            "lateral": lateral, "forward": forward, "yaw": yaw, "vertical": vertical, "end": self.end}, frame
+            "lateral": lateral,
+            "forward": forward,
+            "yaw": yaw,
+            "vertical": vertical,
+            "end": self.end
+        }, frame
