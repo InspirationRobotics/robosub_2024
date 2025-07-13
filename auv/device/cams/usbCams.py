@@ -23,102 +23,90 @@ class USBCamera:
     """
 
     def __init__(self, rospy, id, ogDevice, newDevice):
+        """
+        Initializes the class
+
+        Args:
+            rospy: ROS context (provided outside the class)
+            id: ID of the device (configuration)
+            ogDevice: the real USB camera to be used
+            newDevice: the fake USB camera to be used (meaning the simulated webcam using V4L2 to be used)
+        """
+        # Image width, height
         self.IMG_W = 640
         self.IMG_H = 480
-
+        
         self.rospy = rospy
         self.id = id
         self.frame = None
+
+        # For converting between ROS type "Images" to CV type "mat"
         self.br = CvBridge()
+
+        # Node cycle rate (in Hz)
         self.loop_rate = rospy.Rate(30)
+
         self.isKilled = True
         self.ogDevice = ogDevice
         self.newDevice = newDevice
+
+        # Create a fake webcam 
         self.fake = pyfakewebcam.FakeWebcam(newDevice, self.IMG_W, self.IMG_H)
+        
+        # Publishers and subscribers to be used 
         self.pub = self.rospy.Publisher(f"/auv/camera/videoUSBRaw{str(id)}", Image, queue_size=10)
         self.rospy.Subscriber(f"/auv/camera/videoUSBOutput{str(id)}", Image, self.callbackMain)
+
         self.time = time.time()
+
+        # To communicate the corresponding paths for the same device (fake vs real)
         print(f"Camera ID {str(id)}: {ogDevice} is available at {newDevice}")
 
     def callbackMain(self, msg):
+        """
+        Received camera output and sends frame to be written to the virtual video device (fake)
+
+        Args:
+            msg: frame to be written
+        """
+
         if self.isKilled:
             return
         self.time = time.time()
+        # Convert the image from a ROS Image to an OpenCV image, and write it to the V4L2 video device
         self.sendFakeFrame(self.br.imgmsg_to_cv2(msg))
 
     def sendFakeFrame(self, msg):
+        """
+        Write a frame the the V4L2 virtual video device
+
+        Args:
+            msg (numpy.ndarray): the frame to be written
+        """
         try:
-            # Run red object detection and draw bounding box if applicable
-            frame = msg.copy()
-            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            lower_red1 = np.array([0, 100, 100])
-            upper_red1 = np.array([10, 255, 255])
-            lower_red2 = np.array([160, 100, 100])
-            upper_red2 = np.array([179, 255, 255])
-            mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
-            mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
-            red_mask = cv2.bitwise_or(mask1, mask2)
-            contours, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            red_poles = []
-            for cnt in contours:
-                area = cv2.contourArea(cnt)
-                if area > 1000:
-                    x, y, w, h = cv2.boundingRect(cnt)
-                    red_poles.append((x, y, w, h, area))
-            if red_poles:
-                red_poles.sort(key=lambda x: x[4], reverse=True)
-                x, y, w, h, _ = red_poles[0]
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-            self.frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # Convert from BGR format to RGB format
+            self.frame = cv2.cvtColor(msg, cv2.COLOR_BGR2RGB)
+            # Write the frame to the V4L2 video device
             self.fake.schedule_frame(self.frame)
         except Exception as e:
             print(f"Camera {str(self.id)} Output Error, make sure running in correct python")
             print(e)
 
     def runner(self):
+        """
+        Continously reads frames from the camera, processes them, and publishes them to the correct ROS topic
+        """
         while not self.rospy.is_shutdown() and not self.isKilled:
             try:
+                # Read the frame
                 ret, frame1 = self.cam.read()
                 if ret:
-                     # ---- RED POLE DETECTION ----
-                    hsv = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
-                    lower_red1 = np.array([0, 100, 100])
-                    upper_red1 = np.array([10, 255, 255])
-                    lower_red2 = np.array([160, 100, 100])
-                    upper_red2 = np.array([179, 255, 255])
-
-                    mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
-                    mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
-                    red_mask = cv2.bitwise_or(mask1, mask2)
-
-                    contours, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-                red_poles = []
-                for cnt in contours:
-                    area = cv2.contourArea(cnt)
-                    if area > 1000:
-                        x, y, w, h = cv2.boundingRect(cnt)
-                        red_poles.append((x, y, w, h, area))
-
-                # Draw bounding box around the largest red pole (if found)
-                if red_poles:
-                    red_poles.sort(key=lambda x: x[4], reverse=True)
-                    x, y, w, h, area = red_poles[0]
-                    cv2.rectangle(frame1, (x, y), (x + w, y + h), (0, 0, 255), 3)
-                    cv2.putText(frame1, "Red Pole", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-            
-                    # new_frame = cv2.putText(frame1,  # The image on which to draw
-                    #                         "DEBUG",  # The text string
-                    #                         (300, 300),  # The bottom-left corner coordinates of the text
-                    #                         cv2.FONT_HERSHEY_SIMPLEX,  # The font type
-                    #                         1,  # The font scale factor
-                    #                         (0,0,255),  # The text color (BGR format)
-                    #                         thickness=1,  # The thickness of the text
-                    #                         lineType=cv2.LINE_8,  # The line type (default is LINE_8)
-                    #                         bottomLeftOrigin=False)
-                    msg = self.br.cv2_to_imgmsg(new_frame)
+                    # If the frame was read successfully, convert from a CV image (numpy.ndarray) to a ROS Image
+                    msg = self.br.cv2_to_imgmsg(frame1)
+                    # Publish the image to the correct publisher
                     self.pub.publish(msg)
-                    if time.time() - self.time > 3:
+                    if time.time() - self.time > 3:  
+                        # If it has been more than 3 seconds since there was a new frame received, then default to the camera view (via V4L2 virtual video device)
                         self.sendFakeFrame(frame1)
                 pass
             except Exception as e:
@@ -127,6 +115,9 @@ class USBCamera:
         self.loop_rate.sleep()
 
     def kill(self):
+        """
+        Kill all camera streams by joining threads and releasing resources
+        """
         if self.isKilled:
             return
         self.rospy.loginfo(f"Killing Camera {str(self.id)} Stream...")
@@ -136,6 +127,9 @@ class USBCamera:
         self.rospy.loginfo(f"Killed Camera {str(self.id)} Stream...")
 
     def start(self):
+        """
+        Start the camera streams by starting new threads
+        """
         self.cam = cv2.VideoCapture(self.ogDevice)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, self.IMG_W)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, self.IMG_H)
