@@ -10,7 +10,7 @@ rospy.init_node("cv_debugger", anonymous=True)
 
 def callbacks(msg):
     try:
-        cv_image = b.imgmsg_to_cv2(msg)
+        cv_image = b.imgmsg_to_cv2(img_msg=msg)
         rospy.loginfo('success')
     except Exception as e:
         rospy.logerr(e)
