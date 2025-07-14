@@ -7,12 +7,16 @@ import time
 import numpy as np
 import os
 
+import cv2
+import numpy as np
+import time
+
 class CV:
     camera = "/auv/camera/videoOAKdRawForward"
 
     def __init__(self, **config):
-        self.shape = (640, 480)
-        self.x_midpoint = self.shape[0] / 2
+        self.shape = None  # Will set this dynamically
+        self.x_midpoint = None
         self.tolerance = 40  # How centered the object should be
         self.config = config
         self.state = "searching"  # searching → centering → approaching
@@ -22,16 +26,24 @@ class CV:
         print("[INFO] Pole Center & Approach CV initialized")
 
     def detect_red_pole(self, frame):
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        lower_red1 = np.array([0, 120, 70])
-        upper_red1 = np.array([10, 255, 255])
-        lower_red2 = np.array([170, 120, 70])
-        upper_red2 = np.array([180, 255, 255])
+        # Set shape dynamically on first frame
+        if self.shape is None:
+            height, width = frame.shape[:2]
+            self.shape = (width, height)
+            self.x_midpoint = width / 2
+            print(f"[INFO] Frame shape set dynamically: width={width}, height={height}")
 
-        mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
-        mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
-        red_mask = cv2.bitwise_or(mask1, mask2)
+        # Crop a bit off the bottom (e.g., last 100 pixels)
+        crop_bottom = 100
+        cropped_frame = frame[0:self.shape[1] - crop_bottom, 0:self.shape[0]]
 
+        # Convert to HSV and create red mask
+        hsv = cv2.cvtColor(cropped_frame, cv2.COLOR_BGR2HSV)
+        lower_red1 = np.array([20, 0, 0])
+        upper_red1 = np.array([255, 255, 50])
+        red_mask = cv2.inRange(hsv, lower_red1, upper_red1)
+
+        # Find contours
         contours, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         red_poles = []
@@ -41,6 +53,7 @@ class CV:
                 x, y, w, h = cv2.boundingRect(cnt)
                 red_poles.append((x, y, w, h, area))
 
+        # If any red pole found, return the largest one
         if red_poles:
             red_poles.sort(key=lambda x: x[4], reverse=True)
             x, y, w, h, area = red_poles[0]
@@ -52,7 +65,8 @@ class CV:
                 "ymax": y + h,
                 "area": area
             }, red_mask
-        return {"status": False, "xmin": None, "xmax": None, "ymin": None, "ymax": None, "area": 0}, red_mask
+
+        return {"status": False, "xmin": None, "xmax": None,"ymin": None,"ymax": None,"area": 0}, red_mask
 
     def movement_calculation(self, detection):
         forward = 0
