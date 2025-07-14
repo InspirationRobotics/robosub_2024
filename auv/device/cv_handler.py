@@ -18,7 +18,7 @@ import traceback
 
 import cv2
 import rospy
-from cv_bridge import CvBridge
+from auv.utils.img_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
@@ -155,6 +155,7 @@ class _ScriptHandler:
         self.br = CvBridge()
 
         # Create the ROS node, the subscribers and the publishers
+        rospy.loginfo(f"camera topic name: {self.camera_topic}")
         self.sub_cv = rospy.Subscriber(self.camera_topic, Image, self.callback_cam)
         self.pub_viz = rospy.Publisher(self.camera_topic.replace("Raw", "Output"), Image, queue_size=10)
         self.pub_out = rospy.Publisher(f"auv/cv_handler/{file_name}", String, queue_size=10)
@@ -442,7 +443,7 @@ if __name__ == "__main__":
     def dummy_callback(msg):
         print(f"[INFO] received: {msg.data}")
 
-    file_name = "gate_cv"
+    file_name = "buoy_cv"
 
     cv = CVHandler()
     rospy.init_node("CV_Handler_TEST", anonymous = True)
@@ -461,3 +462,5 @@ if __name__ == "__main__":
 
     except rospy.KeyboardInterrupt:
         cv.stop_cv(file_name)
+        
+        

@@ -14,7 +14,7 @@ import json
 import glob
 import numpy as np
 import depthai as dai
-from cv_bridge import CvBridge, CvBridgeError
+from auv.utils.img_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
