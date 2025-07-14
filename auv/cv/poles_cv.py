@@ -34,7 +34,7 @@ class CV:
             print(f"[INFO] Frame shape set dynamically: width={width}, height={height}")
 
         # Crop a bit off the bottom (e.g., last 100 pixels)
-        crop_bottom = 500
+        crop_bottom = 100
         cropped_frame = frame[0:self.shape[1] - crop_bottom, 0:self.shape[0]]
 
         # Convert to HSV and create red mask
