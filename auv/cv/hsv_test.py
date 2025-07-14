@@ -21,27 +21,39 @@ class CV:
         cropped_frame = frame[0:min(1300, height), 0:min(2880, width),]
         bgr_frame = cropped_frame[:, :, :3]
         hsv = cv2.cvtColor(bgr_frame, cv2.COLOR_BGR2HSV)
-        lower_red1 = np.array([20, 0, 0])
-        upper_red1 = np.array([255, 255, 50])
-        # lower_red2 = np.array([170, 120, 70])
-        # upper_red2 = np.array([180, 255, 255])
 
-        red_mask = cv2.inRange(hsv, lower_red1, upper_red1)
-        # mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
-        # red_mask = cv2.bitwise_or(mask1, mask2)
+        # Two HSV ranges for red (since red wraps around 0 on HSV hue scale)
+        lower_red1 = np.array([0, 100, 100])
+        upper_red1 = np.array([10, 255, 255])
+        lower_red2 = np.array([160, 100, 100])
+        upper_red2 = np.array([179, 255, 255])
 
+        # Create mask for red regions
+        mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+        mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+        red_mask = cv2.bitwise_or(mask1, mask2)
+
+        cv2.imshow("before kernal", red_mask)
+        # Morphology to clean noise
+        kernel = np.ones((5, 5), np.uint8)
+        red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_OPEN, kernel)
+        red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_DILATE, kernel)
+
+        # Find contours on the mask
         contours, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        red_poles = []
+        candidates = []
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area > 1000:
+            if area > 800:  # Filter out small noise
                 x, y, w, h = cv2.boundingRect(cnt)
-                red_poles.append((x, y, w, h, area))
+                aspect_ratio = h / float(w) if w > 0 else 0
+                if aspect_ratio > 2.5:  # Tall and narrow = likely a pole
+                    candidates.append((x, y, w, h, area))
 
-        if red_poles:
-            red_poles.sort(key=lambda x: x[4], reverse=True)
-            x, y, w, h, area = red_poles[0]
+        if candidates:
+            candidates.sort(key=lambda x: x[4], reverse=True)  # sort by area
+            x, y, w, h, area = candidates[0]
             return {
                 "status": True,
                 "xmin": x,
@@ -50,7 +62,9 @@ class CV:
                 "ymax": y + h,
                 "area": area
             }, red_mask
+
         return {"status": False, "xmin": None, "xmax": None, "ymin": None, "ymax": None, "area": 0}, red_mask
+
 
     def process_image(self, image_path):
         image = cv2.imread(image_path)
@@ -108,6 +122,6 @@ class CV:
 
 if __name__ == "__main__":
     # path = input("Enter path to image or video file: ").strip()
-    path = "/Users/avikaprasad/Desktop/pole_1.png"
+    path = r"C:\Users\chase\OneDrive\Pictures\Screenshots\Screenshot 2025-07-14 144721.png"
     cv = CV(path)
     cv.run()
