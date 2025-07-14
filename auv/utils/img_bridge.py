@@ -35,7 +35,7 @@ class CvBridge:
             image_opencv = cv2.cvtColor(image_opencv, cv2.COLOR_RGB2BGR)
         elif img_msg.encoding != "bgr8":
             rospy.logwarn(
-                f"Unsupported encoding '{img_msg.encoding}'. This node assumes 'bgr8' or 'rgb8'. Image may not be interpreted correctly.")
+                f"Unsupported encoding '{img_msg.encoding}'. This node assumes 'bgr8'. Image may not be interpreted correctly.")
 
         return image_opencv
 
