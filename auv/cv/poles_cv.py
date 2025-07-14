@@ -17,6 +17,7 @@ class CV:
         self.config = config
         self.state = "searching"  # searching → centering → approaching
         self.end = False
+        self.start_time = time.time()
 
         print("[INFO] Pole Center & Approach CV initialized")
 
@@ -64,7 +65,7 @@ class CV:
                 self.state = "centering"
             else:
                 # Spin in place to search
-                yaw = 0.5
+                yaw = 1.5
                 print("[INFO] Searching: No red pole detected → yawing")
 
         elif self.state == "centering":
@@ -73,7 +74,7 @@ class CV:
                 offset = x_center - self.x_midpoint
 
                 if abs(offset) > self.tolerance:
-                    yaw = -0.4 if offset > 0 else 0.4  # Yaw toward the center
+                    yaw = -1.0 if offset > 0 else 1.0  # Yaw toward the center
                     print(f"[INFO] Centering: offset={offset:.1f} → yaw={yaw}")
                 else:
                     print("[INFO] Centering: Pole centered → transitioning to approaching")
@@ -86,15 +87,22 @@ class CV:
             if detection["status"]:
                 area = detection["area"]
                 if area < 16000:
-                    forward = 1.0
+                    forward = 2.0
                     print(f"[INFO] Approaching: area={area:.0f} → moving forward")
                 else:
                     forward = 0
                     self.end = True
                     print("[INFO] Pole is close enough → stopping")
+                    self.state = "strafing"
             else:
                 print("[WARN] Lost pole while approaching → reverting to searching")
                 self.state = "searching"
+        
+        elif self.state == "strafing":
+            while time.time() - self.start_time < 1.5:  # Strafing for 1.5 seconds
+                lateral = 2.0
+                print(f"[INFO] Strafing: Moving laterally to come in between poles")
+                break
 
         return forward, lateral, yaw, vertical
 
@@ -116,10 +124,4 @@ class CV:
 
         cv2.putText(frame, f"State: {self.state}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
 
-        return {
-            "lateral": lateral,
-            "forward": forward,
-            "yaw": yaw,
-            "vertical": vertical,
-            "end": self.end
-        }, frame
+        return {"lateral": lateral, "forward": forward, "yaw": yaw,"vertical": vertical, "end": self.end}, frame
