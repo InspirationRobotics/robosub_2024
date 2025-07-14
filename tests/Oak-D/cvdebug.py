@@ -12,7 +12,7 @@ def callbacks(msg):
     try:
         cv_image = b.imgmsg_to_cv2(msg)
         rospy.loginfo('success')
-        cv2.imshow(cv_image)
+        cv2.imshow("debug",cv_image)
     except Exception as e:
         rospy.logerr(e)
         return
