@@ -5,12 +5,12 @@ from auv.utils.img_bridge import CvBridge
 from sensor_msgs.msg import Image
 import cv2
 
-b = CvBridge
+b = CvBridge()
 rospy.init_node("cv_debugger", anonymous=True)
 
 def callbacks(msg):
     try:
-        cv_image = b.imgmsg_to_cv2(img_msg=msg)
+        cv_image = b.imgmsg_to_cv2(msg)
         rospy.loginfo('success')
     except Exception as e:
         rospy.logerr(e)

@@ -15,20 +15,28 @@ from sensor_msgs.msg import Image
 class CvBridge:
     def __init__(self):
         pass
-    
-    def imgmsg_to_cv2(self,img_msg):
-        if img_msg.encoding != "bgr8":
-            if img_msg.encoding == "rgb8":
-                image_opencv = cv2.cvtColor(image_opencv, cv2.COLOR_RGB2BGR)
-            else:
-                rospy.logwarn("This Coral detect node has been hardcoded to the 'bgr8' encoding.  Come change the code if you're actually trying to implement a new camera")
-        dtype = np.dtype("uint8") # Hardcode to 8 bits...
+        
+    def imgmsg_to_cv2(self, img_msg):
+        dtype = np.dtype("uint8")  # Hardcode to 8 bits
         dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
-        image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 3), # and three channels of data. Since OpenCV works with bgr natively, we don't need to reorder the channels.
-                        dtype=dtype, buffer=img_msg.data)
-        # If the byt order is different between the message and the system.
+
+        image_opencv = np.ndarray(
+            shape=(img_msg.height, img_msg.width, 3),  # 3 channels
+            dtype=dtype,
+            buffer=img_msg.data
+        )
+
+        # Byte order fix
         if img_msg.is_bigendian == (sys.byteorder == 'little'):
             image_opencv = image_opencv.byteswap().newbyteorder()
+
+        # Handle encoding
+        if img_msg.encoding == "rgb8":
+            image_opencv = cv2.cvtColor(image_opencv, cv2.COLOR_RGB2BGR)
+        elif img_msg.encoding != "bgr8":
+            rospy.logwarn(
+                f"Unsupported encoding '{img_msg.encoding}'. This node assumes 'bgr8' or 'rgb8'. Image may not be interpreted correctly.")
+
         return image_opencv
 
     def cv2_to_imgmsg(self,cv_image):
