@@ -79,7 +79,7 @@ class CV:
                 self.state = "approaching"
             else:
                 # Spin in place to search
-                yaw = 1.5
+                yaw = -1.5
                 print("[INFO] Searching: No red pole detected → yawing")
 
         elif self.state == "centering":
