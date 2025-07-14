@@ -13,7 +13,7 @@ from sensor_msgs.msg import Image
 
 
 class CvBridge:
-    def __init__():
+    def __init__(self):
         pass
     
     def imgmsg_to_cv2(self,img_msg):
