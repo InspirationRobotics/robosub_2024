@@ -18,7 +18,7 @@ import traceback
 
 import cv2
 import rospy
-from cv_bridge import CvBridge
+from auv.utils.img_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
