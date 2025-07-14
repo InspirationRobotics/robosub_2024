@@ -76,7 +76,7 @@ class CV:
 
         if self.state == "searching":
             if detection["status"]:
-                self.state = "centering"
+                self.state = "approaching"
             else:
                 # Spin in place to search
                 yaw = 1.5
@@ -88,8 +88,8 @@ class CV:
                 offset = x_center - self.x_midpoint
 
                 if abs(offset) > self.tolerance:
-                    yaw = -1.0 if offset > 0 else 1.0  # Yaw toward the center
-                    print(f"[INFO] Centering: offset={offset:.1f} → yaw={yaw}")
+                    lateral = -1.0 if offset > 0 else 1.0  # strafe to align toward the center
+                    print(f"[INFO] Centering: offset={offset:.1f} → lateral={lateral}")
                 else:
                     print("[INFO] Centering: Pole centered → transitioning to approaching")
                     self.state = "approaching"
