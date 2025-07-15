@@ -23,10 +23,10 @@ class CV:
         hsv = cv2.cvtColor(bgr_frame, cv2.COLOR_BGR2HSV)
 
         # Two HSV ranges for red (since red wraps around 0 on HSV hue scale)
-        lower_red1 = np.array([0, 100, 100])
-        upper_red1 = np.array([10, 255, 255])
-        lower_red2 = np.array([160, 100, 100])
-        upper_red2 = np.array([179, 255, 255])
+        lower_red1 = np.array([0, 10, 0])
+        upper_red1 = np.array([255, 255, 140])
+        lower_red2 = np.array([0, 10, 0])
+        upper_red2 = np.array([255, 255, 140])
 
         # Create mask for red regions
         mask1 = cv2.inRange(hsv, lower_red1, upper_red1)

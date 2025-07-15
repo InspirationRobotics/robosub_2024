@@ -1,47 +1,50 @@
 import cv2
 import numpy as np
 
+# ======= Parameters for tuning =======
 path = r"C:\Users\chase\OneDrive\Pictures\Screenshots\Screenshot 2025-07-14 144721.png"
+blur_kernel_size = (5, 5)
+sobel_ksize = 3               # Sobel kernel size (must be 1,3,5,7)
+gradient_thresh = 100         # Threshold on gradient magnitude for edge detection
+min_contour_area = 500        # Minimum area of contour to keep
+max_contour_area = 1e6        # Maximum area (optional)
+# =====================================
+
+# Load image (grayscale)
 img = cv2.imread(path)
-height, width = img.shape[:2]  # works for grayscale or color
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-# Crop the image
-hc = 150
-wc = 50
-img = img[250:height-hc, wc:width-wc]
+# Blur to reduce noise
+blurred = cv2.GaussianBlur(gray, blur_kernel_size, 0)
 
-cv2.imshow('raw', img)
+# Compute Sobel gradients
+grad_x = cv2.Sobel(blurred, cv2.CV_64F, 1, 0, ksize=sobel_ksize)
+grad_y = cv2.Sobel(blurred, cv2.CV_64F, 0, 1, ksize=sobel_ksize)
 
-lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-l, a, b = cv2.split(lab)
+# Compute gradient magnitude
+grad_mag = cv2.magnitude(grad_x, grad_y)
 
-# Threshold on L channel to detect dark regions (white=dark pixels)
-_, dark_mask = cv2.threshold(l, 60, 255, cv2.THRESH_BINARY_INV)  # tweak threshold
+# Convert to 8-bit image for thresholding
+grad_mag_uint8 = cv2.convertScaleAbs(grad_mag)
 
+# Threshold gradient magnitude to get edges
+_, edges = cv2.threshold(grad_mag_uint8, gradient_thresh, 255, cv2.THRESH_BINARY)
 
-cv2.imshow('darkmask',dark_mask)
-# Count white pixels (dark regions) in each column
-column_counts = np.sum(dark_mask == 255, axis=0)
+# Find contours on thresholded edges
+contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-# Threshold for minimum pixels per column to keep
-min_pixels_per_column = 50
-
-# Create mask for columns to keep
-columns_to_keep = column_counts >= min_pixels_per_column
-
-# Make a copy of the image to draw lines on
-marked_img = img.copy()
-
-# Thickness of the vertical lines
-line_thickness = 4
-line_color = (0, 255, 0)  # green BGR
-
-# Draw thick vertical lines on columns that meet threshold
-for col_idx, keep in enumerate(columns_to_keep):
-    if keep:
-        cv2.line(marked_img, (col_idx, 0), (col_idx, marked_img.shape[0]-1), line_color, thickness=line_thickness)
+# Draw bounding boxes on original image
+boxed = img.copy()
+for cnt in contours:
+    area = cv2.contourArea(cnt)
+    if min_contour_area <= area <= max_contour_area:
+        x, y, w, h = cv2.boundingRect(cnt)
+        cv2.rectangle(boxed, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
 # Show results
-cv2.imshow("Marked Columns", marked_img)
+cv2.imshow('Original', img)
+cv2.imshow('Gradient Magnitude', grad_mag_uint8)
+cv2.imshow('Edges from Sobel', edges)
+cv2.imshow('Detected Boxes', boxed)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
