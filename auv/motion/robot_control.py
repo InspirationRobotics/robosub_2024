@@ -299,17 +299,13 @@ class RobotControl:
                 self.__movement(pitch=pitch_pwm,roll=roll_pwm,vertical=depth_pwm,yaw=yaw_pwm,forward=surge_pwm,lateral=lateral_pwm)
 
             elif self.mode=="depth_hold":
-                self.desired = {
-                    'z': self.desired_point["z"] if self.desired_point["z"] is not None else self.position['z'],
-                }
-
-                # Calculate error
-                errors = {
-                    "z": self.desired["z"] - self.position['z'],
-                }
-
                 # Set the PWM values
-                depth_pwm   = self.PIDs["depth"](errors["z"])
+                if self.sub=="graey":
+                    depth_pwm   = int(self.depth_pid(self.position['z']) * -1 + self.depth_pid_offset)
+                elif self.sub=="onyx":
+                    depth_pwm   = int(self.depth_pid(self.position['z']) *    + self.depth_pid_offset)
+                else:
+                    depth_pwm   = int(self.depth_pid(self.position['z']) * -1 + self.depth_pid_offset)
                 pitch_pwm   = self.direct_input[0]
                 roll_pwm    = self.direct_input[1]
                 yaw_pwm     = self.direct_input[3]
@@ -578,7 +574,7 @@ class RobotControl:
                 yaw_pwm = self.PIDs["yaw"](-yaw_error / 180)
                 surge_pwm = max(min(D/5,1) * 3,0.5)
 
-                self.__movement(yaw=yaw_pwm,forward=surge_pwm)
+                self.movement(yaw=yaw_pwm,forward=surge_pwm)
                 time.sleep(0.1)
 
     def reset(self):
