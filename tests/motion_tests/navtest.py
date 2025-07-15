@@ -4,7 +4,7 @@ from auv.motion import robot_control
 from auv.utils import arm, disarm
 
 
-rospy.init_node("Nav Test", anonymous=True)
+rospy.init_node("NavTest", anonymous=True)
 rc = robot_control.RobotControl()
 rc.set_control_mode("depth_hold")
 arm.arm()
