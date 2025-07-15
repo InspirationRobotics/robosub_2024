@@ -572,7 +572,7 @@ class RobotControl:
                     dy = y - self.position['y']
             D = get_norm(dx,dy)
             rospy.loginfo(f"distance away: {D}")
-            while D > 1 and not rospy.is_shutdown:
+            while D > 1:
                 with self.lock:
                     dx = x - self.position['x']
                     dy = y - self.position['y']
