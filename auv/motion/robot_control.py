@@ -567,6 +567,10 @@ class RobotControl:
 
     def waypointNav(self,x,y):
         if self.mode=="depth_hold":
+            with self.lock:
+                    dx = x - self.position['x']
+                    dy = y - self.position['y']
+            D = get_norm(dx,dy)
             while D > 1 and not rospy.is_shutdown:
                 with self.lock:
                     dx = x - self.position['x']
