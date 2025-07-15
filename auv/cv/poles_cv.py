@@ -184,4 +184,4 @@ class CV:
 
         cv2.putText(frame, f"State: {self.state}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
 
-        return {"lateral": lateral, "forward": forward, "yaw": yaw,"vertical": vertical, "end": self.end}, frame
+        return {"lateral": lateral, "forward": forward, "yaw": yaw,"vertical": vertical, "end": self.end}, frame
