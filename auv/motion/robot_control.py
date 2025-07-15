@@ -33,7 +33,18 @@ import time
 import math
 
 
+def clip(pwmMin:int, pwmMax:int, value:int):
+    """
+    A clip function to ensure the pwm is in the acceptable range
 
+    Args: 
+        pwmMin (int) : min pwm
+        pwmMax (int) : max pwm
+        value  (int) : calculated pwm
+    """
+    value = min(pwmMax,value)
+    value = max(pwmMin,value)
+    return value
 
 class RobotControl:
     """
@@ -47,7 +58,7 @@ class RobotControl:
         Args:
             enable_dvl (bool): Flag to enable or disable DVL
         """
-        self.rate = rospy.Rate(10) # 10 Hz
+        self.rate = rospy.Rate(20) # 10 Hz
         # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
         self.config     = deviceHelper.variables
         self.debug      = debug   
@@ -82,11 +93,11 @@ class RobotControl:
 
         self.PIDs = {
             "yaw": PID(
-                self.config.get("YAW_PID_P", 0.1),
-                self.config.get("YAW_PID_I", 0.1),
+                self.config.get("YAW_PID_P", 0.01),
+                self.config.get("YAW_PID_I", 0.01),
                 self.config.get("YAW_PID_D", 0.07),
                 setpoint=0,
-                output_limits=(-5, 5),   
+                output_limits=(-1, 1),   
             ),
             "pitch": PID(
                 self.config.get("YAW_PID_P", 0.5),
@@ -103,16 +114,16 @@ class RobotControl:
                 output_limits=(-5, 5),   
             ),
             "surge": PID(
-                self.config.get("FORWARD_PID_P", 0.1),
-                self.config.get("FORWARD_PID_I", 0.1),
-                self.config.get("FORWARD_PID_D", 0.1),
+                self.config.get("FORWARD_PID_P", 0.3),
+                self.config.get("FORWARD_PID_I", 0.01),
+                self.config.get("FORWARD_PID_D", 0.01),
                 setpoint=0,
                 output_limits=(-5, 5),
             ),
             "lateral": PID(
-                self.config.get("LATERAL_PID_P", 0.1),
-                self.config.get("LATERAL_PID_I", 0.1),
-                self.config.get("LATERAL_PID_D", 0.1),
+                self.config.get("LATERAL_PID_P", 0.3),
+                self.config.get("LATERAL_PID_I", 0.01),
+                self.config.get("LATERAL_PID_D", 0.01),
                 setpoint=0,
                 output_limits=(-5, 5),
             ), 
@@ -171,7 +182,7 @@ class RobotControl:
                     "x": self.desired["x"] - self.position['x'],
                     "y": self.desired["y"] - self.position['y'],
                     "z": self.desired["z"] - self.position['z'],
-                    "yaw": self.desired["yaw"] - self.orientation['yaw'],
+                    "yaw": self.desired["yaw"] - self.orientation['yaw'] if self.desired['yaw'] > self.orientation['yaw'] else self.orientation['yaw'] - self.desired['yaw'],
                     "pitch": self.desired["pitch"] - self.orientation['pitch'],
                     "roll": self.desired["roll"] - self.orientation['roll'],
                 }
@@ -225,7 +236,6 @@ class RobotControl:
                     roll=roll_pwm
                 )
                 
-
             elif self.mode=="direct":
                 pitch_pwm   = self.direct_input[0]
                 roll_pwm    = self.direct_input[1]
@@ -234,6 +244,84 @@ class RobotControl:
                 surge_pwm   = self.direct_input[4]
                 lateral_pwm = self.direct_input[5]
                 self.__movement(pitch=pitch_pwm,roll=roll_pwm,vertical=depth_pwm,yaw=yaw_pwm,forward=surge_pwm,lateral=lateral_pwm)
+            
+            elif self.mode=="p_control":
+                def control(error):
+                    """
+                    Linear proportional control (P-control): output = gain * normalized_error
+                    Args:
+                        -error(float): a percent error from -1 to 1
+                    """
+                    return 5 * error
+                def angular_error(desired, actual):
+                    return (desired - actual + 180) % 360 - 180
+                
+                # Update desire pose
+                self.desired = {
+                    # Get desired X, Y, Z
+                    'x': self.desired_point["x"] if self.desired_point["x"] is not None else self.position['x'],
+                    'y': self.desired_point["y"] if self.desired_point["y"] is not None else self.position['y'],
+                    'z': self.desired_point["z"] if self.desired_point["z"] is not None else self.position['z'],
+
+                    
+                    'yaw': self.desired_point["yaw"] if self.desired_point.get("yaw") is not None else self.orientation['yaw'],
+                    'pitch': self.desired_point["pitch"] if self.desired_point.get("pitch") is not None else self.orientation['pitch'],
+                    'roll': self.desired_point["roll"] if self.desired_point.get("roll") is not None else self.orientation['roll'],
+                }
+
+                # Calculate error
+                errors = {
+                    "x": self.desired["x"] - self.position['x'],
+                    "y": self.desired["y"] - self.position['y'],
+                    "z": self.desired["z"] - self.position['z'],
+                    "yaw": angular_error(self.desired["yaw"], self.orientation['yaw']),
+                    "pitch": angular_error(self.desired["pitch"], self.orientation['pitch']),
+                    "roll": angular_error(self.desired["roll"], self.orientation['roll']),
+                }
+
+                # normalize error
+                for key, value in errors.items():
+                    if key in ['yaw','pitch','roll']:
+                        normalized = value/360
+                    else:
+                        normalized = value/5
+                    errors[key] = clip(-1,1,normalized)
+
+                rospy.loginfo(f"erros: {errors}")
+                lateral_pwm = control(errors['x'])
+                surge_pwm   = control(errors['y'])
+                depth_pwm   = control(errors['z'])
+                yaw_pwm     = control(errors['yaw'])
+                pitch_pwm   = control(errors['pitch'])
+                roll_pwm    = control(errors['roll'])
+
+                self.__movement(pitch=pitch_pwm,roll=roll_pwm,vertical=depth_pwm,yaw=yaw_pwm,forward=surge_pwm,lateral=lateral_pwm)
+
+            elif self.mode=="depth_hold":
+                self.desired = {
+                    'z': self.desired_point["z"] if self.desired_point["z"] is not None else self.position['z'],
+                }
+
+                # Calculate error
+                errors = {
+                    "z": self.desired["z"] - self.position['z'],
+                }
+
+                # Set the PWM values
+                depth_pwm   = self.PIDs["depth"](errors["z"])
+                pitch_pwm   = self.direct_input[0]
+                roll_pwm    = self.direct_input[1]
+                yaw_pwm     = self.direct_input[3]
+                surge_pwm   = self.direct_input[4]
+                lateral_pwm = self.direct_input[5]
+                self.__movement(
+                    lateral=lateral_pwm,
+                    forward=surge_pwm,
+                    vertical=depth_pwm,
+                    yaw=yaw_pwm,
+                    pitch=pitch_pwm,
+                    roll=roll_pwm
+                )            
             else:
                 rospy.logerr("Invalid control mode")
             self.rate.sleep()
@@ -292,18 +380,7 @@ class RobotControl:
             roll (float): Power for the roll maneuver
             vertical (float): Distance to change the depth by
         """
-        def clip(pwmMin:int, pwmMax:int, value:int):
-            """
-            A clip function to ensure the pwm is in the acceptable range
 
-            Args: 
-                pwmMin (int) : min pwm
-                pwmMax (int) : max pwm
-                value  (int) : calculated pwm
-            """
-            value = min(pwmMax,value)
-            value = max(pwmMin,value)
-            return value
         
         # Create a message to send to the thrusters
         pwm = mavros_msgs.msg.OverrideRCIn()
@@ -324,10 +401,11 @@ class RobotControl:
         pwm.channels = channels
 
         # Publish PWMs to /auv/devices/thrusters
-        if not self.debug:
-            self.pub_thrusters.publish(pwm)
+        if self.debug:
+            rospy.loginfo(f"pwms : {channels[0:6]} | input: {[pitch,roll,vertical,yaw,forward,lateral]}")
         else:
             rospy.loginfo(f"pwms : {channels[0:6]} | input: {[pitch,roll,vertical,yaw,forward,lateral]}")
+            self.pub_thrusters.publish(pwm)
 
     def set_control_mode(self, msg:String):
         """
@@ -346,8 +424,14 @@ class RobotControl:
         elif msg=="pid":
             self.mode = msg
             rospy.loginfo("Set to pid control mode")
+        elif msg=="p_control":
+            self.mode = msg
+            rospy.loginfo("Set to p_control mode")
+        elif msg=="depth_hold":
+            self.mode = msg
+            rospy.loginfo("Set to depth hold mode")
         else:
-            self.mode = "pid"
+            self.mode = "direct"
             rospy.logewarn("Control mode not found")
         
     def set_absolute_z(self, depth):
@@ -370,7 +454,7 @@ class RobotControl:
         """
         # Clear the PID error
         self.PIDs["lateral"].reset()
-        self.desired_point["x"] = x
+        self.desired_point["x"] = -x
 
     def set_absolute_y(self, y):
         """
@@ -381,7 +465,7 @@ class RobotControl:
         """
         # Clear the PID error
         self.PIDs["surge"].reset()
-        self.desired_point["y"] = y
+        self.desired_point["y"] = -y
 
     def set_absolute_yaw(self, yaw):
         """
@@ -392,7 +476,7 @@ class RobotControl:
         """
         # Clear the PID error
         self.PIDs["yaw"].reset()
-        self.desired_point["yaw"] = np.deg2rad(yaw)
+        self.desired_point["yaw"] = yaw
     
     def set_absolute_pitch(self,pitch):
         """

@@ -5,19 +5,23 @@ from auv.utils import arm, disarm
 if __name__ == "__main__":
     try:
         rospy.init_node("poshold_test", anonymous=True)  # avoid hiearchy issue
-        rc = robot_control.RobotControl(debug=False)
+        rc = robot_control.RobotControl()
 
         # rospy.loginfo(f"current state: {rc.orientation}")
 
-        rc.set_control_mode("pid")
+        rc.set_control_mode("p_control")
         arm.arm()
         time.sleep(3.0)
         print("[INFO}This is the start")
+        # rc.set_absolute_z(0.5)
         rc.set_absolute_z(0.5)
-        rc.set_absolute_x(0)
-        rc.set_absolute_y(0)
-        rospy.loginfo("holding position")
-        time.sleep(30)
+        rospy.loginfo("starting...")
+        time.sleep(5)
+
+        rc.set_absolute_yaw(180)
+        time.sleep(10)
+
+        rc.reset()
 
         # rospy.loginfo(f"current state: {rc.orientation}")
         # rc.set_control_mode('direct')
