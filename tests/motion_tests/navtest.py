@@ -6,9 +6,9 @@ from auv.utils import arm, disarm
 
 rospy.init_node("Nav Test", anonymous=True)
 rc = robot_control.RobotControl()
-
+rc.set_control_mode("depth_hold")
 arm.arm()
-rc.set_absolute_depth(0.5)
+rc.set_absolute_z(0.5)
 time.sleep(5)
 print("[INFO] This is the start")
 rc.waypointNav(x=0,y=5) 
