@@ -8,7 +8,7 @@ rospy.init_node("Nav Test", anonymous=True)
 rc = robot_control.RobotControl()
 
 arm.arm()
-rc.set_depth(0.5)
+rc.set_absolute_depth(0.5)
 time.sleep(5)
 print("[INFO] This is the start")
 rc.waypointNav(x=0,y=5) 
