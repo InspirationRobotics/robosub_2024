@@ -14,7 +14,7 @@ import time
 class CV:
     camera = "/auv/camera/videoOAKdRawForward"
 
-    def __init__(self, **config):
+    def _init_(self, **config):
         self.shape = None  # Will set this dynamically
         self.x_midpoint = None
         self.tolerance = 40  # How centered the object should be
@@ -22,6 +22,7 @@ class CV:
         self.state = "searching"  # searching → centering → approaching
         self.end = False
         self.start_time = time.time()
+        self.rows_completed = 0
 
         print("[INFO] Pole Center & Approach CV initialized")
 
@@ -33,18 +34,39 @@ class CV:
             self.x_midpoint = width / 2
             print(f"[INFO] Frame shape set dynamically: width={width}, height={height}")
 
-        # Crop a bit off the bottom (e.g., last 100 pixels)
-        crop_bottom = 100
-        cropped_frame = frame[0:self.shape[1] - crop_bottom, 0:self.shape[0]]
+        crop_bottom = 40
+        frame = frame[0:self.shape[1] - crop_bottom, :]
 
-        # Convert to HSV and create red mask
-        hsv = cv2.cvtColor(cropped_frame, cv2.COLOR_BGR2HSV)
-        lower_red1 = np.array([20, 0, 0])
-        upper_red1 = np.array([255, 255, 50])
-        red_mask = cv2.inRange(hsv, lower_red1, upper_red1)
+        # Step 1: HSV Red Mask
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        lower_red1 = np.array([0, 80, 50])
+        upper_red1 = np.array([12, 255, 255])
+        lower_red2 = np.array([168, 80, 50])
+        upper_red2 = np.array([180, 255, 255])
+        mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+        mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+        red_mask = cv2.bitwise_or(mask1, mask2)
 
-        # Find contours
-        contours, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Step 2: Apply mask to image (keep only red regions)
+        red_regions = cv2.bitwise_and(frame, frame, mask=red_mask)
+
+        # Step 3: Convert to grayscale
+        gray = cv2.cvtColor(red_regions, cv2.COLOR_BGR2GRAY)
+
+        # Step 4: Blur + Edge Detection
+        blurred = cv2.GaussianBlur(gray, (5, 5), 1.5)
+        edges = cv2.Canny(blurred, 50, 150)
+
+        return edges, frame
+
+    def run_on_frame(self, frame):
+        edge_mask, cropped = self.detect_red_edges(frame)
+
+        # Overlay edges on the cropped original
+        overlay = cv2.cvtColor(edge_mask, cv2.COLOR_GRAY2BGR)
+        result = cv2.addWeighted(cropped, 0.8, overlay, 0.5, 0)
+
+        return result, edge_mask
 
         red_poles = []
         for cnt in contours:
@@ -74,9 +96,9 @@ class CV:
         yaw = 0
         vertical = 0
 
-        if self.state == "searching":
+        if self.state == "initial_search":
             if detection["status"]:
-                self.state = "approaching"
+                self.state = "centering"
             else:
                 # Spin in place to search
                 yaw = -1.5
@@ -88,14 +110,14 @@ class CV:
                 offset = x_center - self.x_midpoint
 
                 if abs(offset) > self.tolerance:
-                    lateral = -1.0 if offset > 0 else 1.0  # strafe to align toward the center
+                    lateral = -1.0 if offset > 0 else 1.0
                     print(f"[INFO] Centering: offset={offset:.1f} → lateral={lateral}")
                 else:
                     print("[INFO] Centering: Pole centered → transitioning to approaching")
                     self.state = "approaching"
             else:
                 print("[WARN] Lost pole while centering → reverting to searching")
-                self.state = "searching"
+                self.state = "initial_search"
 
         elif self.state == "approaching":
             if detection["status"]:
@@ -110,13 +132,37 @@ class CV:
                     self.state = "strafing"
             else:
                 print("[WARN] Lost pole while approaching → reverting to searching")
-                self.state = "searching"
+                self.state = "initial_search"
         
         elif self.state == "strafing":
             while time.time() - self.start_time < 1.5:  # Strafing for 1.5 seconds
                 lateral = 2.0
                 print(f"[INFO] Strafing: Moving laterally to come in between poles")
-                break
+                self.state = "slaloming"
+
+        elif self.state == "slaloming":
+            while time.time() - self.start_time < 2:  # Slaloming for 2 seconds
+                forward = 2.0
+                print(f"[INFO] Slaloming: Moving forward through the poles")
+                self.rows_completed += 1
+                
+            if self.rows_completed >= 3:
+                self.end = True
+                print("[INFO] Completed slalom through poles → ending")
+                
+            else:
+                self.state = "internal_searching"
+        
+        elif self.state == "internal_searching":
+            elapsed_time = time.time() - self.start_time
+            yaw = 1.0 if int(elapsed_time / 0.5) % 2 == 0 else -1.0
+            print(f"[INFO] Internal Searching: Yawing to find next pole (elapsed time: {elapsed_time:.1f}s)")
+            
+            if detection["status"]:
+                self.state = "approaching"
+                print("[INFO] Found next pole while searching → transitioning to approaching")
+            else:
+                self.state = "internal_searching"
 
         return forward, lateral, yaw, vertical
 
@@ -138,4 +184,4 @@ class CV:
 
         cv2.putText(frame, f"State: {self.state}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
 
-        return {"lateral": lateral, "forward": forward, "yaw": yaw,"vertical": vertical, "end": self.end}, frame
+        return {"lateral": lateral, "forward": forward, "yaw": yaw,"vertical": vertical, "end": self.end}, frame
