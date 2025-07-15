@@ -59,31 +59,6 @@ class CV:
 
         return edges, frame
 
-    def run_on_frame(self, frame):
-        edge_mask, cropped = self.detect_red_edges(frame)
-
-        # Overlay edges on the cropped original
-        overlay = cv2.cvtColor(edge_mask, cv2.COLOR_GRAY2BGR)
-        result = cv2.addWeighted(cropped, 0.8, overlay, 0.5, 0)
-
-        return result, edge_mask
-
-        red_poles = []
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
-            if area > 1000:
-                x, y, w, h = cv2.boundingRect(cnt)
-                red_poles.append((x, y, w, h, area))
-
-        # Step 3: Convert to grayscale
-        gray = cv2.cvtColor(red_regions, cv2.COLOR_BGR2GRAY)
-
-        # Step 4: Blur + Edge Detection
-        blurred = cv2.GaussianBlur(gray, (5, 5), 1.5)
-        edges = cv2.Canny(blurred, 50, 150)
-
-        return edges, frame
-
     def movement_calculation(self, detection):
         forward = 0
         lateral = 0
