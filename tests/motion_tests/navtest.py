@@ -11,7 +11,7 @@ arm.arm()
 rc.set_absolute_z(0.5)
 time.sleep(5)
 print("[INFO] This is the start")
-rc.waypointNav(x=0,y=5) 
+rc.waypointNav(x=1,y=5) 
 time.sleep(10)
 
 
