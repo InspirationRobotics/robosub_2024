@@ -19,6 +19,7 @@ import geometry_msgs.msg
 
 
 # Get the mathematical functions that handle various navigation tasks from utils.py
+from auv.motion.utils import get_distance, get_heading_from_coords, heading_error, rotate_vector, inv_rotate_vector, get_norm
 from auv.utils import deviceHelper # Get the configuration of the devices plugged into the sub(thrusters, camera, etc.)
 from auv.utils import arm, disarm
 from auv.device.dvl import dvl # DVL class that enables position estimation
@@ -93,11 +94,11 @@ class RobotControl:
 
         self.PIDs = {
             "yaw": PID(
-                self.config.get("YAW_PID_P", 0.01),
+                self.config.get("YAW_PID_P", 12),
                 self.config.get("YAW_PID_I", 0.01),
-                self.config.get("YAW_PID_D", 0.07),
+                self.config.get("YAW_PID_D", 0.0),
                 setpoint=0,
-                output_limits=(-1, 1),   
+                output_limits=(-1, 1),
             ),
             "pitch": PID(
                 self.config.get("YAW_PID_P", 0.5),
@@ -114,19 +115,19 @@ class RobotControl:
                 output_limits=(-5, 5),   
             ),
             "surge": PID(
-                self.config.get("FORWARD_PID_P", 0.3),
+                self.config.get("FORWARD_PID_P", 4.0),
                 self.config.get("FORWARD_PID_I", 0.01),
-                self.config.get("FORWARD_PID_D", 0.01),
+                self.config.get("FORWARD_PID_D", 0.1),
                 setpoint=0,
-                output_limits=(-5, 5),
+                output_limits=(-2, 2),
             ),
             "lateral": PID(
-                self.config.get("LATERAL_PID_P", 0.3),
+                self.config.get("LATERAL_PID_P", 4.0),
                 self.config.get("LATERAL_PID_I", 0.01),
-                self.config.get("LATERAL_PID_D", 0.01),
+                self.config.get("LATERAL_PID_D", 0.1),
                 setpoint=0,
-                output_limits=(-5, 5),
-            ), 
+                output_limits=(-2, 2),
+            ),
             "depth": PID(
                 self.config.get("DEPTH_PID_P", 0.5),
                 self.config.get("DEPTH_PID_I", 0.1),
@@ -563,6 +564,22 @@ class RobotControl:
         # Clear the PID error
         self.PIDs["roll"].reset()
         self.desired_point["roll"] = np.deg2rad(roll) + self.orientation['roll']
+
+    def waypointNav(self,x,y):
+        if self.mode=="depth_hold":
+            while D > 1 and not rospy.is_shutdown:
+                with self.lock:
+                    dx = x - self.position['x']
+                    dy = y - self.position['y']
+                D = get_norm(dx,dy)
+                current_heading = self.orientation['yaw'] % 360
+                target_heading  = get_heading_from_coords(dx,dy)
+                yaw_error = heading_error(current_heading, target_heading)
+                yaw_pwm = self.PIDs["yaw"](-yaw_error / 180)
+                surge_pwm = max(min(D/5,1) * 3,0.5)
+
+                self.__movement(yaw=yaw_pwm,forward=surge_pwm)
+                time.sleep(0.1)
 
     def reset(self):
         for key, pid in self.PIDs.items():
