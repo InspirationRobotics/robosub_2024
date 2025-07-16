@@ -18,7 +18,7 @@ import traceback
 
 import cv2
 import rospy
-from cv_bridge import CvBridge
+from auv.utils.img_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
@@ -55,9 +55,10 @@ class CVHandler:
 
         try:
             # Generic module file path: auv.cv.file_name
+            rospy.loginfo(f"running {file_name}")
             module = importlib.import_module(f"auv.cv.{file_name}")
         except Exception as e:
-            print("[ERROR] [cv_handler] Error while importing CV module from file name")
+            print(f"[ERROR] [cv_handler] Error while importing CV module from {file_name}")
             print(f"[ERROR] {e}")
             return
 
@@ -155,6 +156,7 @@ class _ScriptHandler:
         self.br = CvBridge()
 
         # Create the ROS node, the subscribers and the publishers
+        rospy.loginfo(f"camera topic name: {self.camera_topic}")
         self.sub_cv = rospy.Subscriber(self.camera_topic, Image, self.callback_cam)
         self.pub_viz = rospy.Publisher(self.camera_topic.replace("Raw", "Output"), Image, queue_size=10)
         self.pub_out = rospy.Publisher(f"auv/cv_handler/{file_name}", String, queue_size=10)
