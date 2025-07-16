@@ -129,11 +129,10 @@ class RobotControl:
                 output_limits=(-2, 2),
             ),
             "depth": PID(
-                self.config.get("DEPTH_PID_P", 0.5),
-                self.config.get("DEPTH_PID_I", 0.1),
-                self.config.get("DEPTH_PID_D", 0.1),
+                self.config.get("DEPTH_PID_P", 100),
+                self.config.get("DEPTH_PID_I", 10),
+                self.config.get("DEPTH_PID_D", 0.75),
                 setpoint=0,
-                output_limits=(-5, 5),
             ),  
         }
 
@@ -302,11 +301,11 @@ class RobotControl:
                 
                 # Set the PWM values
                 if self.sub=="graey":
-                    self.depth_pwm = int(self.depth_pid(self.position['z']) * -1 + self.depth_pid_offset)
+                    self.depth_pwm = int(self.PIDs(self.position['z']) * -1 + 1490)
                 elif self.sub=="onyx":
-                    self.depth_pwm = int(self.depth_pid(self.position['z'])      + self.depth_pid_offset)
+                    self.depth_pwm = int(self.PIDs(self.position['z'])      + 1490)
                 else:
-                    self.depth_pwm = int(self.depth_pid(self.position['z']) * -1 + self.depth_pid_offset)
+                    self.depth_pwm = int(self.PIDs(self.position['z']) * -1 + 1490)
 
                 with self.lock:
                     pitch_pwm   = self.direct_input[0]
@@ -314,7 +313,7 @@ class RobotControl:
                     yaw_pwm     = self.direct_input[3]
                     surge_pwm   = self.direct_input[4]
                     lateral_pwm = self.direct_input[5]
-                    
+
                 self.__movement(
                     lateral=lateral_pwm,
                     forward=surge_pwm,
