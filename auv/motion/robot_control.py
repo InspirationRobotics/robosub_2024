@@ -573,7 +573,8 @@ class RobotControl:
             D = get_norm(dx,dy)
             rospy.loginfo(f"distance away: {D}")
             try:
-                while not reached and not rospy.is_shutdown:
+                rospy.loginfo("Waypoint loop starting")
+                while not reached and not rospy.is_shutdown():
                     with self.lock:
                         dx = x - self.position['x']
                         dy = y - self.position['y']
