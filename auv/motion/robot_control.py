@@ -144,6 +144,7 @@ class RobotControl:
         arm.arm()
 
         # Run thread
+        self.running = True
         self.thread = threading.Thread(target=self.publisherThread)
         self.thread.daemon = True
         self.thread.start()
@@ -162,7 +163,7 @@ class RobotControl:
         Publisher to publish the thruster values
         """
         # TODO add np clip protection to the pwms
-        while not rospy.is_shutdown():
+        while self.running and not rospy.is_shutdown():
             if self.mode == "pid":
                 # Update desire pose
                 self.desired = {
@@ -608,9 +609,14 @@ class RobotControl:
         # Stop the robot
         self.__movement()
         # Stop the thread
-        self.thread.join()
+        self.running = False
+        # Wait for thread to stop
+        if self.thread.is_alive():
+            self.thread.join(timeout=2.0)
         # Stop the node
         disarm.disarm()
+        rospy.loginfo("[RobotControl] Shutdown complete.")
+
 
     
     
