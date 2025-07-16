@@ -404,7 +404,6 @@ class RobotControl:
         if self.debug:
             rospy.loginfo(f"pwms : {channels[0:6]} | input: {[pitch,roll,vertical,yaw,forward,lateral]}")
         else:
-            rospy.loginfo(f"pwms : {channels[0:6]} | input: {[pitch,roll,vertical,yaw,forward,lateral]}")
             self.pub_thrusters.publish(pwm)
 
     def set_control_mode(self, msg:String):

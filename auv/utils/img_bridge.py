@@ -14,7 +14,7 @@ from sensor_msgs.msg import Image
 
 class CvBridge:
     def __init__(self):
-        pass
+        self.haswarned = False
         
     def imgmsg_to_cv2(self, img_msg):
         dtype = np.dtype("uint8")  # Hardcode to 8 bits
@@ -34,8 +34,10 @@ class CvBridge:
         if img_msg.encoding == "rgb8":
             image_opencv = cv2.cvtColor(image_opencv, cv2.COLOR_RGB2BGR)
         elif img_msg.encoding != "bgr8":
-            rospy.logwarn(
-                f"Unsupported encoding '{img_msg.encoding}'. This node assumes 'bgr8'. Image may not be interpreted correctly.")
+            if not self.haswarned:
+                rospy.logwarn(f"Unsupported encoding '{img_msg.encoding}'. This node assumes 'bgr8'. Image may not be interpreted correctly.")
+                self.haswarned = True
+            
 
         return image_opencv
 
