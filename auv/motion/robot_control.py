@@ -606,13 +606,11 @@ class RobotControl:
         Exit the robot control
         """
         # Stop the robot
-        self.movement()
+        self.__movement()
         # Stop the thread
         self.thread.join()
         # Stop the node
         disarm.disarm()
-        # Exit the node
-        rospy.signal_shutdown("Exiting robot control")
 
     
     
