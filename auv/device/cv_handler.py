@@ -67,6 +67,12 @@ class CVHandler:
         if cv_class is None:
             rospy.logerr("[cv_handler] No CV class found in file, check the file name and file content")
             return
+        class_name = cv_class.__name__                        # "CV"
+        module_name = cv_class.__module__                     # e.g. "auv.device.cams.my_cv_module"
+        module_path = getattr(module, '__file__', 'Unknown')  # full path to the module .py file
+
+        rospy.loginfo(f"Loaded class {class_name} from module {module_name}")
+        rospy.loginfo(f"Module file path: {module_path}")
 
         # Initialize simulated CV script handler or a real CV script handler
         rospy.loginfo(f"current config: {self.config}")
