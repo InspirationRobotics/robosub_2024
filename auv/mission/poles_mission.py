@@ -12,12 +12,12 @@ from auv.utils import disarm
 
 
 class PoleSlalomMission:
-    cv_files = ["poles_cv"]  # Name of your red pole CV script file (no .py extension)
-
+    # Name of your red pole CV script file (no .py extension)
     def __init__(self, target=None, **config):
         """
         Initialize the mission class; configure everything needed in the run function.
         """
+        self.cv_files = ["poles_cv"]
         self.config = config
         self.data = {}
         self.next_data = {}
