@@ -132,6 +132,9 @@ class SimpleEKF:
         pose_msg.pose.position.y = self.x[1, 0]
         pose_msg.pose.position.z = self.x[2, 0]
 
+        pose_msg.pose.orientation.z = self.imu_ori_data['yaw']
+        pose_msg.pose.orientation.y = self.imu_ori_data['pitch']
+        pose_msg.pose.orientation.x = self.imu_ori_data['roll']
         pose_msg.pose.orientation.w = 1
         self.pub.publish(pose_msg)
 

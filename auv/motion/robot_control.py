@@ -154,9 +154,9 @@ class RobotControl:
         self.position['y'] = msg.pose.position.y
         self.position['z'] = msg.pose.position.z
 
-        self.orientation['yaw']     = np.deg2rad(msg.pose.orientation.z)
-        self.orientation['pitch']   = np.deg2rad(msg.pose.orientation.y)
-        self.orientation['roll']    = np.deg2rad(msg.pose.orientation.x)
+        self.orientation['yaw']     = (msg.pose.orientation.z)
+        self.orientation['pitch']   = (msg.pose.orientation.y)
+        self.orientation['roll']    = (msg.pose.orientation.x)
 
     def publisherThread(self):
         """
@@ -299,22 +299,22 @@ class RobotControl:
                 self.__movement(pitch=pitch_pwm,roll=roll_pwm,vertical=depth_pwm,yaw=yaw_pwm,forward=surge_pwm,lateral=lateral_pwm)
 
             elif self.mode=="depth_hold":
-                self.desired = {
-                    'z': self.desired_point["z"] if self.desired_point["z"] is not None else self.position['z'],
-                }
-
-                # Calculate error
-                errors = {
-                    "z": self.desired["z"] - self.position['z'],
-                }
-
+                
                 # Set the PWM values
-                depth_pwm   = self.PIDs["depth"](errors["z"])
-                pitch_pwm   = self.direct_input[0]
-                roll_pwm    = self.direct_input[1]
-                yaw_pwm     = self.direct_input[3]
-                surge_pwm   = self.direct_input[4]
-                lateral_pwm = self.direct_input[5]
+                if self.sub=="graey":
+                    self.depth_pwm = int(self.depth_pid(self.position['z']) * -1 + self.depth_pid_offset)
+                elif self.sub=="onyx":
+                    self.depth_pwm = int(self.depth_pid(self.position['z'])      + self.depth_pid_offset)
+                else:
+                    self.depth_pwm = int(self.depth_pid(self.position['z']) * -1 + self.depth_pid_offset)
+
+                with self.lock:
+                    pitch_pwm   = self.direct_input[0]
+                    roll_pwm    = self.direct_input[1]
+                    yaw_pwm     = self.direct_input[3]
+                    surge_pwm   = self.direct_input[4]
+                    lateral_pwm = self.direct_input[5]
+                    
                 self.__movement(
                     lateral=lateral_pwm,
                     forward=surge_pwm,
@@ -444,7 +444,7 @@ class RobotControl:
         """
         # Clear the PID error
         self.PIDs["depth"].reset()
-        self.desired_point["z"] = depth
+        self.PIDs["depth"].setpoint = depth
     
     def set_absolute_x(self, x):
         """
@@ -489,7 +489,7 @@ class RobotControl:
         self.PIDs["pitch"].reset()
         self.desired_point["pitch"] = np.deg2rad(pitch)
 
-    def set_absolute_pitch(self,roll):
+    def set_absolute_roll(self,roll):
         """
         Set the roll angle of the robot
 
