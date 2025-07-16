@@ -566,26 +566,34 @@ class RobotControl:
 
     def waypointNav(self,x,y):
         if self.mode=="depth_hold":
+            reached = False
             with self.lock:
                     dx = x - self.position['x']
                     dy = y - self.position['y']
             D = get_norm(dx,dy)
             rospy.loginfo(f"distance away: {D}")
-            while D > 1:
-                with self.lock:
-                    dx = x - self.position['x']
-                    dy = y - self.position['y']
-                D = get_norm(dx,dy)
-                current_heading = self.orientation['yaw'] % 360
-                target_heading  = get_heading_from_coords(dx,dy)
-                yaw_error = heading_error(current_heading, target_heading)
-                yaw_pwm = self.PIDs["yaw"](-yaw_error / 180)
-                surge_pwm = max(min(D/5,1) * 3,0.5)
+            try:
+                while not reached and not rospy.is_shutdown:
+                    with self.lock:
+                        dx = x - self.position['x']
+                        dy = y - self.position['y']
+                    D = get_norm(dx,dy)
+                    if D < 1:
+                        reached = True
+                        rospy.loginfo("Reach waypoint or got interupted")
+                    current_heading = self.orientation['yaw'] % 360
+                    target_heading  = get_heading_from_coords(dx,dy)
+                    yaw_error = heading_error(current_heading, target_heading)
+                    yaw_pwm = self.PIDs["yaw"](-yaw_error / 180)
+                    surge_pwm = max(min(D/5,1) * 3,0.5)
 
-                rospy.loginfo(f"distance away: {D}")
-                rospy.loginfo(f"yaw pwm: {yaw_pwm}, forward pwm: {surge_pwm}")
-                self.movement(yaw=yaw_pwm,forward=surge_pwm)
-                time.sleep(0.1)
+                    rospy.loginfo(f"distance away: {D}")
+                    rospy.loginfo(f"yaw pwm: {yaw_pwm}, forward pwm: {surge_pwm}")
+                    self.movement(yaw=yaw_pwm,forward=surge_pwm)
+                    time.sleep(0.1)
+            except KeyboardInterrupt as e:
+                reached = True
+
 
     def reset(self):
         for key, pid in self.PIDs.items():
