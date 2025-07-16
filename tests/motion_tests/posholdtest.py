@@ -5,7 +5,7 @@ from auv.utils import arm, disarm
 if __name__ == "__main__":
     try:
         rospy.init_node("poshold_test", anonymous=True)  # avoid hiearchy issue
-        rc = robot_control.RobotControl()
+        rc = robot_control.RobotControl(debug=True)
         rc.set_control_mode("depth_hold")
         arm.arm()
         time.sleep(1.0)
