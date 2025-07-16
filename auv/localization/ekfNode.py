@@ -82,7 +82,7 @@ class EKFNode:
         self.dvl_sub = rospy.Subscriber("/auv/devices/dvl/velocity", TwistStamped, self.dvl_callback)
         self.baro_sub = rospy.Subscriber("/mavlink/from", Mavlink, self.barometer_callback)
 
-        # self.calibrate_depth()
+        self.calibrate_depth()
         rospy.Timer(rospy.Duration(self.dt), self.ekf_step)
 
     def imu_callback(self, msg):
@@ -136,7 +136,10 @@ class EKFNode:
         pose_msg.pose.position.y = self.ekf.x[1, 0]
         pose_msg.pose.position.z = self.ekf.x[2, 0]
 
-        pose_msg.pose.orientation.w = 1
+        pose_msg.pose.orientation.x = self.imu_ori_data['roll']
+        pose_msg.pose.orientation.y = self.imu_ori_data['pitch']
+        pose_msg.pose.orientation.z = self.imu_ori_data['yaw']
+        pose_msg.pose.orientation.w = 1.0
         self.pub.publish(pose_msg)
 
     def calibrate_depth(self, sample_time=3):
