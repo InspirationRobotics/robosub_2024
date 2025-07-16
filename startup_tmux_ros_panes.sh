@@ -9,6 +9,8 @@ source /opt/ros/noetic/setup.bash
 # Split horizontally to create Pane 1 (top-right)
 tmux split-window -h -t $SESSION_NAME:0.0
 tmux split-window -v -t $SESSION_NAME:0.0
+tmux split-window -v -t $SESSION_NAME:0.1
+
 # tmux split-window -v -t $SESSION_NAME:0.2
 # tmux split-window -h
 # tmux send-keys -t $SESSION:0.0 'echo "Hello from Pane 0"' C-m
