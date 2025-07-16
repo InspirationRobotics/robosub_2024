@@ -14,6 +14,8 @@ if __name__ == "__main__":
         rospy.loginfo("starting...")
         time.sleep(10)
 
+        rc.reset()
+        rospy.loginfo("Setting yaw to 90")
         rc.set_absolute_yaw(90)
         time.sleep(10)
         rospy.loginfo("Reached the end of the program")
