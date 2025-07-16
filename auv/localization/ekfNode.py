@@ -8,11 +8,8 @@ from sensor_msgs.msg import Imu
 from mavros_msgs.msg import Mavlink
 from transforms3d.euler import euler2mat
 
-class SimpleEKF:
-    def __init__(self):
-        rospy.init_node("ekf_6d_node")
-        self.dt = 1.0 / 50.0  # 50Hz
-
+class EKF6State:
+    def __init__(self, dt):
         # State vector: [x, y, z, vx, vy, vz]
         self.x = np.zeros((6, 1))
 
@@ -28,28 +25,7 @@ class SimpleEKF:
         # Measurement noise (barometer)
         self.R_baro = np.array([[0.05]])
 
-        self.last_time = rospy.Time.now()
-
-        self.dvl_velocity = np.zeros((3, 1))
-        
-        self.imu_sub        = rospy.Subscriber("/auv/devices/vectornav", Imu, self.imu_callback)
-        self.imu_acc_data   = {"ax": 0, "ay": 0, "az": 0}
-        self.imu_ori_data   = {"yaw": 0, "pitch": 0, "roll": 0}  # store one line of IMU data for ekf predict
-        self.imu_array = np.zeros((3, 1))  # Before first IMU callback
-
-        self.dvl_sub    = rospy.Subscriber("/auv/devices/dvl/velocity",TwistStamped, self.dvl_callback)
-        self.dvl_data   = {"vx": 0, "vy": 0, "vz": 0}
-        self.dvl_array  = np.zeros((3, 1)) # used for passing into the ekf
-
-        self.baro_sub           = rospy.Subscriber("/mavlink/from", Mavlink, self.barometer_callback)
-        self.depth              = None
-        self.depth_calib        = 0
-        self.calibrated         = False
-        self.pub = rospy.Publisher("/auv/state/pose", PoseStamped, queue_size=10)
-
-        self.calibrate_depth()
-        
-        rospy.Timer(rospy.Duration(self.dt), self.ekf_step)
+        self.dt = dt
 
     def predict(self):
         F = np.eye(6)
@@ -85,6 +61,43 @@ class SimpleEKF:
         self.x += K @ y
         self.P = (np.eye(6) - K @ H) @ self.P
 
+class EKFNode:
+    def __init__(self):
+        rospy.init_node("ekf_6d_node")
+        self.dt = 1.0 / 50.0  # 50Hz
+
+        self.ekf = EKF6State(self.dt)
+
+        self.dvl_velocity = np.zeros((3, 1))
+        self.imu_acc_data = {"ax": 0, "ay": 0, "az": 0}
+        self.imu_ori_data = {"yaw": 0, "pitch": 0, "roll": 0}
+
+        self.depth = None
+        self.depth_calib = 0
+        self.calibrated = False
+
+        self.pub = rospy.Publisher("/auv/state/pose", PoseStamped, queue_size=10)
+
+        self.imu_sub = rospy.Subscriber("/auv/devices/vectornav", Imu, self.imu_callback)
+        self.dvl_sub = rospy.Subscriber("/auv/devices/dvl/velocity", TwistStamped, self.dvl_callback)
+        self.baro_sub = rospy.Subscriber("/mavlink/from", Mavlink, self.barometer_callback)
+
+        # self.calibrate_depth()
+        rospy.Timer(rospy.Duration(self.dt), self.ekf_step)
+
+    def imu_callback(self, msg):
+        self.imu_acc_data["ax"] = msg.linear_acceleration.x
+        self.imu_acc_data["ay"] = msg.linear_acceleration.y
+        self.imu_acc_data["az"] = msg.linear_acceleration.z
+
+        """
+        Since our IMU outputs orientation as Euler angles (yaw, pitch, roll), and the ROS sensor_msgs/Imu message only supports orientation in quaternion format, I’ve been passing the yaw, pitch, and roll directly into the ZYX fields of the message, and leaving the quaternion w field empty.
+        This obviously isn't correct, but I was doing it as a temporary workaround to get a precise rotation matrix — just plugging in the angles without properly converting them to a valid quaternion.
+        """
+        self.imu_ori_data['roll'] = msg.orientation.x
+        self.imu_ori_data['pitch'] = (msg.orientation.y + 180) % 360
+        self.imu_ori_data['yaw'] = msg.orientation.z
+
     def dvl_callback(self, msg):
         yaw = np.deg2rad(self.imu_ori_data['yaw'])
         pitch = np.deg2rad(self.imu_ori_data['pitch'])
@@ -106,21 +119,12 @@ class SimpleEKF:
                 self.depth = (press_abs / (997.0474 * 9.80665 * 0.01)) - self.depth_calib
         except:
             pass
-    def imu_callback(self,msg):
-        # (self.imu_data["ax"], self.imu_data["ay"], self.imu_data["az"]) = quat2euler(orientation_list)
-        self.imu_acc_data["ax"] = msg.linear_acceleration.x
-        self.imu_acc_data["ay"] = msg.linear_acceleration.y
-        self.imu_acc_data["az"] = msg.linear_acceleration.z
-
-        self.imu_ori_data['roll'] = msg.orientation.x
-        self.imu_ori_data['pitch'] = (msg.orientation.y + 180) % 360
-        self.imu_ori_data['yaw'] = msg.orientation.z
 
     def ekf_step(self, event):
-        self.predict()
-        self.update_dvl(self.dvl_velocity)
-        # if self.depth is not None and self.calibrated:
-        #     self.update_depth(self.depth)
+        self.ekf.predict()
+        self.ekf.update_dvl(self.dvl_velocity)
+        if self.depth is not None and self.calibrated:
+            self.ekf.update_depth(self.depth)
         self.publish_pose()
 
     def publish_pose(self):
@@ -128,13 +132,10 @@ class SimpleEKF:
         pose_msg.header.stamp = rospy.Time.now()
         pose_msg.header.frame_id = "base_link"
 
-        pose_msg.pose.position.x = self.x[0, 0]
-        pose_msg.pose.position.y = self.x[1, 0]
-        pose_msg.pose.position.z = self.x[2, 0]
+        pose_msg.pose.position.x = self.ekf.x[0, 0]
+        pose_msg.pose.position.y = self.ekf.x[1, 0]
+        pose_msg.pose.position.z = self.ekf.x[2, 0]
 
-        pose_msg.pose.orientation.z = self.imu_ori_data['yaw']
-        pose_msg.pose.orientation.y = self.imu_ori_data['pitch']
-        pose_msg.pose.orientation.x = self.imu_ori_data['roll']
         pose_msg.pose.orientation.w = 1
         self.pub.publish(pose_msg)
 
@@ -149,28 +150,25 @@ class SimpleEKF:
         samples = []
 
         # Wait for depth data
-        while self.depth == None:
+        while self.depth is None:
             rospy.sleep(0.1)
-            pass
 
-
-        prevDepth = self.depth
+        prev_depth = self.depth
         start_time = time.time()
 
         # Collect data for sample_time seconds, then calculate the mean
         while time.time() - start_time < sample_time:
-            if self.depth == prevDepth:
+            if self.depth == prev_depth:
                 continue
-
             samples.append(self.depth)
-            prevDepth = self.depth
+            prev_depth = self.depth
 
         self.depth_calib = mean(samples)
         self.calibrated = True
         rospy.loginfo(f"depth calibration Finished. Surface is: {self.depth_calib}")
 
 if __name__ == "__main__":
-    ekf = SimpleEKF()
+    node = EKFNode()
     rospy.sleep(2)
     rospy.loginfo("Running the simple ekf node")
     rospy.spin()
