@@ -302,11 +302,11 @@ class RobotControl:
                 
                 # Set the PWM values
                 if self.sub=="graey":
-                    depth_pwm = max(int((self.PIDs['depth'](self.position['z']) * -1)/5),0.5)
+                    depth_pwm = max(int((self.PIDs['depth'](self.position['z']) * -1)/80),0.5)
                 elif self.sub=="onyx":
-                    depth_pwm = max(int(self.PIDs['depth'](self.position['z'])/5),0.5)
+                    depth_pwm = max(int(self.PIDs['depth'](self.position['z'])/80),0.5)
                 else:
-                    depth_pwm = max(int((self.PIDs['depth'](self.position['z']) * -1)/5),0.5)
+                    depth_pwm = max(int((self.PIDs['depth'](self.position['z']) * -1)/80),0.5)
 
                 with self.lock:
                     pitch_pwm   = self.direct_input[0]
