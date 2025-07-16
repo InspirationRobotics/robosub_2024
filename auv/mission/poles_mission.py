@@ -13,7 +13,7 @@ from auv.utils import disarm
 
 class PoleSlalomMission:
     # Name of your red pole CV script file (no .py extension)
-    def __init__(self, target=None, **config):
+    def __init__(self, target="right", **config):
         """
         Initialize the mission class; configure everything needed in the run function.
         """
@@ -22,6 +22,7 @@ class PoleSlalomMission:
         self.data = {}
         self.next_data = {}
         self.received = False
+        self.target = target
 
         self.robot_control = robot_control.RobotControl()
         self.cv_handler = cv_handler.CVHandler(**self.config)
@@ -37,22 +38,21 @@ class PoleSlalomMission:
         data = json.loads(msg.data)
         self.next_data[file_name] = data
         self.received = True
-        print("[DEBUG] Received data from {file_name}")
+        print(f"[DEBUG] Received data from {file_name}")
 
     def run(self):
         """
         Run the pole slalom mission loop.
         """
         print("[INFO] Pole Slalom mission running")
-        rate = rospy.Rate(10)  # 10 Hz
 
         while not rospy.is_shutdown():
             if not self.received:
-                rate.sleep()
+                time.sleep(0.01)
                 continue
 
-            for key in self.next_data:
-                if key in self.data:
+            for key in self.next_data.keys():
+                if key in self.data.keys():
                     self.data[key].update(self.next_data[key])
                 else:
                     self.data[key] = self.next_data[key]
@@ -75,7 +75,7 @@ class PoleSlalomMission:
             else:
                 self.robot_control.movement(lateral=lateral, forward=forward, yaw=yaw)
 
-            rate.sleep()
+            time.sleep(0.01)
 
         print("[INFO] Pole Slalom mission run complete")
 
