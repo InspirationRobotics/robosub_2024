@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
         # rospy.loginfo(f"current state: {rc.orientation}")
 
-        rc.set_control_mode("p_control")
+        rc.set_control_mode("pid")
         arm.arm()
         time.sleep(3.0)
         print("[INFO}This is the start")

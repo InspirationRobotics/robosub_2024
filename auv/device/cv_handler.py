@@ -90,7 +90,7 @@ class CVHandler:
             file_name (str): File that contains the script that should be stopped
         """
         if file_name not in self.active_cv_scripts:
-            print("[ERROR] [cv_handler] Cannot stop a script that is not running")
+            rospy.logerr("[cv_handler] Cannot stop a script that is not running")
             return
 
         self.active_cv_scripts[file_name].stop()

@@ -50,12 +50,12 @@ class CV:
         # Step 2: Apply mask to image (keep only red regions)
         red_regions = cv2.bitwise_and(frame, frame, mask=red_mask)
 
-        # # Step 3: Convert to grayscale
-        # gray = cv2.cvtColor(red_regions, cv2.COLOR_BGR2GRAY)
+        # Step 3: Convert to grayscale
+        gray = cv2.cvtColor(red_regions, cv2.COLOR_BGR2GRAY)
 
-        # # Step 4: Blur + Edge Detection
-        # blurred = cv2.GaussianBlur(gray, (5, 5), 1.5)
-        # edges = cv2.Canny(blurred, 50, 150)
+        # Step 4: Blur + Edge Detection
+        blurred = cv2.GaussianBlur(gray, (5, 5), 1.5)
+        edges = cv2.Canny(blurred, 50, 150)
 
         return red_regions, frame
 
