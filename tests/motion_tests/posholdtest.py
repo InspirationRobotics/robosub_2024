@@ -48,6 +48,8 @@ if __name__ == "__main__":
 
         # rospy.loginfo(f"current state: {rc.orientation}")
         rospy.loginfo("Reached the end of the program")
+
+        rc.exit()
         disarm.disarm()
     except KeyboardInterrupt:
         disarm.disarm()
