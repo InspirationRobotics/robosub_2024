@@ -14,7 +14,7 @@ import time
 class CV:
     camera = "/auv/camera/videoOAKdRawForward"
 
-    def _init_(self, **config):
+    def __init__(self, **config):
         self.shape = None  # Will set this dynamically
         self.x_midpoint = None
         self.tolerance = 40  # How centered the object should be
