@@ -609,8 +609,8 @@ class RobotControl:
                     current_heading = self.orientation['yaw'] % 360
                     target_heading  = get_heading_from_coords(dx,dy)
                     yaw_error = heading_error(current_heading, target_heading)
-                    yaw_pwm = self.PIDs["yaw"](yaw_error / 180)
-                    surge_pwm = max(min(D/5.0,1) * 3,0.5)
+                    yaw_pwm = self.PIDs["yaw"]( - yaw_error / 180)
+                    surge_pwm = max(min(D/5.0,1) * 1.5,0.5)
 
                     rospy.loginfo(f"distance away: {D}")
                     rospy.loginfo(f"yaw pwm: {yaw_pwm}, forward pwm: {surge_pwm}")
