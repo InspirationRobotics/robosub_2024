@@ -68,6 +68,7 @@ class RobotControl:
         # Store informaiton
         self.sub            = deviceHelper.variables.get("sub")
         self.mode           = "pid"
+        self.heading_control = False
         self.position       = {'x':0,'y':0,'z':0}
         self.orientation    = {'yaw':0,'pitch':0,'roll':0}   # in degrees, see self.pose_callback
 
@@ -300,17 +301,25 @@ class RobotControl:
 
             elif self.mode=="depth_hold":
                 
-                # Set the PWM values
+                # Set depth PWM value
                 if self.sub=="graey":
                     depth_pwm = (self.PIDs['depth'](self.position['z']) * -1) /80.0
                 elif self.sub=="onyx":
                     depth_pwm = (self.PIDs['depth'](self.position['z']))/80.0
                 else:
                     depth_pwm = (self.PIDs['depth'](self.position['z']) * -1) /80.0
+
+                # Set yaw PWM valuet
+                if self.desired_point['yaw'] is not None:
+                    error = heading_error(heading=self.orientation['yaw'], target=self.desired_point['yaw'])
+                else:
+                    error = 0
+                yaw_pwm = self.PIDs["yaw"](-error / 180)
+
                 with self.lock:
                     pitch_pwm   = self.direct_input[0]
                     roll_pwm    = self.direct_input[1]
-                    yaw_pwm     = self.direct_input[3]
+
                     surge_pwm   = self.direct_input[4]
                     lateral_pwm = self.direct_input[5]
 
@@ -406,6 +415,9 @@ class RobotControl:
         else:
             self.pub_thrusters.publish(pwm)
 
+    def heading_control(self):
+        self.heading_control = True
+
     def set_control_mode(self, msg:String):
         """
         Callback function to handle the control mode of the robot.
@@ -473,34 +485,25 @@ class RobotControl:
         Args:
             yaw (float): robot desired yaw angle, unit: degrees
         """
-        target = (yaw) % 360
-        print(f"[INFO] Setting heading to {target}")
-        time_check = time.time()
-        self.prev_error = None
-        while not rospy.is_shutdown():
+        self.desired_point['yaw'] = yaw % 360
+        rospy.loginfo(f"Set desire heading to {yaw%360}")
+        # target = (yaw) % 360
+        # print(f"[INFO] Setting heading to {target}")
+        # self.prev_error = None
+        # while not rospy.is_shutdown():
 
-            error = heading_error(self.orientation['yaw'], target)
-            # stuck at an "incorrect" heading
-            # if time.time() - time_check > 3:
-            #     time_check = time.time()
-            #     if self.prev_error is None:
-            #         self.prev_error = error
-            #     elif abs(error - self.prev_error) < 3:
-            #         break
-            #     else:
-            #         self.prev_error = error
+        #     error = heading_error(self.orientation['yaw'], target)
 
-            # Normalize error to the range -1 to 1 for the PID controller
-            output = self.PIDs["yaw"](-error / 180)
+        #     output = self.PIDs["yaw"](-error / 180)
 
-            if abs(error) <= 5:
-                print("[INFO] Heading reached")
-                break
+        #     if abs(error) <= 5:
+        #         print("[INFO] Heading reached")
+        #         break
 
-            self.movement(yaw=output)
-            time.sleep(0.1)
+        #     self.movement(yaw=output)
+        #     time.sleep(0.1)
 
-        print(f"[INFO] Finished setting heading to {target}")
+        # print(f"[INFO] Finished setting heading to {target}")
     
     def set_absolute_pitch(self,pitch):
         """
