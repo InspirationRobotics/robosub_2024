@@ -11,8 +11,7 @@ arm.arm()
 rc.set_absolute_z(0.5)
 time.sleep(5)
 print("[INFO] This is the start")
-rc.waypointNav(x=0,y=3) 
-
+rc.set_absolute_yaw(0.0)
 
 print("Reached the end")
 
