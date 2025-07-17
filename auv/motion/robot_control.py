@@ -473,9 +473,36 @@ class RobotControl:
         Args:
             yaw (float): robot desired yaw angle, unit: degrees
         """
-        # Clear the PID error
-        self.PIDs["yaw"].reset()
-        self.desired_point["yaw"] = yaw
+        target = (target) % 360
+        print(f"[INFO] Setting heading to {target}")
+        time_check = time.time()
+        self.prev_error = None
+        while not rospy.is_shutdown():
+
+            error = heading_error(self.orientation['yaw'], target)
+            # stuck at an "incorrect" heading
+            if time.time() - time_check > 3:
+                time_check = time.time()
+                if self.prev_error is None:
+                    self.prev_error = error
+                elif abs(error - self.prev_error) < 3:
+                    break
+                else:
+                    self.prev_error = error
+
+            # Normalize error to the range -1 to 1 for the PID controller
+            output = self.PIDs["yaw"](-error / 180)
+
+            # print(f"[DEBUG] Heading error: {error}, output: {output} {self.compass} {target}")
+
+            if abs(error) <= 5:
+                print("[INFO] Heading reached")
+                break
+
+            self.movement(yaw=output)
+            time.sleep(0.1)
+
+        print(f"[INFO] Finished setting heading to {target}")
     
     def set_absolute_pitch(self,pitch):
         """
