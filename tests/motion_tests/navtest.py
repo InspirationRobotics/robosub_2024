@@ -13,6 +13,8 @@ time.sleep(5)
 print("[INFO] This is the start")
 rc.set_absolute_yaw(0.0)
 
+rc.waypointNav(x=0,y=2)
+
 print("Reached the end")
 
 disarm.disarm()
