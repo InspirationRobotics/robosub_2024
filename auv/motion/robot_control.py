@@ -473,7 +473,7 @@ class RobotControl:
         Args:
             yaw (float): robot desired yaw angle, unit: degrees
         """
-        target = (target) % 360
+        target = (yaw) % 360
         print(f"[INFO] Setting heading to {target}")
         time_check = time.time()
         self.prev_error = None
