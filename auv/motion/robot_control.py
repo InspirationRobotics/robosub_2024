@@ -237,68 +237,7 @@ class RobotControl:
                     pitch=pitch_pwm,
                     roll=roll_pwm
                 )
-                
-            elif self.mode=="direct":
-                pitch_pwm   = self.direct_input[0]
-                roll_pwm    = self.direct_input[1]
-                depth_pwm   = self.direct_input[2]
-                yaw_pwm     = self.direct_input[3]
-                surge_pwm   = self.direct_input[4]
-                lateral_pwm = self.direct_input[5]
-                self.__movement(pitch=pitch_pwm,roll=roll_pwm,vertical=depth_pwm,yaw=yaw_pwm,forward=surge_pwm,lateral=lateral_pwm)
             
-            elif self.mode=="p_control":
-                def control(error):
-                    """
-                    Linear proportional control (P-control): output = gain * normalized_error
-                    Args:
-                        -error(float): a percent error from -1 to 1
-                    """
-                    return 5 * error
-                def angular_error(desired, actual):
-                    return (desired - actual + 180) % 360 - 180
-                
-                # Update desire pose
-                self.desired = {
-                    # Get desired X, Y, Z
-                    'x': self.desired_point["x"] if self.desired_point["x"] is not None else self.position['x'],
-                    'y': self.desired_point["y"] if self.desired_point["y"] is not None else self.position['y'],
-                    'z': self.desired_point["z"] if self.desired_point["z"] is not None else self.position['z'],
-
-                    
-                    'yaw': self.desired_point["yaw"] if self.desired_point.get("yaw") is not None else self.orientation['yaw'],
-                    'pitch': self.desired_point["pitch"] if self.desired_point.get("pitch") is not None else self.orientation['pitch'],
-                    'roll': self.desired_point["roll"] if self.desired_point.get("roll") is not None else self.orientation['roll'],
-                }
-
-                # Calculate error
-                errors = {
-                    "x": self.desired["x"] - self.position['x'],
-                    "y": self.desired["y"] - self.position['y'],
-                    "z": self.desired["z"] - self.position['z'],
-                    "yaw": angular_error(self.desired["yaw"], self.orientation['yaw']),
-                    "pitch": angular_error(self.desired["pitch"], self.orientation['pitch']),
-                    "roll": angular_error(self.desired["roll"], self.orientation['roll']),
-                }
-
-                # normalize error
-                for key, value in errors.items():
-                    if key in ['yaw','pitch','roll']:
-                        normalized = value/360
-                    else:
-                        normalized = value/5
-                    errors[key] = clip(-1,1,normalized)
-
-                rospy.loginfo(f"erros: {errors}")
-                lateral_pwm = control(errors['x'])
-                surge_pwm   = control(errors['y'])
-                depth_pwm   = control(errors['z'])
-                yaw_pwm     = control(errors['yaw'])
-                pitch_pwm   = control(errors['pitch'])
-                roll_pwm    = control(errors['roll'])
-
-                self.__movement(pitch=pitch_pwm,roll=roll_pwm,vertical=depth_pwm,yaw=yaw_pwm,forward=surge_pwm,lateral=lateral_pwm)
-
             elif self.mode=="depth_hold":
                 
                 # Set depth PWM value
@@ -309,17 +248,17 @@ class RobotControl:
                 else:
                     depth_pwm = (self.PIDs['depth'](self.position['z']) * -1) /80.0
 
-                # Set yaw PWM valuet
+                # Calculate heading error
                 if self.desired_point['yaw'] is not None:
                     error = heading_error(heading=self.orientation['yaw'], target=self.desired_point['yaw'])
                 else:
-                    error = 0
-                yaw_pwm = self.PIDs["yaw"](-error / 180)
+                    error =0
+
 
                 with self.lock:
                     pitch_pwm   = self.direct_input[0]
                     roll_pwm    = self.direct_input[1]
-
+                    yaw_pwm     = self.direct_input[3] if not self.heading_control else self.PIDs["yaw"](-error / 180) 
                     surge_pwm   = self.direct_input[4]
                     lateral_pwm = self.direct_input[5]
 
@@ -415,8 +354,8 @@ class RobotControl:
         else:
             self.pub_thrusters.publish(pwm)
 
-    def heading_control(self):
-        self.heading_control = True
+    def activate_heading_control(self, activate:bool):
+        self.heading_control = activate
 
     def set_control_mode(self, msg:String):
         """
@@ -429,15 +368,9 @@ class RobotControl:
         """
         self.reset()
         
-        if msg=="direct":
-            self.mode = msg
-            rospy.loginfo("Set to direct control mode")
-        elif msg=="pid":
+        if msg=="pid":
             self.mode = msg
             rospy.loginfo("Set to pid control mode")
-        elif msg=="p_control":
-            self.mode = msg
-            rospy.loginfo("Set to p_control mode")
         elif msg=="depth_hold":
             self.mode = msg
             rospy.loginfo("Set to depth hold mode")
@@ -478,6 +411,25 @@ class RobotControl:
         self.PIDs["surge"].reset()
         self.desired_point["y"] = -y
 
+    def go_to_heading(self, target):
+        target = (target) % 360
+        print(f"[INFO] Setting heading to {target}")
+        self.prev_error = None
+        while not rospy.is_shutdown():
+
+            error = heading_error(self.orientation['yaw'], target)
+
+            output = self.PIDs["yaw"](-error / 180)
+
+            if abs(error) <= 5:
+                print("[INFO] Heading reached")
+                break
+
+            self.movement(yaw=output)
+            time.sleep(0.1)
+
+        print(f"[INFO] Finished setting heading to {target}")
+
     def set_absolute_yaw(self, yaw):
         """
         Set the heading of the robot
@@ -487,24 +439,7 @@ class RobotControl:
         """
         self.desired_point['yaw'] = yaw % 360
         rospy.loginfo(f"Set desire heading to {yaw%360}")
-        # target = (yaw) % 360
-        # print(f"[INFO] Setting heading to {target}")
-        # self.prev_error = None
-        # while not rospy.is_shutdown():
-
-        #     error = heading_error(self.orientation['yaw'], target)
-
-        #     output = self.PIDs["yaw"](-error / 180)
-
-        #     if abs(error) <= 5:
-        #         print("[INFO] Heading reached")
-        #         break
-
-        #     self.movement(yaw=output)
-        #     time.sleep(0.1)
-
-        # print(f"[INFO] Finished setting heading to {target}")
-    
+            
     def set_absolute_pitch(self,pitch):
         """
         Set the pitch angle of the robot
@@ -567,7 +502,7 @@ class RobotControl:
         """
         # Clear the PID error
         self.PIDs["yaw"].reset()
-        self.desired_point["yaw"] = np.deg2rad(yaw) + self.orientation['yaw']
+        self.desired_point["yaw"] = yaw + self.orientation['yaw']
     
     def set_relative_pitch(self, pitch):
         """
@@ -593,12 +528,9 @@ class RobotControl:
 
     def waypointNav(self,x,y):
         if self.mode=="depth_hold":
+            self.heading_control = False
             reached = False
-            with self.lock:
-                    dx = x - self.position['x']
-                    dy = y - self.position['y']
-            D = get_norm(dx,dy)
-            rospy.loginfo(f"distance away: {D}")
+            
             try:
                 rospy.loginfo("Waypoint loop starting")
                 while not reached and not rospy.is_shutdown():
